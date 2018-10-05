@@ -1,0 +1,3 @@
+[submodule "utils/BSV-RVFI-DII"]
+	path = utils/BSV-RVFI-DII
+	url = https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git
