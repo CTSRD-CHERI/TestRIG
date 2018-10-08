@@ -59,7 +59,7 @@ main = withSocketsDo $ do
     modSoc <- open addrMod
     impSoc <- open addrImp
     --instTrace <- sequence (take 8 (repeat generateInstructionTraceEntry))
-    verboseCheck (withMaxSuccess 3 (prop modSoc impSoc))
+    quickCheck (withMaxSuccess 100 (prop modSoc impSoc))
     --success <- prop modSoc impSoc (instTrace ++ [RVFI_DII_Instruction {
     --  padding   = 0,
     --  rvfi_cmd  = rvfi_cmd_end,
@@ -76,7 +76,7 @@ main = withSocketsDo $ do
         return addr
     open addr = do
         sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
-        connect sock $ addrAddress addr
+        connect sock (addrAddress addr)
         return sock
 
 prop :: Socket -> Socket -> [RVFI_DII_Instruction] -> Property
@@ -89,9 +89,9 @@ prop modSoc impSoc instTrace = monadicIO $ run $ do
                                           }])
   sendInstructionTrace modSoc instTraceTerminated
   sendInstructionTrace impSoc instTraceTerminated
-  putStr(" receive the model ")
+  --putStr(" receive the model ")
   modTrace <- receiveExecutionTrace modSoc
-  putStr(" and now implementation ")
+  --putStr(" and now implementation ")
   impTrace <- receiveExecutionTrace impSoc
   return (and (zipWith compareExecutionTraceEntry modTrace impTrace))
   
@@ -113,7 +113,7 @@ receiveExecutionTrace :: Socket -> IO ([RVFI_DII_Execution])
 receiveExecutionTrace sock = do
   msg <- recv sock 88
   let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
-  print traceEntry
+  -- print traceEntry
   if ((rvfi_halt traceEntry) == 1)
     then return [traceEntry]
     else do

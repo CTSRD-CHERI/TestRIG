@@ -53,17 +53,19 @@ data RVFI_DII_Instruction = RVFI_DII_Instruction {
   rvfi_cmd  :: Int8,
   rvfi_time :: Int16,
   rvfi_ins_insn :: Int32
-} deriving (Show, Generic)
+} deriving (Generic)
 instance Binary RVFI_DII_Instruction
 instance Arbitrary RVFI_DII_Instruction where
   arbitrary = do
-    inst <- gen
+    inst <- genArithmetic
     return RVFI_DII_Instruction {
       padding   = 0,
       rvfi_cmd  = rvfi_cmd_instruction,
       rvfi_time = 1,
       rvfi_ins_insn = fromInteger inst
     }
+instance Show RVFI_DII_Instruction where
+  show inst_tok = pretty (toInteger (rvfi_ins_insn inst_tok))
 
 data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_intr :: Int8,

@@ -79,6 +79,7 @@ sh      = "imm[11:5] rs2[4:0] rs1[4:0] 001 imm[4:0] 0100011"
 sw      = "imm[11:5] rs2[4:0] rs1[4:0] 010 imm[4:0] 0100011"
 fence   = "0000 pred[3:0] succ[3:0] 00000 000 00000 0001111"
 fence_i = "0000 0000 0000 00000 001 00000 0001111"
+resrvd  = "0000 0000 0000 00000 000 00000 0000000"
 
 -----------------------------
 -- Instruction pretty printer
@@ -163,6 +164,7 @@ pretty instr =
   , sw      --> prettyS "sw"
   , fence   --> prettyF
   , fence_i --> "fence_i"
+  , resrvd  --> "reserved"
   ]
 
 -------------------------------
@@ -195,8 +197,8 @@ bits w = choose (0, 2^w - 1)
 offset :: Gen Integer
 offset = oneof [return 0, return 1, return 64, return 65] 
  
-gen :: Gen Integer
-gen =
+genAll :: Gen Integer
+genAll =
   frequency [
     (8,  encode add   src src dest)
   , (8,  encode slt   src src dest)
@@ -208,17 +210,17 @@ gen =
   , (8,  encode srl   src src dest)
   , (8,  encode sub   src src dest)
   , (8,  encode sra   src src dest)
-  , (8,  encode addi  (bits 12) src dest)
+  , (128,  encode addi  (bits 12) src dest)
   , (8,  encode slti  (bits 12) src dest)
   , (8,  encode sltiu (bits 12) src dest)
   , (8,  encode andi  (bits 12) src dest)
   , (8,  encode ori   (bits 12) src dest)
-  , (8,  encode xori  (bits 12) src dest)
+  , (128,  encode xori  (bits 12) src dest)
   , (8,  encode slli  (bits 12) src dest)
   , (8,  encode srli  (bits 12) src dest)
   , (8,  encode srai  (bits 12) src dest)
-  , (8,  encode lui   (bits 20) dest)
-  , (8,  encode auipc (bits 20) dest)
+  , (128,  encode lui   (bits 20) dest)
+  , (128,  encode auipc (bits 20) dest)
   , (8,  encode jal   (bits 20) dest)
   , (8,  encode jalr  (bits 12) src dest)
   , (8,  encode beq   (bits 12) src src)
@@ -235,4 +237,29 @@ gen =
   , (8,  encode sw    offset src src)
   , (8,  encode fence (bits 4) (bits 4))
   , (8,  encode fence_i)
+  ]
+
+genArithmetic :: Gen Integer
+genArithmetic =
+  frequency [
+    (8,  encode add   src src dest)
+  , (8,  encode slt   src src dest)
+  , (8,  encode sltu  src src dest)
+  , (8,  encode andr  src src dest)
+  , (8,  encode orr   src src dest)
+  , (8,  encode xorr  src src dest)
+  , (8,  encode sll   src src dest)
+  , (8,  encode srl   src src dest)
+  , (8,  encode sub   src src dest)
+  , (8,  encode sra   src src dest)
+  , (128,  encode addi  (bits 12) src dest)
+  , (8,  encode slti  (bits 12) src dest)
+  , (8,  encode sltiu (bits 12) src dest)
+  , (8,  encode andi  (bits 12) src dest)
+  , (8,  encode ori   (bits 12) src dest)
+  , (128,  encode xori  (bits 12) src dest)
+  , (8,  encode slli  (bits 12) src dest)
+  , (8,  encode srli  (bits 12) src dest)
+  , (8,  encode srai  (bits 12) src dest)
+  , (128,  encode lui   (bits 20) dest)
   ]
