@@ -59,7 +59,7 @@ main = withSocketsDo $ do
     modSoc <- open addrMod
     impSoc <- open addrImp
     --instTrace <- sequence (take 8 (repeat generateInstructionTraceEntry))
-    quickCheck (withMaxSuccess 100 (prop modSoc impSoc))
+    verboseCheck (withMaxSuccess 100 (prop modSoc impSoc))
     --success <- prop modSoc impSoc (instTrace ++ [RVFI_DII_Instruction {
     --  padding   = 0,
     --  rvfi_cmd  = rvfi_cmd_end,
