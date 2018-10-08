@@ -59,7 +59,7 @@ main = withSocketsDo $ do
     modSoc <- open addrMod
     impSoc <- open addrImp
     --instTrace <- sequence (take 8 (repeat generateInstructionTraceEntry))
-    quickCheck (prop modSoc impSoc)
+    verboseCheck (withMaxSuccess 3 (prop modSoc impSoc))
     --success <- prop modSoc impSoc (instTrace ++ [RVFI_DII_Instruction {
     --  padding   = 0,
     --  rvfi_cmd  = rvfi_cmd_end,
@@ -89,7 +89,9 @@ prop modSoc impSoc instTrace = monadicIO $ run $ do
                                           }])
   sendInstructionTrace modSoc instTraceTerminated
   sendInstructionTrace impSoc instTraceTerminated
+  putStr(" receive the model ")
   modTrace <- receiveExecutionTrace modSoc
+  putStr(" and now implementation ")
   impTrace <- receiveExecutionTrace impSoc
   return (and (zipWith compareExecutionTraceEntry modTrace impTrace))
   
@@ -110,14 +112,16 @@ sendInstruction sock inst = do
 receiveExecutionTrace :: Socket -> IO ([RVFI_DII_Execution])
 receiveExecutionTrace sock = do
   msg <- recv sock 88
-  let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution in
-    if ((rvfi_halt traceEntry) == 1)
-      then return [traceEntry]
-      else do
-        remainderOfTrace <- receiveExecutionTrace sock
-        return (traceEntry:remainderOfTrace)
+  let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
+  print traceEntry
+  if ((rvfi_halt traceEntry) == 1)
+    then return [traceEntry]
+    else do
+      remainderOfTrace <- receiveExecutionTrace sock
+      return (traceEntry:remainderOfTrace)
 
 -- Compare two execution trace entries
 compareExecutionTraceEntry :: RVFI_DII_Execution -> RVFI_DII_Execution -> Bool
 compareExecutionTraceEntry modEntry impEntry =
-  (rvfi_exe_insn modEntry) == (rvfi_exe_insn impEntry)
+  (rvfi_exe_insn modEntry) == (rvfi_exe_insn impEntry) &&
+  (rvfi_rd_wdata modEntry) == (rvfi_rd_wdata impEntry)
