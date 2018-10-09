@@ -64,6 +64,17 @@ instance Arbitrary RVFI_DII_Instruction where
       rvfi_time = 1,
       rvfi_ins_insn = fromInteger inst
     }
+
+rvfi_dii_gen :: Gen Integer -> Gen RVFI_DII_Instruction
+rvfi_dii_gen instGenerator = do
+  inst <- instGenerator
+  return RVFI_DII_Instruction {
+    padding   = 0,
+    rvfi_cmd  = rvfi_cmd_instruction,
+    rvfi_time = 1,
+    rvfi_ins_insn = (fromInteger inst)
+  }
+
 instance Show RVFI_DII_Instruction where
   show inst_tok = pretty (toInteger (rvfi_ins_insn inst_tok))
 

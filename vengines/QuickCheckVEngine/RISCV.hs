@@ -200,17 +200,7 @@ offset = oneof [return 0, return 1, return 64, return 65]
 genAll :: Gen Integer
 genAll =
   frequency [
-    (8,  encode add   src src dest)
-  , (8,  encode slt   src src dest)
-  , (8,  encode sltu  src src dest)
-  , (8,  encode andr  src src dest)
-  , (8,  encode orr   src src dest)
-  , (8,  encode xorr  src src dest)
-  , (8,  encode sll   src src dest)
-  , (8,  encode srl   src src dest)
-  , (8,  encode sub   src src dest)
-  , (8,  encode sra   src src dest)
-  , (128,  encode addi  (bits 12) src dest)
+    (128,  encode addi  (bits 12) src dest)
   , (8,  encode slti  (bits 12) src dest)
   , (8,  encode sltiu (bits 12) src dest)
   , (8,  encode andi  (bits 12) src dest)
@@ -262,4 +252,22 @@ genArithmetic =
   , (8,  encode srli  (bits 12) src dest)
   , (8,  encode srai  (bits 12) src dest)
   , (128,  encode lui   (bits 20) dest)
+  ]
+
+genMemory :: Gen Integer
+genMemory =
+  frequency [
+    (64,  encode addi  (oneof [return 8, return (-8)]) src dest)
+  , (64,  encode ori   (oneof [return 0x8]) src dest)
+  , (128, encode auipc (oneof [return 0x8000]) dest)
+  , (8,  encode lb    offset src dest)
+  , (8,  encode lbu   offset src dest)
+  , (8,  encode lh    offset src dest)
+  , (8,  encode lhu   offset src dest)
+  , (8,  encode lw    offset src dest)
+  , (8,  encode sb    offset src src)
+  , (8,  encode sh    offset src src)
+  , (8,  encode sw    offset src src)
+  , (8,  encode fence (bits 4) (bits 4))
+  , (8,  encode fence_i)
   ]

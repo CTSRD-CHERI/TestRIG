@@ -51,6 +51,7 @@ import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import RVFI_DII
+import RISCV
 
 main :: IO ()
 main = withSocketsDo $ do
@@ -58,15 +59,11 @@ main = withSocketsDo $ do
     addrImp <- resolve "127.0.0.1" "5001"
     modSoc <- open addrMod
     impSoc <- open addrImp
-    --instTrace <- sequence (take 8 (repeat generateInstructionTraceEntry))
-    verboseCheck (withMaxSuccess 100 (prop modSoc impSoc))
-    --success <- prop modSoc impSoc (instTrace ++ [RVFI_DII_Instruction {
-    --  padding   = 0,
-    --  rvfi_cmd  = rvfi_cmd_end,
-    --  rvfi_time = 1,
-    --  rvfi_ins_insn = 0
-    --}])
-    --putStr (show success)
+    let check gen = quickCheck (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+    
+    check genArithmetic
+    check genMemory
+    
     close modSoc
     close impSoc
   where
@@ -78,9 +75,9 @@ main = withSocketsDo $ do
         sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
         connect sock (addrAddress addr)
         return sock
-
-prop :: Socket -> Socket -> [RVFI_DII_Instruction] -> Property
-prop modSoc impSoc instTrace = monadicIO $ run $ do
+        
+prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Property
+prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
   let instTraceTerminated = (instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
@@ -89,12 +86,11 @@ prop modSoc impSoc instTrace = monadicIO $ run $ do
                                           }])
   sendInstructionTrace modSoc instTraceTerminated
   sendInstructionTrace impSoc instTraceTerminated
-  --putStr(" receive the model ")
+  --print " model          Trace "
   modTrace <- receiveExecutionTrace modSoc
-  --putStr(" and now implementation ")
+  --print " implementation Trace "
   impTrace <- receiveExecutionTrace impSoc
-  return (and (zipWith compareExecutionTraceEntry modTrace impTrace))
-  
+  return (and (zipWith compareExecutionTraceEntry modTrace impTrace)))))
   
 -- Send an instruction trace
 sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
@@ -113,7 +109,7 @@ receiveExecutionTrace :: Socket -> IO ([RVFI_DII_Execution])
 receiveExecutionTrace sock = do
   msg <- recv sock 88
   let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
-  -- print traceEntry
+  --print traceEntry
   if ((rvfi_halt traceEntry) == 1)
     then return [traceEntry]
     else do
