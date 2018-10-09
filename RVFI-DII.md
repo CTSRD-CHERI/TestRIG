@@ -1,10 +1,10 @@
-# RVFI-DII Spec
+# RVFI-DII Specification
 
 RVFI-DII (Risc-V Formal Interface - Direct Instruction Injection) is based on RVFI from
-Clifford Wolf used for formal verification of Risc-V implementations, but adds the instruction
+Clifford Wolf used for formal verification of Risc-V implementations. It adds an instruction
 trace format and standardises a packet format for the execution trace.
 
-The RVFI-DII spec is composed of two packet structures designed to send across sockets.
+RVFI-DII is composed of two packet structures designed to send across sockets.
  * The **instruction trace** format that is sent from the vengine to the implementation
  * The **execution trace** format that is reported from the implementation to the vengine
 
@@ -51,6 +51,7 @@ struct RVFI_DII_Execution_Packet {
 ~~~
 
 # Other TestRIG Requirements
+
 TestRIG efficiently verifies a measure of equivelance between a model and an implementation at the cost of constructing
 a test harness for the design.
 Specifically:
@@ -62,8 +63,8 @@ This requirement is very similar to standard RVFI support recommended by Cliffor
 for interoperability between verification tools.
 
 ## Direct Instruction Injection
-A pipeline that can be verified using TestRIG must support direct instruction injection.
-That is, the ICache and any branch prediction is bypassed to consume instructions directly from a queue populated
+An implementation that can be verified using TestRIG must support direct instruction injection.
+That is, any ICache and branch prediction mechanism must be bypassed, and instructions should be consumed
 from the RVFI-DII socket interface.
 The Bluespec HDL example receives instruction traces from the RVFI-DII socket and fills a FIFO until it receives
 an **EndOfTrace** token, indicating that the FIFO holds a complete instruction trace.
@@ -71,7 +72,7 @@ It then begins injecting instructions when a 16-bit counter is equal to the valu
 This preserves timing relationships between instructions even as the vengine eliminates intervening instructions.
 
 ## TestRIG-triggered Reset
-The design must reset on each receibt of an **EndOfTrace** command from the RVFI-DII instruction trace socket.
+The design must reset on each **EndOfTrace** command from the RVFI-DII instruction trace socket.
 That is, all general-purpose register values must be set to zero, CSRs to reset value, and memory to zero.
 
 ## 64KiB Memory at 0x80000000
