@@ -59,7 +59,7 @@ main = withSocketsDo $ do
     addrImp <- resolve "127.0.0.1" "5001"
     modSoc <- open addrMod
     impSoc <- open addrImp
-    let check gen = quickCheck (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+    let check gen = verboseCheck (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
     
     check genArithmetic
     check genMemory
@@ -86,10 +86,13 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
                                           }])
   sendInstructionTrace modSoc instTraceTerminated
   sendInstructionTrace impSoc instTraceTerminated
-  --print " model          Trace "
+  
   modTrace <- receiveExecutionTrace modSoc
-  --print " implementation Trace "
   impTrace <- receiveExecutionTrace impSoc
+  --print " model          Trace "
+  print modTrace
+  --print " implementation Trace "
+  print impTrace
   return (and (zipWith compareExecutionTraceEntry modTrace impTrace)))))
   
 -- Send an instruction trace

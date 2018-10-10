@@ -257,9 +257,9 @@ genArithmetic =
 genMemory :: Gen Integer
 genMemory =
   frequency [
-    (64,  encode addi  (oneof [return 8, return (-8)]) src dest)
+    (64,  encode addi  (oneof [return 0x8, return 0xFF8]) src dest)
   , (64,  encode ori   (oneof [return 0x8]) src dest)
-  , (128, encode auipc (oneof [return 0x8000]) dest)
+  --, (128, encode auipc (oneof [return 0x8000]) dest)
   , (8,  encode lb    offset src dest)
   , (8,  encode lbu   offset src dest)
   , (8,  encode lh    offset src dest)

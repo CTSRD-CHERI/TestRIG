@@ -41,6 +41,7 @@ module RVFI_DII where
 
 import Data.Word
 import Data.Binary
+import Numeric (showHex, showIntAtBase)
 import GHC.Generics (Generic)
 import Test.QuickCheck
 import RISCV
@@ -97,5 +98,11 @@ data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_pc_wdata :: Word64,
   rvfi_pc_rdata :: Word64,
   rvfi_order :: Word64
-} deriving (Show, Generic)
+} deriving (Generic)
 instance Binary RVFI_DII_Execution
+
+instance Show RVFI_DII_Execution where
+  show tok = "  PC:0x" ++ (showHex (rvfi_pc_rdata tok) "") ++
+             "  Rd:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
+             "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
+             "  In:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"
