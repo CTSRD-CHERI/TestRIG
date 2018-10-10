@@ -174,20 +174,21 @@ pretty instr =
 -- Generate random destination register
 -- Use 6 registers with a geometic distribution
 dest :: Gen Integer
-dest =
-  frequency [
-    (32, return 1)
-  , (16, return 2)
-  , (8,  return 3)
-  , (4,  return 4)
-  , (2,  return 5)
-  , (1,  return 0)
-  ]
+dest = choose (1, 2)
+-- dest =
+--   frequency [
+--     (32, return 1)
+--   , (16, return 2)
+--   , (8,  return 3)
+--   , (4,  return 4)
+--   , (2,  return 5)
+--   , (1,  return 0)
+--   ]
 
 -- Generate random source register
 -- Use 6 registers with a uniform distribution
 src :: Gen Integer
-src = choose (0, 5)
+src = choose (1, 2)
 
 -- Generate random integer with given bit-width
 bits :: Int -> Gen Integer
@@ -195,7 +196,7 @@ bits w = choose (0, 2^w - 1)
 
 -- Generate memory offset
 offset :: Gen Integer
-offset = oneof [return 0, return 1, return 64, return 65] 
+offset = oneof [return 0, return 4, return 64, return 68] 
  
 genAll :: Gen Integer
 genAll =
@@ -257,17 +258,17 @@ genArithmetic =
 genMemory :: Gen Integer
 genMemory =
   frequency [
-    (64,  encode addi  (oneof [return 0x8, return 0xFF8]) src dest)
-  , (64,  encode ori   (oneof [return 0x8]) src dest)
-  --, (128, encode auipc (oneof [return 0x8000]) dest)
+  --  (16,  encode addi (oneof [return 0x8, return 0xFF8]) src dest)
+  --, (16,  encode ori  (oneof [return 0x8]) src dest)
+    (32, encode lui  (oneof [return 0x80008]) dest)
   , (8,  encode lb    offset src dest)
-  , (8,  encode lbu   offset src dest)
-  , (8,  encode lh    offset src dest)
-  , (8,  encode lhu   offset src dest)
+  --, (8,  encode lbu   offset src dest)
+  --, (8,  encode lh    offset src dest)
+  --, (8,  encode lhu   offset src dest)
   , (8,  encode lw    offset src dest)
   , (8,  encode sb    offset src src)
-  , (8,  encode sh    offset src src)
+  --, (8,  encode sh    offset src src)
   , (8,  encode sw    offset src src)
-  , (8,  encode fence (bits 4) (bits 4))
-  , (8,  encode fence_i)
+  --, (8,  encode fence (bits 4) (bits 4))
+  --, (8,  encode fence_i)
   ]
