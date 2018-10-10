@@ -23,6 +23,10 @@ struct RVFI_DII_Instruction_Packet {
 }
 ~~~
 
+The **rvfi_cmd** field currently has two values defined:  
+0 = **EndOfTrace** // Reset the implemenation, including registers, memory, and PC (to 0x80000000)  
+1 = **Instruction** // Execute the instruction in rvfi_insn  
+
 ## RVFI-DII Execution Packet (88 bytes)
 ~~~
 struct RVFI_DII_Execution_Packet {
