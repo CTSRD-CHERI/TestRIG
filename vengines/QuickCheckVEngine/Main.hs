@@ -50,6 +50,7 @@ import Text.Printf
 import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
+import System.Exit
 import RVFI_DII
 import RISCV
 
@@ -59,10 +60,23 @@ main = withSocketsDo $ do
     addrImp <- resolve "127.0.0.1" "5001"
     modSoc <- open addrMod
     impSoc <- open addrImp
-    let check gen = verboseCheck (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+    let check gen = do
+          result <- verboseCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+          case result of
+             Failure {} -> do
+               --mapM putStrLn (failingTestCase result)
+               --exitSuccess
+               return ()
+             other -> return ()
     
+    print "RV32I Arithmetic Verification:"
     check genArithmetic
+    print "RV32I Memory Verification:"
     check genMemory
+    print "RV32I Control Flow Verification:"
+    check genControlFlow
+    print "RV32I All Verification:"
+    check genAll
     
     close modSoc
     close impSoc
@@ -89,9 +103,9 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
   
   modTrace <- receiveExecutionTrace modSoc
   impTrace <- receiveExecutionTrace impSoc
-  --print " model          Trace "
+  print " model          Trace "
   print modTrace
-  --print " implementation Trace "
+  print " implementation Trace "
   print impTrace
   return (and (zipWith compareExecutionTraceEntry modTrace impTrace)))))
   

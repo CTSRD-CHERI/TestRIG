@@ -78,6 +78,7 @@ rvfi_dii_gen instGenerator = do
 
 instance Show RVFI_DII_Instruction where
   show inst_tok = pretty (toInteger (rvfi_ins_insn inst_tok))
+  showList inst_toks = showString (unlines (map show inst_toks))
 
 data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_intr :: Word8,

@@ -62,7 +62,7 @@ srai    = "0100000 imm[4:0] rs1[4:0] 101 rd[4:0] 0010011"
 lui     = "imm[19:0] rd[4:0] 0110111"
 auipc   = "imm[19:0] rd[4:0] 0010111"
 jal     = "imm[19:19] imm[9:0] imm[10:10] imm[18:11] rd[4:0] 1101111"
-jalr    = "imm[11:0] rs1[4:0] 010 rd[4:0] 0100011"
+jalr    = "imm[11:0] rs1[4:0] 000 rd[4:0] 1100011"
 beq     = "im[11:11] im[9:4] rs2[4:0] rs1[4:0] 000 im[3:0] im[10:10] 1100011"
 bne     = "im[11:11] im[9:4] rs2[4:0] rs1[4:0] 001 im[3:0] im[10:10] 1100011"
 blt     = "im[11:11] im[9:4] rs2[4:0] rs1[4:0] 100 im[3:0] im[10:10] 1100011"
@@ -174,7 +174,7 @@ pretty instr =
 -- Generate random destination register
 -- Use 6 registers with a geometic distribution
 dest :: Gen Integer
-dest = choose (1, 2)
+dest = choose (0, 5)
 -- dest =
 --   frequency [
 --     (32, return 1)
@@ -188,15 +188,19 @@ dest = choose (1, 2)
 -- Generate random source register
 -- Use 6 registers with a uniform distribution
 src :: Gen Integer
-src = choose (1, 2)
+src = choose (0, 5)
 
 -- Generate random integer with given bit-width
 bits :: Int -> Gen Integer
 bits w = choose (0, 2^w - 1)
 
+-- Power of two values clustered around 1.
+geomBits :: Int -> Int -> Gen Integer
+geomBits hi lo = frequency [(2^(32-i), return (2^i))| i <- [lo..(hi-1)]]
+
 -- Generate memory offset
 offset :: Gen Integer
-offset = oneof [return 0, return 4, return 64, return 68] 
+offset = oneof [return 0, return 1, return 64, return 65]
  
 genAll :: Gen Integer
 genAll =
@@ -258,17 +262,29 @@ genArithmetic =
 genMemory :: Gen Integer
 genMemory =
   frequency [
-  --  (16,  encode addi (oneof [return 0x8, return 0xFF8]) src dest)
-  --, (16,  encode ori  (oneof [return 0x8]) src dest)
-    (32, encode lui  (oneof [return 0x80008]) dest)
-  , (8,  encode lb    offset src dest)
-  --, (8,  encode lbu   offset src dest)
-  --, (8,  encode lh    offset src dest)
-  --, (8,  encode lhu   offset src dest)
-  , (8,  encode lw    offset src dest)
-  , (8,  encode sb    offset src src)
-  --, (8,  encode sh    offset src src)
-  , (8,  encode sw    offset src src)
-  --, (8,  encode fence (bits 4) (bits 4))
-  --, (8,  encode fence_i)
+    (8,  encode addi (geomBits 11 2) src dest)
+  , (8,  encode ori  (geomBits 11 2) src dest)
+  , (16, encode lui  (oneof [return 0x80008]) dest)
+  , (8,  encode lb    (geomBits 11 0) src dest)
+  , (8,  encode lbu   (geomBits 11 0) src dest)
+  , (8,  encode lh    (geomBits 11 1) src dest)
+  , (8,  encode lhu   (geomBits 11 1) src dest)
+  , (8,  encode lw    (geomBits 11 2) src dest)
+  , (8,  encode sb    (geomBits 11 0) src src)
+  , (8,  encode sh    (geomBits 11 1) src src)
+  , (8,  encode sw    (geomBits 11 2) src src)
+  , (2,  encode fence (bits 4) (bits 4))
+  , (2,  encode fence_i)
+  ]
+
+genControlFlow :: Gen Integer
+genControlFlow =
+  frequency [
+  --  (8,  encode auipc (bits 20) dest)
+    (8,  encode jal   (bits 20) dest)
+  , (8,  encode jalr  (bits 12) src dest)
+  , (8,  encode beq   (bits 12) src src)
+  , (8,  encode bne   (bits 12) src src)
+  , (8,  encode bge   (bits 12) src src)
+  , (8,  encode bgeu  (bits 12) src src)
   ]
