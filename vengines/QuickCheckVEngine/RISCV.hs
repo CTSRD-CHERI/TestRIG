@@ -62,7 +62,7 @@ srai    = "0100000 imm[4:0] rs1[4:0] 101 rd[4:0] 0010011"
 lui     = "imm[19:0] rd[4:0] 0110111"
 auipc   = "imm[19:0] rd[4:0] 0010111"
 jal     = "imm[19:19] imm[9:0] imm[10:10] imm[18:11] rd[4:0] 1101111"
-jalr    = "imm[11:0] rs1[4:0] 000 rd[4:0] 1100011"
+jalr    = "imm[11:0] rs1[4:0] 000 rd[4:0] 1100111"
 beq     = "im[11:11] im[9:4] rs2[4:0] rs1[4:0] 000 im[3:0] im[10:10] 1100011"
 bne     = "im[11:11] im[9:4] rs2[4:0] rs1[4:0] 001 im[3:0] im[10:10] 1100011"
 blt     = "im[11:11] im[9:4] rs2[4:0] rs1[4:0] 100 im[3:0] im[10:10] 1100011"
@@ -205,17 +205,17 @@ offset = oneof [return 0, return 1, return 64, return 65]
 genAll :: Gen Integer
 genAll =
   frequency [
-    (128,  encode addi  (bits 12) src dest)
+    (8,  encode addi  (bits 12) src dest)
   , (8,  encode slti  (bits 12) src dest)
   , (8,  encode sltiu (bits 12) src dest)
   , (8,  encode andi  (bits 12) src dest)
   , (8,  encode ori   (bits 12) src dest)
-  , (128,  encode xori  (bits 12) src dest)
+  , (8,  encode xori  (bits 12) src dest)
   , (8,  encode slli  (bits 12) src dest)
   , (8,  encode srli  (bits 12) src dest)
   , (8,  encode srai  (bits 12) src dest)
-  , (128,  encode lui   (bits 20) dest)
-  , (128,  encode auipc (bits 20) dest)
+  , (32,  encode lui   (bits 20) dest)
+  , (32,  encode auipc (bits 20) dest)
   , (8,  encode jal   (bits 20) dest)
   , (8,  encode jalr  (bits 12) src dest)
   , (8,  encode beq   (bits 12) src src)
@@ -247,23 +247,23 @@ genArithmetic =
   , (8,  encode srl   src src dest)
   , (8,  encode sub   src src dest)
   , (8,  encode sra   src src dest)
-  , (128,  encode addi  (bits 12) src dest)
+  , (16, encode addi  (bits 12) src dest)
   , (8,  encode slti  (bits 12) src dest)
   , (8,  encode sltiu (bits 12) src dest)
   , (8,  encode andi  (bits 12) src dest)
   , (8,  encode ori   (bits 12) src dest)
-  , (128,  encode xori  (bits 12) src dest)
+  , (16, encode xori  (bits 12) src dest)
   , (8,  encode slli  (bits 12) src dest)
   , (8,  encode srli  (bits 12) src dest)
   , (8,  encode srai  (bits 12) src dest)
-  , (128,  encode lui   (bits 20) dest)
+  , (16, encode lui   (bits 20) dest)
   ]
 
 genMemory :: Gen Integer
 genMemory =
   frequency [
-    (8,  encode addi (geomBits 11 2) src dest)
-  , (8,  encode ori  (geomBits 11 2) src dest)
+    (8,  encode addi (geomBits 11 0) src dest)
+  , (8,  encode ori  (geomBits 11 0) src dest)
   , (16, encode lui  (oneof [return 0x80008]) dest)
   , (8,  encode lb    (geomBits 11 0) src dest)
   , (8,  encode lbu   (geomBits 11 0) src dest)
@@ -280,8 +280,10 @@ genMemory =
 genControlFlow :: Gen Integer
 genControlFlow =
   frequency [
-  --  (8,  encode auipc (bits 20) dest)
-    (8,  encode jal   (bits 20) dest)
+    (8,  encode addi (geomBits 11 2) src dest)
+  , (8,  encode ori  (geomBits 11 2) src dest)
+  , (8,  encode auipc (bits 20) dest)
+  , (8,  encode jal   (bits 20) dest)
   , (8,  encode jalr  (bits 12) src dest)
   , (8,  encode beq   (bits 12) src src)
   , (8,  encode bne   (bits 12) src src)
