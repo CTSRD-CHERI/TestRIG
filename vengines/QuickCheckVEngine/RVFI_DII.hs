@@ -102,8 +102,17 @@ data RVFI_DII_Execution = RVFI_DII_Execution {
 } deriving (Generic)
 instance Binary RVFI_DII_Execution
 
+instance Eq RVFI_DII_Execution where
+  x == y =
+    (rvfi_exe_insn x) == (rvfi_exe_insn y) &&
+    (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
+    (rvfi_mem_addr x) == (rvfi_mem_addr y) &&
+    (rvfi_pc_wdata x) == (rvfi_pc_wdata y) &&
+    (rvfi_mem_wdata x) == (rvfi_mem_wdata y)
+
 instance Show RVFI_DII_Execution where
-  show tok = "  PC:0x" ++ (showHex (rvfi_pc_rdata tok) "") ++
+  show tok = "  nPC:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
              "  Rd:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
              "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
+             "  MD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
              "  In:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"

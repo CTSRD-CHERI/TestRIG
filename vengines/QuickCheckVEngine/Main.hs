@@ -61,7 +61,7 @@ main = withSocketsDo $ do
     modSoc <- open addrMod
     impSoc <- open addrImp
     let check gen = do
-          result <- quickCheckResult (withMaxSuccess 1000 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+          result <- verboseCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
           case result of
              Failure {} -> do
                --mapM putStrLn (failingTestCase result)
@@ -107,7 +107,7 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
   --print modTrace
   --print " implementation Trace "
   --print impTrace
-  return (and (zipWith compareExecutionTraceEntry modTrace impTrace)))))
+  --return (and (zipWith (==) modTrace impTrace)))))
   
 -- Send an instruction trace
 sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
@@ -132,9 +132,3 @@ receiveExecutionTrace sock = do
     else do
       remainderOfTrace <- receiveExecutionTrace sock
       return (traceEntry:remainderOfTrace)
-
--- Compare two execution trace entries
-compareExecutionTraceEntry :: RVFI_DII_Execution -> RVFI_DII_Execution -> Bool
-compareExecutionTraceEntry modEntry impEntry =
-  (rvfi_exe_insn modEntry) == (rvfi_exe_insn impEntry) &&
-  (rvfi_rd_wdata modEntry) == (rvfi_rd_wdata impEntry)
