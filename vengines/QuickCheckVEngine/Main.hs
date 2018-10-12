@@ -37,6 +37,7 @@
 --
 
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main (main) where
 
 import qualified Control.Exception as E
@@ -50,25 +51,83 @@ import Text.Printf
 import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
+import System.Environment
+import System.Console.GetOpt
+import Data.Maybe ( fromMaybe )
 import System.Exit
+import System.IO
 import RVFI_DII
 import RISCV
 
+data Options = Options
+    { modelPort     :: String
+    , modelIP      :: String
+    , implPort      :: String
+    , implIP      :: String
+    , instTraceFile :: Maybe FilePath
+    } deriving Show
+
+defaultOptions    = Options
+    { modelPort     = "5000"
+    , modelIP       = "127.0.0.1"
+    , implPort      = "5001"
+    , implIP        = "127.0.0.1"
+    , instTraceFile = Nothing
+    }
+
+options :: [OptDescr (Options -> Options)]
+options =
+  [ Option ['m']     ["model_port"]
+      (ReqArg (\ f opts -> opts { modelPort = f }) "PORT")
+        "model PORT"
+  , Option ['M']     ["model_ip"]
+      (ReqArg (\ f opts -> opts { modelIP = f }) "IP")
+        "model_ip IP"
+  , Option ['i']     ["implementation_port"]
+      (ReqArg (\ f opts -> opts { implPort = f }) "PORT")
+        "implementation_port PORT"
+  , Option ['I']     ["implementation_ip"]
+      (ReqArg (\ f opts -> opts { implIP = f }) "IP")
+        "implementation_ip IP"
+  , Option ['t']     ["trace_file"]
+      (ReqArg (\ f opts -> opts { instTraceFile = Just f }) "PATH")
+        "trace_file PATH"
+  ]
+
+commandOpts :: [String] -> IO (Options, [String])
+commandOpts argv =
+  case getOpt Permute options argv of
+      (o,n,[]  ) -> return (foldl (flip id) defaultOptions o, n)
+      (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
+  where header = "Usage: ic [OPTION...] files..."
+
 main :: IO ()
 main = withSocketsDo $ do
-    addrMod <- resolve "127.0.0.1" "5000"
-    addrImp <- resolve "127.0.0.1" "5001"
+    rawArgs <- getArgs
+    (flags, leftover) <- commandOpts rawArgs
+    print flags
+    addrMod <- resolve (modelIP flags) (modelPort flags)
+    addrImp <- resolve (implIP flags) (implPort flags)
     modSoc <- open addrMod
     impSoc <- open addrImp
     let check gen = do
-          result <- verboseCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+          result <- quickCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
           case result of
-             Failure {} -> do
-               --mapM putStrLn (failingTestCase result)
-               --exitSuccess
-               return ()
-             other -> return ()
-    
+            Failure {} -> do
+              --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
+              writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
+              putStrLn "Save this trace? (y?)"
+              ans <- getLine
+              when (ans == "y" || ans == "Y") $ do
+                putStrLn "What <fileName>.S?"
+                fileName <- getLine
+                putStrLn "One-line description?"
+                comment <- getLine
+                writeFile (fileName ++ ".S") ("# " ++ comment
+                                            ++ "\n" ++ (unlines (failingTestCase result)))
+              return ()
+            other -> return ()
+
     print "RV32I Arithmetic Verification:"
     check genArithmetic
     print "RV32I Memory Verification:"
@@ -77,7 +136,7 @@ main = withSocketsDo $ do
     check genControlFlow
     print "RV32I All Verification:"
     check genAll
-    
+
     close modSoc
     close impSoc
   where
@@ -100,26 +159,26 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
                                           }])
   sendInstructionTrace modSoc instTraceTerminated
   sendInstructionTrace impSoc instTraceTerminated
-  
+
   modTrace <- receiveExecutionTrace modSoc
   impTrace <- receiveExecutionTrace impSoc
-  --print " model          Trace "
-  --print modTrace
-  --print " implementation Trace "
-  --print impTrace
+  print " model          Trace "
+  print modTrace
+  print " implementation Trace "
+  print impTrace
   return (and (zipWith (==) modTrace impTrace)))))
-  
+
 -- Send an instruction trace
 sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
 sendInstructionTrace sock instTrace =
   mapM_ (sendInstruction sock) instTrace
-  
+
 -- Send a single instruction
 sendInstruction :: Socket -> RVFI_DII_Instruction -> IO ()
 sendInstruction sock inst = do
   sendAll sock (BS.reverse (encode inst))
   return ()
-  
+
 
 -- Receive an execution trace
 receiveExecutionTrace :: Socket -> IO ([RVFI_DII_Execution])
