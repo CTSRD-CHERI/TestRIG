@@ -107,7 +107,7 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
   --print modTrace
   --print " implementation Trace "
   --print impTrace
-  --return (and (zipWith (==) modTrace impTrace)))))
+  return (and (zipWith (==) modTrace impTrace)))))
   
 -- Send an instruction trace
 sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
