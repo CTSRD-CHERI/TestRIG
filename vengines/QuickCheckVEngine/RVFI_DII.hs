@@ -111,8 +111,8 @@ instance Eq RVFI_DII_Execution where
     (rvfi_mem_wdata x) == (rvfi_mem_wdata y)
 
 instance Show RVFI_DII_Execution where
-  show tok = "  nPC:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
-             "  Rd:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
+  show tok = "  PCWD:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
+             "  RWD:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
              "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
-             "  MD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
-             "  In:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"
+             "  MWD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
+             "  I:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"
