@@ -3,6 +3,7 @@
 --
 -- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2018 Jonathan Woodruff
+-- Copyright (c) 2018 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -104,16 +105,19 @@ data RVFI_DII_Execution = RVFI_DII_Execution {
 instance Binary RVFI_DII_Execution
 
 instance Eq RVFI_DII_Execution where
-  x == y =
-    (rvfi_exe_insn x) == (rvfi_exe_insn y) &&
-    (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
-    (rvfi_mem_addr x) == (rvfi_mem_addr y) &&
-    (rvfi_pc_wdata x) == (rvfi_pc_wdata y) &&
-    (rvfi_mem_wdata x) == (rvfi_mem_wdata y)
+  x == y
+    | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
+    | otherwise = (rvfi_exe_insn x) == (rvfi_exe_insn y) &&
+                  (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
+                  (rvfi_mem_addr x) == (rvfi_mem_addr y) &&
+                  (rvfi_pc_wdata x) == (rvfi_pc_wdata y) &&
+                  (rvfi_mem_wdata x) == (rvfi_mem_wdata y)
 
 instance Show RVFI_DII_Execution where
-  show tok = "  PCWD:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
-             "  RWD:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
-             "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
-             "  MWD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
-             "  I:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"
+  show tok
+    | rvfi_halt tok /= 0 = "halt token"
+    | otherwise = "  PCWD:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
+                  "  RWD:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
+                  "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
+                  "  MWD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
+                  "  I:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"
