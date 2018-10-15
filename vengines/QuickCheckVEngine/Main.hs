@@ -167,10 +167,10 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
 
   modTrace <- receiveExecutionTrace modSoc
   impTrace <- receiveExecutionTrace impSoc
-  print " model          Trace "
-  print modTrace
-  print " implementation Trace "
-  print impTrace
+  --print " model          Trace "
+  --print modTrace
+  --print " implementation Trace "
+  --print impTrace
   return (and (zipWith (==) modTrace impTrace)))))
 
 -- Send an instruction trace
