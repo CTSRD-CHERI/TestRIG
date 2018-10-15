@@ -42,8 +42,10 @@ module RVFI_DII where
 
 import Data.Word
 import Data.Binary
-import Numeric (showHex, showIntAtBase)
+import Data.String
+import Numeric (readHex, showHex, showIntAtBase)
 import GHC.Generics (Generic)
+import System.IO 
 import Test.QuickCheck
 import RISCV
 
@@ -57,6 +59,14 @@ data RVFI_DII_Instruction = RVFI_DII_Instruction {
   rvfi_ins_insn :: Word32
 } deriving (Generic)
 instance Binary RVFI_DII_Instruction
+instance Num RVFI_DII_Instruction where
+  fromInteger i =
+    RVFI_DII_Instruction {
+      padding   = 0,
+      rvfi_cmd  = rvfi_cmd_instruction,
+      rvfi_time = 1,
+      rvfi_ins_insn = fromInteger i
+    }
 instance Arbitrary RVFI_DII_Instruction where
   arbitrary = do
     inst <- genArithmetic
@@ -81,6 +91,16 @@ instance Show RVFI_DII_Instruction where
   show inst_tok = ".4byte 0x" ++ (showHex (rvfi_ins_insn inst_tok) "")
                ++ " # " ++ pretty (toInteger (rvfi_ins_insn inst_tok))
   showList inst_toks = showString (unlines (map show inst_toks))
+
+read_rvfi_inst_trace :: FilePath -> IO [RVFI_DII_Instruction]
+read_rvfi_inst_trace inFile = do
+  handle <- openFile inFile ReadMode
+  contents <- hGetContents handle
+  let lns = drop 1 (lines contents)
+  let trimmed = filter (not . null) lns
+  let insts = map ((drop 2) .(!! 1) . words) trimmed
+  let rvfi_trace = map (fromInteger .fst . head . readHex) insts
+  return rvfi_trace
 
 data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_intr :: Word8,

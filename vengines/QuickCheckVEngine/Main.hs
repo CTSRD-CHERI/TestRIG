@@ -53,7 +53,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import System.Environment
 import System.Console.GetOpt
-import Data.Maybe ( fromMaybe )
+import Data.Maybe ( isJust, fromMaybe )
 import System.Exit
 import System.IO
 import RVFI_DII
@@ -99,46 +99,51 @@ commandOpts argv =
   case getOpt Permute options argv of
       (o,n,[]  ) -> return (foldl (flip id) defaultOptions o, n)
       (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
-  where header = "Usage: ic [OPTION...] files..."
+  where header = "Usage: QCTestRIG [OPTION...] files..."
 
 main :: IO ()
 main = withSocketsDo $ do
-    rawArgs <- getArgs
-    (flags, leftover) <- commandOpts rawArgs
-    print flags
-    addrMod <- resolve (modelIP flags) (modelPort flags)
-    addrImp <- resolve (implIP flags) (implPort flags)
-    modSoc <- open addrMod
-    impSoc <- open addrImp
-    let check gen = do
-          result <- quickCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
-          case result of
-            Failure {} -> do
-              --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
-              writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
-              putStrLn "Save this trace? (y?)"
-              ans <- getLine
-              when (ans == "y" || ans == "Y") $ do
-                putStrLn "What <fileName>.S?"
-                fileName <- getLine
-                putStrLn "One-line description?"
-                comment <- getLine
-                writeFile (fileName ++ ".S") ("# " ++ comment
-                                            ++ "\n" ++ (unlines (failingTestCase result)))
-              return ()
-            other -> return ()
+  rawArgs <- getArgs
+  (flags, leftover) <- commandOpts rawArgs
+  print flags
+  addrMod <- resolve (modelIP flags) (modelPort flags)
+  addrImp <- resolve (implIP flags) (implPort flags)
+  modSoc <- open addrMod
+  impSoc <- open addrImp
+  let check gen = do
+      result <- quickCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+      case result of
+        Failure {} -> do
+          --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
+          writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
+          putStrLn "Save this trace? (y?)"
+          ans <- getLine
+          when (ans == "y" || ans == "Y") $ do
+            putStrLn "What <fileName>.S?"
+            fileName <- getLine
+            putStrLn "One-line description?"
+            comment <- getLine
+            writeFile (fileName ++ ".S") ("# " ++ comment
+                                          ++ "\n" ++ (unlines (failingTestCase result)))
+          return ()
+        other -> return ()
+  case (instTraceFile flags) of
+    Just str -> do
+      print ("Reading trace from " ++ str ++ ":")
+      trace <- read_rvfi_inst_trace (fromMaybe "./last_failure.S" (instTraceFile flags))
+      quickCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
+    Nothing -> do
+      print "RV32I Arithmetic Verification:"
+      check genArithmetic
+      print "RV32I Memory Verification:"
+      check genMemory
+      print "RV32I Control Flow Verification:"
+      check genControlFlow
+      print "RV32I All Verification:"
+      check genAll
 
-    print "RV32I Arithmetic Verification:"
-    check genArithmetic
-    print "RV32I Memory Verification:"
-    check genMemory
-    print "RV32I Control Flow Verification:"
-    check genControlFlow
-    print "RV32I All Verification:"
-    check genAll
-
-    close modSoc
-    close impSoc
+  close modSoc
+  close impSoc
   where
     resolve host port = do
         let hints = defaultHints { addrSocketType = Stream }
@@ -162,10 +167,10 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
 
   modTrace <- receiveExecutionTrace modSoc
   impTrace <- receiveExecutionTrace impSoc
-  --print " model          Trace "
-  --print modTrace
-  --print " implementation Trace "
-  --print impTrace
+  print " model          Trace "
+  print modTrace
+  print " implementation Trace "
+  print impTrace
   return (and (zipWith (==) modTrace impTrace)))))
 
 -- Send an instruction trace
