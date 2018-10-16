@@ -52,8 +52,11 @@ import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import System.Environment
+import System.Directory
 import System.Console.GetOpt
 import Data.Maybe ( isJust, fromMaybe )
+import Data.List
+import System.FilePath.Windows
 import System.Exit
 import System.IO
 import RVFI_DII
@@ -65,6 +68,7 @@ data Options = Options
     , implPort      :: String
     , implIP      :: String
     , instTraceFile :: Maybe FilePath
+    , instDirectory :: Maybe FilePath
     } deriving Show
 
 defaultOptions    = Options
@@ -73,6 +77,7 @@ defaultOptions    = Options
     , implPort      = "5001"
     , implIP        = "127.0.0.1"
     , instTraceFile = Nothing
+    , instDirectory = Nothing
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -92,6 +97,9 @@ options =
   , Option ['t']     ["trace_file"]
       (ReqArg (\ f opts -> opts { instTraceFile = Just f }) "PATH")
         "trace_file PATH"
+  , Option ['d']     ["trace_directory"]
+      (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
+        "trace_directory PATH"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -110,7 +118,7 @@ main = withSocketsDo $ do
   addrImp <- resolve (implIP flags) (implPort flags)
   modSoc <- open addrMod
   impSoc <- open addrImp
-  let check gen = do
+  let checkGen gen = do
       result <- quickCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
       case result of
         Failure {} -> do
@@ -127,20 +135,31 @@ main = withSocketsDo $ do
                                           ++ "\n" ++ (unlines (failingTestCase result)))
           return ()
         other -> return ()
-  case (instTraceFile flags) of
-    Just str -> do
-      print ("Reading trace from " ++ str ++ ":")
-      trace <- read_rvfi_inst_trace (fromMaybe "./last_failure.S" (instTraceFile flags))
+  let checkFile (fileName :: FilePath) = do
+      print ("Reading trace from " ++ fileName ++ ":")
+      trace <- read_rvfi_inst_trace fileName
       quickCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
+  case (instTraceFile flags) of
+    Just fileName -> do
+      checkFile fileName
+      --print ("Reading trace from " ++ fileName ++ ":")
+      --trace <- read_rvfi_inst_trace fileName
+      --quickCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
     Nothing -> do
-      print "RV32I Arithmetic Verification:"
-      check genArithmetic
-      print "RV32I Memory Verification:"
-      check genMemory
-      print "RV32I Control Flow Verification:"
-      check genControlFlow
-      print "RV32I All Verification:"
-      check genAll
+      case (instDirectory flags) of
+        Just directory -> do
+          fileNames <- getDirectoryContents directory
+          let culledFileNames = filter (\x -> (takeExtension x) == ".S") fileNames
+          mapM_ checkFile culledFileNames
+        Nothing -> do
+          print "RV32I Arithmetic Verification:"
+          checkGen genArithmetic
+          print "RV32I Memory Verification:"
+          checkGen genMemory
+          print "RV32I Control Flow Verification:"
+          checkGen genControlFlow
+          print "RV32I All Verification:"
+          checkGen genAll
 
   close modSoc
   close impSoc
