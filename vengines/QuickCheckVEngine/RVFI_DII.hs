@@ -131,6 +131,7 @@ maskUpper x = (x Data.Bits..&. 0x00000000FFFFFFFF)
 instance Eq RVFI_DII_Execution where
   x == y
     | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
+    | rvfi_trap x /= 0 = (rvfi_trap x) == (rvfi_trap y)
     | otherwise = (maskUpper (rvfi_exe_insn x)) == (maskUpper (rvfi_exe_insn y)) &&
                   (maskUpper (rvfi_rd_wdata x)) == (maskUpper (rvfi_rd_wdata y)) &&
                   (maskUpper (rvfi_mem_addr x)) == (maskUpper (rvfi_mem_addr y)) &&
@@ -140,7 +141,8 @@ instance Eq RVFI_DII_Execution where
 instance Show RVFI_DII_Execution where
   show tok
     | rvfi_halt tok /= 0 = "halt token"
-    | otherwise = "  PCWD:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
+    | otherwise = "  Trap:" ++ (show ((rvfi_trap tok) /= 0)) ++
+                  "  PCWD:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
                   "  RWD:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
                   "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
                   "  MWD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
