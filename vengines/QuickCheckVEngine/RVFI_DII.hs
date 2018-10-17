@@ -41,6 +41,7 @@
 module RVFI_DII where
 
 import Data.Word
+import Data.Bits
 import Data.Binary
 import Data.String
 import Numeric (readHex, showHex, showIntAtBase)
@@ -124,14 +125,17 @@ data RVFI_DII_Execution = RVFI_DII_Execution {
 } deriving (Generic)
 instance Binary RVFI_DII_Execution
 
+maskUpper :: Word64 -> Word64
+maskUpper x = (x Data.Bits..&. 0x00000000FFFFFFFF)
+
 instance Eq RVFI_DII_Execution where
   x == y
     | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
-    | otherwise = (rvfi_exe_insn x) == (rvfi_exe_insn y) &&
-                  (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
-                  (rvfi_mem_addr x) == (rvfi_mem_addr y) &&
-                  (rvfi_pc_wdata x) == (rvfi_pc_wdata y) &&
-                  (rvfi_mem_wdata x) == (rvfi_mem_wdata y)
+    | otherwise = (maskUpper (rvfi_exe_insn x)) == (maskUpper (rvfi_exe_insn y)) &&
+                  (maskUpper (rvfi_rd_wdata x)) == (maskUpper (rvfi_rd_wdata y)) &&
+                  (maskUpper (rvfi_mem_addr x)) == (maskUpper (rvfi_mem_addr y)) &&
+                  (maskUpper (rvfi_pc_wdata x)) == (maskUpper (rvfi_pc_wdata y)) &&
+                  (maskUpper (rvfi_mem_wdata x)) == (maskUpper (rvfi_mem_wdata y))
 
 instance Show RVFI_DII_Execution where
   show tok

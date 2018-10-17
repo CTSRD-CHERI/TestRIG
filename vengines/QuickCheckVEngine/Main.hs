@@ -119,7 +119,7 @@ main = withSocketsDo $ do
   modSoc <- open addrMod
   impSoc <- open addrImp
   let checkGen gen = do
-      result <- quickCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+      result <- verboseCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
       case result of
         Failure {} -> do
           --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
@@ -138,13 +138,10 @@ main = withSocketsDo $ do
   let checkFile (fileName :: FilePath) = do
       print ("Reading trace from " ++ fileName ++ ":")
       trace <- read_rvfi_inst_trace fileName
-      quickCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
+      verboseCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
   case (instTraceFile flags) of
     Just fileName -> do
       checkFile fileName
-      --print ("Reading trace from " ++ fileName ++ ":")
-      --trace <- read_rvfi_inst_trace fileName
-      --quickCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
     Nothing -> do
       case (instDirectory flags) of
         Just directory -> do
@@ -186,10 +183,10 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
 
   modTrace <- receiveExecutionTrace modSoc
   impTrace <- receiveExecutionTrace impSoc
-  --print " model          Trace "
-  --print modTrace
-  --print " implementation Trace "
-  --print impTrace
+  print " model          Trace "
+  print modTrace
+  print " implementation Trace "
+  print impTrace
   return (and (zipWith (==) modTrace impTrace)))))
 
 -- Send an instruction trace
