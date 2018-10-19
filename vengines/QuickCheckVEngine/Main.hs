@@ -3,6 +3,7 @@
 --
 -- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2018 Jonathan Woodruff
+-- Copyright (c) 2018 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -62,17 +63,23 @@ import System.IO
 import RVFI_DII
 import RISCV
 
+-- command line arguments
+--------------------------------------------------------------------------------
 data Options = Options
-    { modelPort     :: String
-    , modelIP      :: String
+    { optVerbose    :: Bool
+    , nTests        :: Int
+    , modelPort     :: String
+    , modelIP       :: String
     , implPort      :: String
-    , implIP      :: String
+    , implIP        :: String
     , instTraceFile :: Maybe FilePath
     , instDirectory :: Maybe FilePath
     } deriving Show
 
-defaultOptions    = Options
-    { modelPort     = "5000"
+defaultOptions = Options
+    { optVerbose    = False
+    , nTests        = 100
+    , modelPort     = "5000"
     , modelIP       = "127.0.0.1"
     , implPort      = "5001"
     , implIP        = "127.0.0.1"
@@ -82,24 +89,30 @@ defaultOptions    = Options
 
 options :: [OptDescr (Options -> Options)]
 options =
-  [ Option ['m']     ["model_port"]
+  [ Option ['v']     ["verbose"]
+      (NoArg (\ opts -> opts { optVerbose = True }))
+        "--verbose"
+  , Option ['n']     ["number-of-tests"]
+      (ReqArg (\ f opts -> opts { nTests = read f }) "NUMTESTS")
+        "--number-of-tests NUMTESTS"
+  , Option ['m']     ["model-port"]
       (ReqArg (\ f opts -> opts { modelPort = f }) "PORT")
-        "model PORT"
-  , Option ['M']     ["model_ip"]
+        "--model-port PORT"
+  , Option ['M']     ["model-ip"]
       (ReqArg (\ f opts -> opts { modelIP = f }) "IP")
-        "model_ip IP"
-  , Option ['i']     ["implementation_port"]
+        "--model-ip IP"
+  , Option ['i']     ["implementation-port"]
       (ReqArg (\ f opts -> opts { implPort = f }) "PORT")
-        "implementation_port PORT"
-  , Option ['I']     ["implementation_ip"]
+        "--implementation-port PORT"
+  , Option ['I']     ["implementation-ip"]
       (ReqArg (\ f opts -> opts { implIP = f }) "IP")
-        "implementation_ip IP"
-  , Option ['t']     ["trace_file"]
+        "--implementation-ip IP"
+  , Option ['t']     ["trace-file"]
       (ReqArg (\ f opts -> opts { instTraceFile = Just f }) "PATH")
-        "trace_file PATH"
-  , Option ['d']     ["trace_directory"]
+        "--trace-file PATH"
+  , Option ['d']     ["trace-directory"]
       (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
-        "trace_directory PATH"
+        "--trace-directory PATH"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -109,17 +122,28 @@ commandOpts argv =
       (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
   where header = "Usage: QCTestRIG [OPTION...] files..."
 
+--------------------------------------------------------------------------------
+
 main :: IO ()
 main = withSocketsDo $ do
+  -- parse command line arguments
   rawArgs <- getArgs
   (flags, leftover) <- commandOpts rawArgs
-  print flags
+  when (optVerbose flags) $ print flags
+  -- initialize model and implementation sockets
   addrMod <- resolve (modelIP flags) (modelPort flags)
   addrImp <- resolve (implIP flags) (implPort flags)
   modSoc <- open addrMod
   impSoc <- open addrImp
+  --
+  let checkResult = if (optVerbose flags)
+                    then verboseCheckResult
+                    else quickCheckResult
+  let check = if (optVerbose flags)
+              then verboseCheck
+              else quickCheck
   let checkGen gen = do
-      result <- verboseCheckResult (withMaxSuccess 100 (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc))
+      result <- checkResult (withMaxSuccess (nTests flags) (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc (optVerbose flags)))
       case result of
         Failure {} -> do
           --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
@@ -138,7 +162,8 @@ main = withSocketsDo $ do
   let checkFile (fileName :: FilePath) = do
       print ("Reading trace from " ++ fileName ++ ":")
       trace <- read_rvfi_inst_trace fileName
-      verboseCheck (withMaxSuccess 1 (prop (return trace) modSoc impSoc))
+      check (withMaxSuccess 1 (prop (return trace) modSoc impSoc (optVerbose flags)))
+  --
   case (instTraceFile flags) of
     Just fileName -> do
       checkFile fileName
@@ -158,9 +183,10 @@ main = withSocketsDo $ do
           checkGen genControlFlow
           print "RV32I All Verification:"
           checkGen genAll
-
+  --
   close modSoc
   close impSoc
+  --
   where
     resolve host port = do
         let hints = defaultHints { addrSocketType = Stream }
@@ -170,9 +196,11 @@ main = withSocketsDo $ do
         sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
         connect sock (addrAddress addr)
         return sock
+
+--------------------------------------------------------------------------------
         
-prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Property
-prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
+prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Property
+prop gen modSoc impSoc doLog = forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
   let instTraceTerminated = (instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
@@ -184,11 +212,14 @@ prop gen modSoc impSoc = forAllShrink gen shrink ( \instTrace -> monadicIO ( run
 
   modTrace <- receiveExecutionTrace modSoc
   impTrace <- receiveExecutionTrace impSoc
-  print " model          Trace "
-  print modTrace
-  print " implementation Trace "
-  print impTrace
+  when doLog $ do
+    print " model          Trace "
+    print modTrace
+    print " implementation Trace "
+    print impTrace
   return (and (zipWith (==) modTrace impTrace)))))
+
+--------------------------------------------------------------------------------
 
 -- Send an instruction trace
 sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
