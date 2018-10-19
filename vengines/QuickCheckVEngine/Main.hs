@@ -147,7 +147,8 @@ main = withSocketsDo $ do
         Just directory -> do
           fileNames <- getDirectoryContents directory
           let culledFileNames = filter (\x -> (takeExtension x) == ".S") fileNames
-          mapM_ checkFile culledFileNames
+          let fullCulledFileNames = map (\x -> directory ++ "/" ++ x) culledFileNames
+          mapM_ checkFile fullCulledFileNames
         Nothing -> do
           print "RV32I Arithmetic Verification:"
           checkGen genArithmetic
