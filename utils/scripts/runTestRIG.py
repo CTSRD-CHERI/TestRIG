@@ -94,6 +94,9 @@ parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
 parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
   default='rvbs-rv32i-rvfi-dii',
   help="The PATH to the rvbs executable")
+parser.add_argument('--path-to-spike', metavar='PATH', type=str,
+  default='spike',
+  help="The PATH to the spike executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default='QCVEngine',
   help="The PATH to the QCVEngine executable")
@@ -117,22 +120,31 @@ def input_y_n(prompt):
 #########################
 
 def spawn_rvfi_dii_server(name, port, log):
+  ## few common variables
+  use_log = open(os.devnull,"w")
+  if log:
+    use_log = log
+  env2 = os.environ.copy()
+  cmd = []
+  ##############################################################################
   if (name == 'spike'):
-    print('TODO spawn spike rvfi-dii server')
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port)]
+    if log:
+      cmd += ["-l"]
+  ##############################################################################
   elif (name == 'rvbs'):
-    env2 = os.environ.copy()
     env2["RVFI_DII_PORT"] = str(port)
     cmd = [args.path_to_rvbs]
-    use_log = open(os.devnull,"w")
     if log:
       cmd += ["+itrace"]
-      use_log = log
-    p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
-    print('spawned rvbs rvfi-dii server on port: {:d}'.format(port))
-    return p
+  ##############################################################################
   else:
     print("Unknown rvfi-dii server {:s}".format(name))
     exit(0)
+  ##############################################################################
+  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
+  print('spawned {:s} rvfi-dii server on port: {:d}'.format(name, port))
+  return p
 
 #############################
 # spawn verification engine #
