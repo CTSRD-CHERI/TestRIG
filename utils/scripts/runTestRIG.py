@@ -37,6 +37,7 @@ import argparse
 import os
 import os.path as op
 import subprocess as sub
+import time
 
 ################################
 # Parse command line arguments #
@@ -51,20 +52,41 @@ def auto_pos_int (x):
     raise argparse.ArgumentTypeError("argument must be a positive int. Got {:d}.".format(val))
   return val
 
+def auto_write_fd (fname):
+  return open(fname, 'w')
+
 known_rvfi_dii = set({'spike','rvbs'})
-known_vengine  = set({'QCTestRIG'})
+known_vengine  = set({'QCVEngine'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
+# model args
 parser.add_argument('-m', '--model', metavar='MODEL', choices=known_rvfi_dii,
   default='spike',
   help="The model to use. (one of {:s})".format(str(known_rvfi_dii)))
+parser.add_argument('--model-port', metavar='PORT', type=auto_int, default=5000,
+  help="The port to use for the model rvfi-dii server")
+parser.add_argument('--model-log', metavar='PATH',
+  default=None, type=auto_write_fd,
+  #nargs='?', const=sub.PIPE,
+  help="Turn on logging for the model rvfi-dii server (optionally specifying a file path)")
+# implementation args
 parser.add_argument('-i', '--implementation', metavar='IMPL', choices=known_rvfi_dii,
   default='rvbs',
   help="The implementation to use. (one of {:s})".format(str(known_rvfi_dii)))
+parser.add_argument('--implementation-port', metavar='PORT', type=auto_int, default=5001,
+  help="The port to use for the implementation rvfi-dii server")
+parser.add_argument('--implementation-log', metavar='PATH',
+  default=None, type=auto_write_fd,
+  #nargs='?', const=sub.PIPE,
+  help="Turn on logging for the implementation rvfi-dii server (optionally specifying a file path)")
+# verification engine args
 parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known_vengine,
-  default='QCTestRIG',
+  default='QCVEngine',
   help="The verification engine to use. (one of {:s})".format(str(known_vengine)))
+# general configuration args
+parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=1, type=auto_int,
+  help="Specify a number of seconds to wait between server creation and verification engine startup.")
 parser.add_argument('-v', '--verbose', action='count', default=0,
   help="Increase verbosity level by adding more \"v\".")
 parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
@@ -72,9 +94,9 @@ parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
 parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
   default='rvbs-rv32i-rvfi-dii',
   help="The PATH to the rvbs executable")
-parser.add_argument('--path-to-QCTestRIG', metavar='PATH', type=str,
-  default='QCTestRIG',
-  help="The PATH to the QCTestRIG executable")
+parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
+  default='QCVEngine',
+  help="The PATH to the QCVEngine executable")
 
 args = parser.parse_args()
 
@@ -94,18 +116,20 @@ def input_y_n(prompt):
 # spawn rvfi_dii server #
 #########################
 
-def spawn_rvfi_dii_server(name, port):
+def spawn_rvfi_dii_server(name, port, log):
   if (name == 'spike'):
     print('TODO spawn spike rvfi-dii server')
   elif (name == 'rvbs'):
-    itrace_path = 'rvbs-{:d}-itrace'.format(port)
-    itrace = open(itrace_path,'w')
     env2 = os.environ.copy()
     env2["RVFI_DII_PORT"] = str(port)
-    cmd = [args.path_to_rvbs, "+itrace"]
-    sub.Popen(cmd, env=env2, stdin=None, stdout=itrace, stderr=itrace)
-    print('spawned rvbs rvfi-dii server on port: {:d}, trace file: {:s}'.format(
-      port, itrace_path))
+    cmd = [args.path_to_rvbs]
+    use_log = open(os.devnull,"w")
+    if log:
+      cmd += ["+itrace"]
+      use_log = log
+    p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
+    print('spawned rvbs rvfi-dii server on port: {:d}'.format(port))
+    return p
   else:
     print("Unknown rvfi-dii server {:s}".format(name))
     exit(0)
@@ -114,13 +138,14 @@ def spawn_rvfi_dii_server(name, port):
 # spawn verification engine #
 #############################
 
-def spawn_vengine(name):
-  if (name == 'QCTestRIG'):
-    cmd = [args.path_to_QCTestRIG, '-m', '5000', '-i', '5001']
+def spawn_vengine(name, mport, iport):
+  if (name == 'QCVEngine'):
+    cmd = [args.path_to_QCVEngine, '-m', str(mport), '-i', str(iport)]
     cmd += ['-n', str(args.number_of_tests)]
     if args.verbose > 0:
       cmd += ['-v']
-    sub.run(cmd)
+    p = sub.Popen(cmd)
+    return p
   else:
     print("Unknown verification engine {:s}".format(name))
     exit(0)
@@ -130,9 +155,16 @@ def spawn_vengine(name):
 #################
 
 def main():
-  spawn_rvfi_dii_server(args.model, 5000)
-  spawn_rvfi_dii_server(args.implementation, 5001)
-  spawn_vengine(args.verification_engine)
+  m = spawn_rvfi_dii_server(args.model, args.model_port, args.model_log)
+  i = spawn_rvfi_dii_server(args.implementation, args.implementation_port, args.implementation_log)
+  time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
+  e = spawn_vengine(args.verification_engine, args.model_port, args.implementation_port)
+  e.wait()
+  print('verification engine run terminated')
+  print('killing model rvfi-dii server')
+  m.kill()
+  print('killing implementation rvfi-dii server')
+  i.kill()
   exit(0)
 
 if __name__ == "__main__":
