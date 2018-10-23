@@ -128,7 +128,7 @@ def spawn_rvfi_dii_server(name, port, log):
   cmd = []
   ##############################################################################
   if (name == 'spike'):
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port)]
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa=RV32I","--progsize=0","-m0x80000000:0x10000"]
     if log:
       cmd += ["-l"]
   ##############################################################################
