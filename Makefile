@@ -26,21 +26,37 @@
 # @BERI_LICENSE_HEADER_END@
 #
 
-all: rvbs
+all: vengines riscv-implementations
+
+clean: clean-vengines clean-riscv-implementations
+
+# Verification Engines
+################################################################################
+vengines: QCVengine
+
+QCVengine:
+	cd vengines/QuickCheckVEngine &&\
+	cabal configure &&\
+	cabal build
+
+.PHONY: clean-vengines clean-QCVEngine
+
+clean-vengines: clean-QCVEngine
+
+clean-QCVEngine:
+	cd vengines/QuickCheckVEngine &&\
+	cabal clean
+
+# RISCV implementations
+################################################################################
+riscv-implementations: rvbs
 
 rvbs:
 	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1
 
-.PHONY: clean clean-rvbs
+.PHONY: clean-riscv-implementations clean-rvbs
 
-clean: clean-rvbs
+clean-riscv-implementations: clean-rvbs
 
 clean-rvbs:
-	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1 clean
-
-.PHONY: mrproper mrproper-rvbs
-
-mrproper: mrproper-rvbs
-
-mrproper-rvbs:
 	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1 mrproper

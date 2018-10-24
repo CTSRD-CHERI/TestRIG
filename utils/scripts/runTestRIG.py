@@ -100,7 +100,8 @@ parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default='spike',
   help="The PATH to the spike executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
-  default='QCVEngine',
+  #default='QCVEngine',
+  default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
 
 args = parser.parse_args()
