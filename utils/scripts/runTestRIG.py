@@ -35,6 +35,7 @@
 
 import argparse
 import os
+import signal
 import os.path as op
 import subprocess as sub
 import time
@@ -140,9 +141,9 @@ def spawn_rvfi_dii_server(name, port, log):
   ##############################################################################
   else:
     print("Unknown rvfi-dii server {:s}".format(name))
-    exit(0)
+    return None
   ##############################################################################
-  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
+  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log)
   print('spawned {:s} rvfi-dii server on port: {:d}'.format(name, port))
   return p
 
@@ -160,7 +161,6 @@ def spawn_vengine(name, mport, iport):
     return p
   else:
     print("Unknown verification engine {:s}".format(name))
-    exit(0)
 
 #################
 # main function #
@@ -169,14 +169,26 @@ def spawn_vengine(name, mport, iport):
 def main():
   m = spawn_rvfi_dii_server(args.model, args.model_port, args.model_log)
   i = spawn_rvfi_dii_server(args.implementation, args.implementation_port, args.implementation_log)
+
+  def kill_rvfi_dii_servers():
+    if m:
+      print('killing model rvfi-dii server')
+      m.kill()
+    if i:
+      print('killing implementation rvfi-dii server')
+      i.kill()
+
+  def handle_SIGINT(sig, frame):
+    kill_rvfi_dii_servers()
+    exit(0)
+
+  signal.signal(signal.SIGINT, handle_SIGINT)
+
   time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
   e = spawn_vengine(args.verification_engine, args.model_port, args.implementation_port)
   e.wait()
   print('verification engine run terminated')
-  print('killing model rvfi-dii server')
-  m.kill()
-  print('killing implementation rvfi-dii server')
-  i.kill()
+  kill_rvfi_dii_servers()
   exit(0)
 
 if __name__ == "__main__":
