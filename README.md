@@ -40,6 +40,9 @@ The implementation should have a mode where instructions are consumed exlusively
 An implementation should then deliver a trace report at the end of execution detailing implementation behaviour in response to that instruction in the RVFI-DII format.
 The RVFI-DII communication uses a single socket with the itrace consumed and the etrace be delivered over the same socket.
 
+Currently, The RVFI-DII interface is known to be implemented by:
+- [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
+
 ## Getting started
 
 In order to get the different submodules provided by **TestRIG**, run the following command:
@@ -50,3 +53,4 @@ $ git submodule update --init --recursive
 
 Currently, the provided modules are:
 - [BSV-RVFI-DII](https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git)
+- [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
