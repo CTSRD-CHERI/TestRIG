@@ -68,10 +68,10 @@ import RISCV
 data Options = Options
     { optVerbose    :: Bool
     , nTests        :: Int
-    , modelPort     :: String
-    , modelIP       :: String
-    , implPort      :: String
-    , implIP        :: String
+    , impAPort      :: String
+    , impAIP        :: String
+    , impBPort      :: String
+    , impBIP        :: String
     , instTraceFile :: Maybe FilePath
     , instDirectory :: Maybe FilePath
     } deriving Show
@@ -79,10 +79,10 @@ data Options = Options
 defaultOptions = Options
     { optVerbose    = False
     , nTests        = 100
-    , modelPort     = "5000"
-    , modelIP       = "127.0.0.1"
-    , implPort      = "5001"
-    , implIP        = "127.0.0.1"
+    , impAPort      = "5000"
+    , impAIP        = "127.0.0.1"
+    , impBPort      = "5001"
+    , impBIP        = "127.0.0.1"
     , instTraceFile = Nothing
     , instDirectory = Nothing
     }
@@ -91,28 +91,28 @@ options :: [OptDescr (Options -> Options)]
 options =
   [ Option ['v']     ["verbose"]
       (NoArg (\ opts -> opts { optVerbose = True }))
-        "--verbose"
+        "Turn on verbose output"
   , Option ['n']     ["number-of-tests"]
       (ReqArg (\ f opts -> opts { nTests = read f }) "NUMTESTS")
-        "--number-of-tests NUMTESTS"
-  , Option ['m']     ["model-port"]
-      (ReqArg (\ f opts -> opts { modelPort = f }) "PORT")
-        "--model-port PORT"
-  , Option ['M']     ["model-ip"]
-      (ReqArg (\ f opts -> opts { modelIP = f }) "IP")
-        "--model-ip IP"
-  , Option ['i']     ["implementation-port"]
-      (ReqArg (\ f opts -> opts { implPort = f }) "PORT")
-        "--implementation-port PORT"
-  , Option ['I']     ["implementation-ip"]
-      (ReqArg (\ f opts -> opts { implIP = f }) "IP")
-        "--implementation-ip IP"
+        "Specify NUMTESTS the sumber of tests to run"
+  , Option ['a']     ["implementation-A-port"]
+      (ReqArg (\ f opts -> opts { impAPort = f }) "PORT")
+        "Specify which PORT to use for implementation A"
+  , Option ['A']     ["implementaton-A-ip"]
+      (ReqArg (\ f opts -> opts { impAIP = f }) "IP")
+        "Specify which IP to use for implementation A"
+  , Option ['b']     ["implementation-B-port"]
+      (ReqArg (\ f opts -> opts { impBPort = f }) "PORT")
+        "Specify which PORT to use for implementation B"
+  , Option ['B']     ["implementaton-B-ip"]
+      (ReqArg (\ f opts -> opts { impBIP = f }) "IP")
+        "Specify which IP to use for implementation B"
   , Option ['t']     ["trace-file"]
       (ReqArg (\ f opts -> opts { instTraceFile = Just f }) "PATH")
-        "--trace-file PATH"
+        "Specify PATH a trace file to use as the instruction trace to replay"
   , Option ['d']     ["trace-directory"]
       (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
-        "--trace-directory PATH"
+        "Specify PATH a directory which contains trace files to replay"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -131,8 +131,8 @@ main = withSocketsDo $ do
   (flags, leftover) <- commandOpts rawArgs
   when (optVerbose flags) $ print flags
   -- initialize model and implementation sockets
-  addrMod <- resolve (modelIP flags) (modelPort flags)
-  addrImp <- resolve (implIP flags) (implPort flags)
+  addrMod <- resolve (impAIP flags) (impAPort flags)
+  addrImp <- resolve (impBIP flags) (impBPort flags)
   modSoc <- open addrMod
   impSoc <- open addrImp
   --

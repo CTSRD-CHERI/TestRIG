@@ -62,25 +62,25 @@ known_vengine  = set({'QCVEngine'})
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
 # model args
-parser.add_argument('-m', '--model', metavar='MODEL', choices=known_rvfi_dii,
-  default='spike',
-  help="The model to use. (one of {:s})".format(str(known_rvfi_dii)))
-parser.add_argument('--model-port', metavar='PORT', type=auto_int, default=5000,
-  help="The port to use for the model rvfi-dii server")
-parser.add_argument('--model-log', metavar='PATH',
-  default=None, type=auto_write_fd,
-  #nargs='?', const=sub.PIPE,
-  help="Turn on logging for the model rvfi-dii server (optionally specifying a file path)")
-# implementation args
-parser.add_argument('-i', '--implementation', metavar='IMPL', choices=known_rvfi_dii,
+parser.add_argument('-a', '--implementation-A', metavar='IMP', choices=known_rvfi_dii,
   default='rvbs',
-  help="The implementation to use. (one of {:s})".format(str(known_rvfi_dii)))
-parser.add_argument('--implementation-port', metavar='PORT', type=auto_int, default=5001,
-  help="The port to use for the implementation rvfi-dii server")
-parser.add_argument('--implementation-log', metavar='PATH',
+  help="The implementation A to use. (one of {:s})".format(str(known_rvfi_dii)))
+parser.add_argument('--implementation-A-port', metavar='PORT', type=auto_int, default=5000,
+  help="The port to use for implementation A's rvfi-dii server")
+parser.add_argument('--implementation-A-log', metavar='PATH',
   default=None, type=auto_write_fd,
   #nargs='?', const=sub.PIPE,
-  help="Turn on logging for the implementation rvfi-dii server (optionally specifying a file path)")
+  help="Turn on logging for implementation A's rvfi-dii server (optionally specifying a file path)")
+# implementation args
+parser.add_argument('-b', '--implementation-B', metavar='IMP', choices=known_rvfi_dii,
+  default='spike',
+  help="The implementation B to use. (one of {:s})".format(str(known_rvfi_dii)))
+parser.add_argument('--implementation-B-port', metavar='PORT', type=auto_int, default=5001,
+  help="The port to use for implementation B's rvfi-dii server")
+parser.add_argument('--implementation-B-log', metavar='PATH',
+  default=None, type=auto_write_fd,
+  #nargs='?', const=sub.PIPE,
+  help="Turn on logging for implementation B's rvfi-dii server (optionally specifying a file path)")
 # verification engine args
 parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known_vengine,
   default='QCVEngine',
@@ -153,7 +153,7 @@ def spawn_rvfi_dii_server(name, port, log):
 
 def spawn_vengine(name, mport, iport):
   if (name == 'QCVEngine'):
-    cmd = [args.path_to_QCVEngine, '-m', str(mport), '-i', str(iport)]
+    cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport)]
     cmd += ['-n', str(args.number_of_tests)]
     if args.verbose > 0:
       cmd += ['-v']
@@ -167,16 +167,16 @@ def spawn_vengine(name, mport, iport):
 #################
 
 def main():
-  m = spawn_rvfi_dii_server(args.model, args.model_port, args.model_log)
-  i = spawn_rvfi_dii_server(args.implementation, args.implementation_port, args.implementation_log)
+  a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log)
+  b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log)
 
   def kill_rvfi_dii_servers():
-    if m:
-      print('killing model rvfi-dii server')
-      m.kill()
-    if i:
-      print('killing implementation rvfi-dii server')
-      i.kill()
+    if a:
+      print("killing implementation A's rvfi-dii server")
+      a.kill()
+    if b:
+      print("killing implementation B's rvfi-dii server")
+      b.kill()
 
   def handle_SIGINT(sig, frame):
     kill_rvfi_dii_servers()
@@ -185,7 +185,7 @@ def main():
   signal.signal(signal.SIGINT, handle_SIGINT)
 
   time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
-  e = spawn_vengine(args.verification_engine, args.model_port, args.implementation_port)
+  e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port)
   e.wait()
   print('verification engine run terminated')
   kill_rvfi_dii_servers()
