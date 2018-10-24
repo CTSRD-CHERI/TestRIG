@@ -93,7 +93,8 @@ parser.add_argument('-v', '--verbose', action='count', default=0,
 parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
   default=100, help="Runs the verification engine for NTESTS tests.")
 parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
-  default='rvbs-rv32i-rvfi-dii',
+  #default='rvbs-rv32i-rvfi-dii',
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/rvbs-rv32i-rvfi-dii"),
   help="The PATH to the rvbs executable")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default='spike',
