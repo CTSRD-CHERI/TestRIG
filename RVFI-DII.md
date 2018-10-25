@@ -82,3 +82,15 @@ That is, all general-purpose register values must be set to zero, CSRs to reset 
 ## 64KiB Memory at 0x80000000
 Memory must be 64KiB in size and mapped at 0x80000000.
 Test generators are responsable to attempt to generate addresses within this 64KiB region.
+
+# Potential RVFI-DII extensions
+
+These are potential extensions to the RVFI-DII format. We expect these to help shorten counter examples, and we will consider adding them if it proves difficult to generate related counter examples.
+
+- Report the `mstatus` CSR
+  > Enables more concise counter examples on privilege transition bugs
+- Report the `misa` CSR
+  > Saves some debugging e.g. due to accidentally enabling `misa.C` in one implementation under test and not the other
+- Report the `[m|s]cause` CSRs
+- Report the `[m|s]tval` CSRs
+- Reprt the `[m|s]epc` CSRs
