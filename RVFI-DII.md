@@ -93,4 +93,4 @@ These are potential extensions to the RVFI-DII format. We expect these to help s
   > Saves some debugging e.g. due to accidentally enabling `misa.C` in one implementation under test and not the other
 - Report the `[m|s]cause` CSRs
 - Report the `[m|s]tval` CSRs
-- Reprt the `[m|s]epc` CSRs
+- Report the `[m|s]epc` CSRs
