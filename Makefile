@@ -49,14 +49,23 @@ clean-QCVEngine:
 
 # RISCV implementations
 ################################################################################
-riscv-implementations: rvbs
+riscv-implementations: rvbs spike
 
 rvbs:
 	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1
 
+spike:
+	cd riscv-implementations/riscv-isa-sim &&\
+	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
+	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-misaligned &&\
+	make install && cp libfesvr.so lib/
+
 .PHONY: clean-riscv-implementations clean-rvbs
 
-clean-riscv-implementations: clean-rvbs
+clean-riscv-implementations: clean-rvbs clean-spike
 
 clean-rvbs:
 	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1 mrproper
+
+clean-spike:
+	rm -rf riscv-implementations/riscv-isa-sim/build
