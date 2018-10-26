@@ -145,7 +145,7 @@ def spawn_rvfi_dii_server(name, port, log):
     print("Unknown rvfi-dii server {:s}".format(name))
     return None
   ##############################################################################
-  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log)
+  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
   print('spawned {:s} rvfi-dii server on port: {:d}'.format(name, port))
   return p
 
