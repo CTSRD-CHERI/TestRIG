@@ -97,7 +97,7 @@ parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/rvbs-rv32i-rvfi-dii"),
   help="The PATH to the rvbs executable")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
-  default='spike',
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
   help="The PATH to the spike executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
