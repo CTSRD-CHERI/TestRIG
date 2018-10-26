@@ -58,3 +58,4 @@ Currently, the provided modules are:
 The root makefile can currently build the Quick Check Verification Engine, and the RVBS implementation.
 The dependencies for the Quick Check Verification Engine are:
 - cabal `sudo apt-get install cabal-install && cabal update`
+- Haskell Quick Check verification engine dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
