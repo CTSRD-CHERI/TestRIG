@@ -4,3 +4,6 @@
 [submodule "riscv-implementations/RVBS"]
 	path = riscv-implementations/RVBS
 	url = https://github.com/CTSRD-CHERI/RVBS.git
+[submodule "riscv-implementations/riscv-isa-sim"]
+	path = riscv-implementations/riscv-isa-sim
+	url = git@github.com:CTSRD-CHERI/riscv-isa-sim.git
