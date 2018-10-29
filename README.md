@@ -42,6 +42,7 @@ The RVFI-DII communication uses a single socket with the itrace consumed and the
 
 Currently, The RVFI-DII interface is known to be implemented by:
 - [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
+- [Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
 
 ## Getting started
 
@@ -54,8 +55,9 @@ $ git submodule update --init --recursive
 Currently, the provided modules are:
 - [BSV-RVFI-DII](https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git)
 - [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
+- [Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
 
-The root makefile can currently build the Quick Check Verification Engine, and the RVBS implementation.
+The root makefile can currently build the Quick Check Verification Engine, Spike, and the RVBS implementation.
 The dependencies for the Quick Check Verification Engine are:
 - cabal `sudo apt-get install cabal-install && cabal update`
 - Haskell Quick Check verification engine dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
