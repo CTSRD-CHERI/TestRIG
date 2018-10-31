@@ -210,13 +210,11 @@ prop gen modSoc impSoc doLog = forAllShrink gen shrink ( \instTrace -> monadicIO
   sendInstructionTrace modSoc instTraceTerminated
   sendInstructionTrace impSoc instTraceTerminated
 
-  modTrace <- receiveExecutionTrace modSoc
-  impTrace <- receiveExecutionTrace impSoc
-  when doLog $ do
-    print " model          Trace "
-    print modTrace
-    print " implementation Trace "
-    print impTrace
+  when doLog $ print " model          Trace "
+  modTrace <- receiveExecutionTrace doLog modSoc
+  when doLog $ print " implementation Trace "
+  impTrace <- receiveExecutionTrace doLog impSoc
+
   return (and (zipWith (==) modTrace impTrace)))))
 
 --------------------------------------------------------------------------------
@@ -234,13 +232,13 @@ sendInstruction sock inst = do
 
 
 -- Receive an execution trace
-receiveExecutionTrace :: Socket -> IO ([RVFI_DII_Execution])
-receiveExecutionTrace sock = do
+receiveExecutionTrace :: Bool -> Socket -> IO ([RVFI_DII_Execution])
+receiveExecutionTrace doLog sock = do
   msg <- recv sock 88
   let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
-  --print traceEntry
+  when doLog $ print traceEntry
   if ((rvfi_halt traceEntry) == 1)
     then return [traceEntry]
     else do
-      remainderOfTrace <- receiveExecutionTrace sock
+      remainderOfTrace <- receiveExecutionTrace doLog sock
       return (traceEntry:remainderOfTrace)
