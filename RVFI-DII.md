@@ -44,6 +44,7 @@ struct RVFI_DII_Execution_Packet {
    Bit64 rvfi_mem_rdata; // [64 - 71] Read data:               Data read from mem_addr (i.e. before write)
    Bit64 rvfi_mem_addr;  // [56 - 63] Memory access addr:      Points to byte address (aligned if define
                             //                                      is set). *Should* be straightforward.
+                            //                                      0 if unused.
    Bit64 rvfi_rd_wdata;  // [48 - 55] Write register value:    MUST be 0 if rd_ is 0.
    Bit64 rvfi_rs2_data;  // [40 - 47]                          above. Must be 0 if register ID is 0.
    Bit64 rvfi_rs1_data;  // [32 - 39] Read register values:    Values as read from registers named
