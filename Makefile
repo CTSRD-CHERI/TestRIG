@@ -52,7 +52,7 @@ clean-QCVEngine:
 riscv-implementations: rvbs spike
 
 rvbs:
-	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1
+	$(MAKE) -C riscv-implementations/RVBS rvfi-dii
 
 spike:
 	cd riscv-implementations/riscv-isa-sim &&\
@@ -65,7 +65,7 @@ spike:
 clean-riscv-implementations: clean-rvbs clean-spike
 
 clean-rvbs:
-	$(MAKE) -C riscv-implementations/RVBS RVFI_DII=1 mrproper
+	$(MAKE) -C riscv-implementations/RVBS mrproper-rvfi-dii
 
 clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
