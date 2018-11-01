@@ -49,7 +49,7 @@ struct RVFI_DII_Execution_Packet {
    Bit64 rvfi_rs2_data;  // [40 - 47]                          above. Must be 0 if register ID is 0.
    Bit64 rvfi_rs1_data;  // [32 - 39] Read register values:    Values as read from registers named
    Bit64 rvfi_insn;      // [24 - 31] Instruction word:        32-bit command value.
-   Bit64 rvfi_pc_wdata;  // [16 - 23] PC after instr:          Following PC - either PC + 4 or jump target.
+   Bit64 rvfi_pc_wdata;  // [16 - 23] PC after instr:          Following PC - either PC + 4 or jump/trap target.
    Bit64 rvfi_pc_rdata;  // [08 - 15] PC before instr:         PC for current instruction
    Bit64 rvfi_order;     // [00 - 07] Instruction number:      INSTRET value after completion.
 }

@@ -136,7 +136,7 @@ maskWith a b = a Data.Bits..&. mask
 instance Eq RVFI_DII_Execution where
   x == y
     | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
-    | rvfi_trap x /= 0 = (rvfi_trap x) == (rvfi_trap y)
+    | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (maskUpper (rvfi_pc_wdata x)) == (maskUpper (rvfi_pc_wdata y))
     | otherwise = (maskUpper (rvfi_exe_insn x)) == (maskUpper (rvfi_exe_insn y)) &&
                   (maskUpper (rvfi_rd_wdata x)) == (maskUpper (rvfi_rd_wdata y)) &&
                   (maskUpper (rvfi_mem_addr x)) == (maskUpper (rvfi_mem_addr y)) &&
