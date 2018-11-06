@@ -121,10 +121,8 @@ prettyB instr imm rs2 rs1 =
 prettyF pred succ =
   concat ["fence ", int pred, ", ", int succ]
 
--- Instruction pretty printer
-pretty :: Integer -> String
-pretty instr = 
-  decode 32 instr [
+
+integer_instructions_dissasembly_list = [
     add     --> prettyR "add"
   , slt     --> prettyR "slt"
   , sltu    --> prettyR "sltu"
@@ -166,6 +164,11 @@ pretty instr =
   , fence_i --> "fence_i"
   , resrvd  --> "reserved"
   ]
+
+-- Instruction pretty printer
+pretty :: Integer -> String
+pretty instr = 
+  decode 32 instr integer_instructions_dissasembly_list
 
 -------------------------------
 -- Random instruction generator
