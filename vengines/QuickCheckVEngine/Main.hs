@@ -61,7 +61,6 @@ import System.Exit
 import System.IO
 import RVFI_DII
 import RISCV
-import CHERI
 
 data Options = Options
     { modelPort     :: String
@@ -158,8 +157,6 @@ main = withSocketsDo $ do
           checkGen genControlFlow
           print "RV32I All Verification:"
           checkGen genAll
-          print "CHERI Verification:"
-          checkGen genCHERI
 
   close modSoc
   close impSoc
