@@ -42,6 +42,7 @@ import RISCV
 -- CHERI instructions
 ---------------------
 
+-- Capability Inspection
 cgetperm                  = "1111111 00000 cs1[4:0] 000 rd[4:0] 1011011"
 cgettype                  = "1111111 00001 cs1[4:0] 000 rd[4:0] 1011011"
 cgetbase                  = "1111111 00010 cs1[4:0] 000 rd[4:0] 1011011"
@@ -51,66 +52,83 @@ cgetsealed                = "1111111 00101 cs1[4:0] 000 rd[4:0] 1011011"
 cgetoffset                = "1111111 00110 cs1[4:0] 000 rd[4:0] 1011011"
 cgetaddr                  = "1111111 01111 cs1[4:0] 000 rd[4:0] 1011011"
 
+-- Capability Modification
 cseal                     = "0001011 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 cunseal                   = "0001100 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 candperm                  = "0001101 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-csetoffset                = "0001111 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cincoffset                = "0010001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-csetbounds                = "0001000 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-csetboundsexact           = "0001001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 cbuildcap                 = "0011101 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 ccopytype                 = "0011110 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 ccseal                    = "0011111 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 ccleartag                 = "1111111 01011 cs1[4:0] 000 cd[4:0] 1011011"
+
+-- Capability Pointer Arithmetic
+csetoffset                = "0001111 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+cincoffset                = "0010001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+csetbounds                = "0001000 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+csetboundsexact           = "0001001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 cincoffsetimmediate       = "imm[11:0] cs1[4:0] 001 cd[4:0] 1011011"
 csetboundsimmediate       = "imm[11:0] cs1[4:0] 002 cd[4:0] 1011011"
+ctoptr                    = "0010010 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+cfromptr                  = "0010011 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+cspecialrw                = "0000001 cSP[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+cmove                     = "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"
+
+-- Control Flow
+cjalr                     = "1111111 01100 cs1[4:0] 000 cd[4:0] 1011011"
+ccall                     = "1111111 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+-- creturn is a special case of ccall, which would mess up decoding!
+
+
+-- Register Clearing
+clear                     = "1111111 01101 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
+fpclear                   = "1111111 10000 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
+
+-- Memory -- Needs further refinement
+cmem                      = "0010010 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"
 
 -----------------------------
 -- Instruction pretty printer
 -----------------------------
 
--- Register pretty printer
-reg :: Integer -> String
-reg i = "c" ++ show i
-
--- Integer pretty printer
-int :: Integer -> String
-int i = show i
-
--- R-type pretty printer
-prettyRC instr cs2 cs1 cd =
-  concat [instr, " ", reg cd, ", ", reg cs1, ", ", reg cs2]
-
--- R-type pretty printer
+-- R-type, 2-operand pretty printer
 prettyR_2op instr cs1 cd =
   concat [instr, " ", reg cd, ", ", reg cs1]
 
--- I-type pretty printer
-prettyIC instr imm cs1 cd =
-  concat [instr, " ", reg cd, ", ", reg cs1, ", ", int imm]
+-- R-type, 2-operand pretty printer
+pretty_reg_clear instr imm qt =
+  concat [instr, " ", int qt, ", ", int imm]
 
 cheri_instructions_dissasembly_list = [
-	   cgetperm            --> prettyR "cgetperm"
-	 , cgettype            --> prettyR "cgettype"
-	 , cgetbase            --> prettyR "cgetbase"
-	 , cgetlen             --> prettyR "cgetlen"
-	 , cgettag             --> prettyR "cgettag"
-	 , cgetsealed          --> prettyR "cgetsealed"
-	 , cgetoffset          --> prettyR "cgetoffset"
-	 , cgetaddr            --> prettyR "cgetaddr"
-	 , cseal               --> prettyR "cseal"
-	 , cunseal             --> prettyR "cunseal"
-	 , candperm            --> prettyR "candperm"
-	 , csetoffset          --> prettyR "csetoffset"
-	 , cincoffset          --> prettyR "cincoffset"
-	 , csetbounds          --> prettyR "csetbounds"
-	 , csetboundsexact     --> prettyR "csetboundsexact"
-	 , cbuildcap           --> prettyR "cbuildcap"
-	 , ccopytype           --> prettyR "ccopytype"
-	 , ccseal              --> prettyR "ccseal"
-	 , ccleartag           --> prettyR_2op "ccleartag"
+     cgetperm            --> prettyR_2op "cgetperm"
+   , cgettype            --> prettyR_2op "cgettype"
+   , cgetbase            --> prettyR_2op "cgetbase"
+   , cgetlen             --> prettyR_2op "cgetlen"
+   , cgettag             --> prettyR_2op "cgettag"
+   , cgetsealed          --> prettyR_2op "cgetsealed"
+   , cgetoffset          --> prettyR_2op "cgetoffset"
+   , cgetaddr            --> prettyR_2op "cgetaddr"
+   , cseal               --> prettyR "cseal"
+   , cunseal             --> prettyR "cunseal"
+   , candperm            --> prettyR "candperm"
+   , csetoffset          --> prettyR "csetoffset"
+   , cincoffset          --> prettyR "cincoffset"
+   , csetbounds          --> prettyR "csetbounds"
+   , csetboundsexact     --> prettyR "csetboundsexact"
+   , cbuildcap           --> prettyR "cbuildcap"
+   , ccopytype           --> prettyR "ccopytype"
+   , ccseal              --> prettyR "ccseal"
+   , ccleartag           --> prettyR_2op "ccleartag"
    , cincoffsetimmediate --> prettyI "cincoffsetimmediate"
    , csetboundsimmediate --> prettyI "csetboundsimmediate"
+   , ctoptr              --> prettyR "ctoptr"
+   , cfromptr            --> prettyR "cfromptr"
+   , cspecialrw          --> prettyR "cspecialrw"
+   , cmove               --> prettyR_2op "cmove"
+   , cjalr               --> prettyR_2op "cjalr"
+   , ccall               --> prettyR "ccall"
+   , clear               --> pretty_reg_clear "clear"
+   , fpclear             --> pretty_reg_clear "fpclear"
+   , cmem                --> prettyR "cmem"
   ]
 
 -- Instruction pretty printer
@@ -118,43 +136,59 @@ pretty :: Integer -> String
 pretty instr = 
   decode 32 instr (integer_instructions_dissasembly_list ++ cheri_instructions_dissasembly_list)
 
--------------------------------
--- Random instruction generator
--------------------------------
-
--- Generate random destination register
--- Use 6 registers with a geometic distribution
-dest :: Gen Integer
-dest = choose (0, 5)
--- dest =
---   frequency [
---     (32, return 1)
---   , (16, return 2)
---   , (8,  return 3)
---   , (4,  return 4)
---   , (2,  return 5)
---   , (1,  return 0)
---   ]
-
--- Generate random source register
--- Use 6 registers with a uniform distribution
-src :: Gen Integer
-src = choose (0, 5)
-
--- Generate random integer with given bit-width
-bits :: Int -> Gen Integer
-bits w = choose (0, 2^w - 1)
-
--- Power of two values clustered around 1.
-geomBits :: Int -> Int -> Gen Integer
-geomBits hi lo = frequency [(2^(32-i), return (2^i))| i <- [lo..(hi-1)]]
-
--- Generate memory offset
-offset :: Gen Integer
-offset = oneof [return 0, return 1, return 64, return 65]
-
-genCHERI :: Gen Integer
-genCHERI =
+genCHERIinspection :: Gen Integer
+genCHERIinspection =
   frequency [
-    (8,  encode cincoffsetimmediate (bits 12) src dest)
+      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
+    , (8,  encode cgetperm src dest)
+    , (8,  encode cgettype src dest)
+    , (8,  encode cgetbase src dest)
+    , (8,  encode cgetlen src dest)
+    , (8,  encode cgettag src dest)
+    , (8,  encode cgetsealed src dest)
+    , (8,  encode cgetoffset src dest)
+    , (8,  encode cgetaddr src dest)
+  ]
+
+genCHERIarithmatic :: Gen Integer
+genCHERIarithmatic =
+  frequency [
+      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
+    , (8,  encode addi (geomBits 11 2) src dest)
+    , (8,  encode csetoffset src src dest)
+    , (8,  encode cincoffset src src dest)
+    , (8,  encode csetbounds src src dest)
+    , (8,  encode csetboundsexact src src dest)
+    , (8,  encode cincoffsetimmediate (bits 12) src dest)
+    , (8,  encode csetboundsimmediate (bits 12) src dest)
+    , (8,  encode ctoptr     src src dest)
+    , (8,  encode cfromptr   src src dest)
+    , (8,  encode cmove src dest)
+  ]
+
+genCHERImisc :: Gen Integer
+genCHERImisc =
+  frequency [
+      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
+    , (8,  encode addi (geomBits 11 2) src dest)
+    , (8,  encode cincoffsetimmediate (bits 12) src dest)
+    , (8,  encode csetboundsimmediate (bits 12) src dest)
+    , (8,  encode cseal     src src dest)
+    , (8,  encode cunseal   src src dest)
+    , (8,  encode candperm  src src dest)
+    , (8,  encode cbuildcap src src dest)
+    , (8,  encode ccopytype src src dest)
+    , (8,  encode ccseal    src src dest)
+    , (8,  encode ccleartag src dest)
+  ]
+
+genCHERIcontrol :: Gen Integer
+genCHERIcontrol =
+  frequency [
+      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
+    , (8,  encode addi (geomBits 11 2) src dest)
+    , (8,  encode cincoffsetimmediate (bits 12) src dest)
+    , (8,  encode csetboundsimmediate (bits 12) src dest)
+    , (8,  encode cjalr src dest)
+    , (8,  encode ccall src src dest)
   ]
