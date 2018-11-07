@@ -49,6 +49,7 @@ import Network.Socket.ByteString.Lazy --(recv, sendAll)
 import Data.Int
 import Data.Binary
 import Text.Printf
+import Text.Regex.Posix
 import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
@@ -62,6 +63,7 @@ import System.Exit
 import System.IO
 import RVFI_DII
 import RISCV
+import CHERI
 
 -- command line arguments
 --------------------------------------------------------------------------------
@@ -74,6 +76,7 @@ data Options = Options
     , impBIP        :: String
     , instTraceFile :: Maybe FilePath
     , instDirectory :: Maybe FilePath
+    , arch          :: String
     } deriving Show
 
 defaultOptions = Options
@@ -85,6 +88,7 @@ defaultOptions = Options
     , impBIP        = "127.0.0.1"
     , instTraceFile = Nothing
     , instDirectory = Nothing
+    , arch          = "32i"      
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -113,6 +117,9 @@ options =
   , Option ['d']     ["trace-directory"]
       (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
         "Specify PATH a directory which contains trace files to replay"
+  , Option ['r']     ["architecture"]
+      (ReqArg (\ f opts -> opts { arch = f }) "ARCHITECTURE")
+        "Specify ARCHITECTURE to be verified (e.g. 32i)"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -175,14 +182,16 @@ main = withSocketsDo $ do
           let fullCulledFileNames = map (\x -> directory ++ "/" ++ x) culledFileNames
           mapM_ checkFile fullCulledFileNames
         Nothing -> do
-          print "RV32I Arithmetic Verification:"
-          checkGen genArithmetic
-          print "RV32I Memory Verification:"
-          checkGen genMemory
-          print "RV32I Control Flow Verification:"
-          checkGen genControlFlow
-          print "RV32I All Verification:"
-          checkGen genAll
+          when (((arch flags) =~ ("i"::String)) ::Bool) (
+            do
+              print "RV32I Arithmetic Verification:"
+              checkGen genArithmetic
+              print "RV32I Memory Verification:"
+              checkGen genMemory
+              print "RV32I Control Flow Verification:"
+              checkGen genControlFlow
+              print "RV32I All Verification:"
+              checkGen genAll)
   --
   close modSoc
   close impSoc
