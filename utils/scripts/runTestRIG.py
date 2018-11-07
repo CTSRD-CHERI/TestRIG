@@ -131,11 +131,19 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   use_log = open(os.devnull,"w")
   if log:
     use_log = log
+  if 'x' in arch:
+    # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
+    [isa, extension] = arch.split('x')
+  else:
+    # No extension specified in the architecture string
+    [isa, extension] = [arch, ""]
+
   env2 = os.environ.copy()
   cmd = []
   ##############################################################################
   if (name == 'spike'):
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa=RV32I", "-m0x80000000:0x10000"]
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa), "--extension={:s}".format(extension), "-m0x80000000:0x10000"]
+
     if log:
       cmd += ["-l"]
   ##############################################################################
