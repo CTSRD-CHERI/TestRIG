@@ -169,29 +169,36 @@ def spawn_vengine(name, mport, iport):
 #################
 
 def main():
-  a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log)
-  b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log)
-
-  def kill_rvfi_dii_servers():
-    if a:
+  def kill_rvfi_dii_servers(servA, servB):
+    if servA:
       print("killing implementation A's rvfi-dii server")
-      a.kill()
-    if b:
+      servA.kill()
+    if servB:
       print("killing implementation B's rvfi-dii server")
-      b.kill()
+      servB.kill()
 
-  def handle_SIGINT(sig, frame):
-    kill_rvfi_dii_servers()
+  try:
+    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log)
+    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log)
+  except:
+    kill_rvfi_dii_servers(a,b)
+    raise
+  
+  def kill_n_exit(sig, frame):
+    kill_rvfi_dii_servers(a,b)
     exit(0)
 
-  signal.signal(signal.SIGINT, handle_SIGINT)
+  signal.signal(signal.SIGINT, kill_n_exit)
 
   time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
-  e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port)
+  try:
+    e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port)
+  except:
+    kill_rvfi_dii_servers(a,b)
+    raise
   e.wait()
   print('verification engine run terminated')
-  kill_rvfi_dii_servers()
-  exit(0)
+  kill_n_exit()
 
 if __name__ == "__main__":
   main()
