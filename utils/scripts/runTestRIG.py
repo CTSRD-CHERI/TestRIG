@@ -58,7 +58,7 @@ def auto_write_fd (fname):
 
 known_rvfi_dii = set({'spike','rvbs'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({'rv32i','rv64i','rv64ixCHERI','rv64xCHERI'})
+known_architectures = set({'rv32i','rv64i','rv32ixcheri'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
