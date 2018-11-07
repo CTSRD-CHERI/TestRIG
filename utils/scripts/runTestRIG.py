@@ -58,7 +58,7 @@ def auto_write_fd (fname):
 
 known_rvfi_dii = set({'spike','rvbs'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({'rv32i','rv64i','rv64ixCHERI','rv64xCHERI'})
+known_architectures = set({'rv32i','rv64i','rv32ixcheri'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
@@ -126,16 +126,24 @@ def input_y_n(prompt):
 # spawn rvfi_dii server #
 #########################
 
-def spawn_rvfi_dii_server(name, port, log):
+def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   ## few common variables
   use_log = open(os.devnull,"w")
   if log:
     use_log = log
+  if 'x' in arch:
+    # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
+    [isa, extension] = arch.split('x')
+  else:
+    # No extension specified in the architecture string
+    [isa, extension] = [arch, ""]
+
   env2 = os.environ.copy()
   cmd = []
   ##############################################################################
   if (name == 'spike'):
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa=RV32I", "-m0x80000000:0x10000"]
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa), "--extension={:s}".format(extension), "-m0x80000000:0x10000"]
+
     if log:
       cmd += ["-l"]
   ##############################################################################
@@ -182,8 +190,8 @@ def main():
       servB.kill()
 
   try:
-    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log)
-    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log)
+    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
+    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
   except:
     kill_rvfi_dii_servers(a,b)
     raise
