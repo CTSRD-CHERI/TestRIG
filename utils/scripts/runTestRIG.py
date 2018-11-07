@@ -58,6 +58,7 @@ def auto_write_fd (fname):
 
 known_rvfi_dii = set({'spike','rvbs'})
 known_vengine  = set({'QCVEngine'})
+known_architectures = set({'rv32i','rv64i','rv64ixCHERI','rv64xCHERI'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
@@ -103,6 +104,9 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
+parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
+  default='rv32i',
+  help="The architecture to verify. (one of {:s})".format(str(known_architectures)))
 
 args = parser.parse_args()
 
@@ -153,9 +157,9 @@ def spawn_rvfi_dii_server(name, port, log):
 # spawn verification engine #
 #############################
 
-def spawn_vengine(name, mport, iport):
+def spawn_vengine(name, mport, iport, arch):
   if (name == 'QCVEngine'):
-    cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport)]
+    cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport), '-r', str(arch)]
     cmd += ['-n', str(args.number_of_tests)]
     if args.verbose > 0:
       cmd += ['-v']
@@ -192,13 +196,14 @@ def main():
 
   time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
   try:
-    e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port)
+    e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, args.architecture)
   except:
     kill_rvfi_dii_servers(a,b)
     raise
   e.wait()
   print('verification engine run terminated')
-  kill_n_exit()
+  kill_rvfi_dii_servers(a,b)
+  exit(0)
 
 if __name__ == "__main__":
   main()
