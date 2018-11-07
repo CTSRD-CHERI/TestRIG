@@ -48,6 +48,7 @@ import Network.Socket hiding (recv)
 import Network.Socket.ByteString.Lazy --(recv, sendAll)
 import Data.Int
 import Data.Binary
+import Data.Char
 import Text.Printf
 import Text.Regex.Posix
 import Control.Monad
@@ -119,7 +120,7 @@ options =
       (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
         "Specify PATH a directory which contains trace files to replay"
   , Option ['r']     ["architecture"]
-      (ReqArg (\ f opts -> opts { arch = f }) "ARCHITECTURE")
+      (ReqArg (\ f opts -> opts { arch = map toLower f }) "ARCHITECTURE")
         "Specify ARCHITECTURE to be verified (e.g. 32i)"
   ]
 
@@ -193,7 +194,7 @@ main = withSocketsDo $ do
               checkGen genControlFlow
               print "rv32i All Verification:"
               checkGen genAll)
-          when (((arch flags) =~ ("xCHERI"::String)) ::Bool) (
+          when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
             do
               print "xCHERI Capability Inspection Verification:"
               checkGen genCHERIinspection
