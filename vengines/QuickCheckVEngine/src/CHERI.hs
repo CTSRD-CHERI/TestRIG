@@ -1,7 +1,8 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2018 Hesham Almatary 
+-- Copyright (c) 2018 Jonathan Woodruff
+-- Copyright (c) 2018 Hesham Almatary
 -- Copyright (c) 2018 Matthew Naylor
 -- All rights reserved.
 --
@@ -36,7 +37,8 @@ module CHERI where
 import InstrCodec
 import Test.QuickCheck
 import Control.Monad
-import RISCV
+import ISA_Helpers
+import RVxxI
 
 ---------------------
 -- CHERI instructions
@@ -91,13 +93,10 @@ cmem                      = "0010010 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"
 -----------------------------
 
 -- R-type, 2-operand pretty printer
-prettyR_2op instr cs1 cd =
-  concat [instr, " ", reg cd, ", ", reg cs1]
-
--- R-type, 2-operand pretty printer
 pretty_reg_clear instr imm qt =
   concat [instr, " ", int qt, ", ", int imm]
 
+cheri_instructions_dissasembly_list :: [DecodeBranch String]
 cheri_instructions_dissasembly_list = [
      cgetperm            --> prettyR_2op "cgetperm"
    , cgettype            --> prettyR_2op "cgettype"
@@ -131,11 +130,6 @@ cheri_instructions_dissasembly_list = [
    , cmem                --> prettyR "cmem"
   ]
 
--- Instruction pretty printer
-pretty :: Integer -> String
-pretty instr = 
-  decode 32 instr (integer_instructions_dissasembly_list ++ cheri_instructions_dissasembly_list)
-
 genCHERIinspection :: Gen Integer
 genCHERIinspection =
   frequency [
@@ -150,8 +144,8 @@ genCHERIinspection =
     , (8,  encode cgetaddr src dest)
   ]
 
-genCHERIarithmatic :: Gen Integer
-genCHERIarithmatic =
+genCHERIarithmetic :: Gen Integer
+genCHERIarithmetic =
   frequency [
       (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
     , (8,  encode addi (geomBits 11 2) src dest)

@@ -208,6 +208,8 @@ decodeOne fmt rhs =
           then Just $ apply rhs (args subj' (tag toks))
           else Nothing
 
+type DecodeBranch a = (Integer, Int) -> Maybe a
+
 infix 9 -->
 (-->) :: Apply f a => String -> f -> (Integer, Int) -> Maybe a
 pat --> rhs = decodeOne pat rhs

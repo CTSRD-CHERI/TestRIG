@@ -50,6 +50,7 @@ import GHC.Generics (Generic)
 import System.IO 
 import Test.QuickCheck
 import RISCV
+import RVxxI
 
 rvfi_cmd_instruction = 1 :: Word8
 rvfi_cmd_end = 0 :: Word8

@@ -64,6 +64,7 @@ import System.IO
 import RVFI_DII
 import RISCV
 import CHERI
+import RVxxI
 
 -- command line arguments
 --------------------------------------------------------------------------------
@@ -184,14 +185,24 @@ main = withSocketsDo $ do
         Nothing -> do
           when (((arch flags) =~ ("i"::String)) ::Bool) (
             do
-              print "RV32I Arithmetic Verification:"
+              print "rv32i Arithmetic Verification:"
               checkGen genArithmetic
-              print "RV32I Memory Verification:"
+              print "rv32i Memory Verification:"
               checkGen genMemory
-              print "RV32I Control Flow Verification:"
+              print "rv32i Control Flow Verification:"
               checkGen genControlFlow
-              print "RV32I All Verification:"
+              print "rv32i All Verification:"
               checkGen genAll)
+          when (((arch flags) =~ ("xCHERI"::String)) ::Bool) (
+            do
+              print "xCHERI Capability Inspection Verification:"
+              checkGen genCHERIinspection
+              print "xCHERI Capability Arithmetic Verification:"
+              checkGen genCHERIarithmetic
+              print "xCHERI Capability Miscellaneous Verification:"
+              checkGen genCHERImisc
+              print "xCHERI Capability Control Flow Verification:"
+              checkGen genCHERIcontrol)
   --
   close modSoc
   close impSoc
