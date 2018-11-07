@@ -60,6 +60,12 @@ spike:
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-misaligned &&\
 	make install && cp libfesvr.so lib/
 
+spike-cheri:
+	cd riscv-implementations/riscv-isa-sim &&\
+	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
+	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
+	make install && cp libfesvr.so lib/
+
 .PHONY: clean-riscv-implementations clean-rvbs
 
 clean-riscv-implementations: clean-rvbs clean-spike
