@@ -126,7 +126,7 @@ def input_y_n(prompt):
 # spawn rvfi_dii server #
 #########################
 
-def spawn_rvfi_dii_server(name, port, log):
+def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   ## few common variables
   use_log = open(os.devnull,"w")
   if log:
@@ -182,8 +182,8 @@ def main():
       servB.kill()
 
   try:
-    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log)
-    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log)
+    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
+    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
   except:
     kill_rvfi_dii_servers(a,b)
     raise
