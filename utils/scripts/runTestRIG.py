@@ -142,10 +142,14 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   cmd = []
   ##############################################################################
   if (name == 'spike'):
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa), "--extension={:s}".format(extension), "-m0x80000000:0x10000"]
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa), "-m0x80000000:0x10000"]
 
     if log:
       cmd += ["-l"]
+
+    if extension != "":
+      cmd += ["--extension={:s}".format(extension)]
+
   ##############################################################################
   elif (name == 'rvbs'):
     env2["RVFI_DII_PORT"] = str(port)

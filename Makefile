@@ -56,12 +56,14 @@ rvbs:
 
 spike:
 	cd riscv-implementations/riscv-isa-sim &&\
+	git checkout rvfi_dii &&\
 	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-misaligned &&\
 	make install && cp libfesvr.so lib/
 
 spike-cheri:
 	cd riscv-implementations/riscv-isa-sim &&\
+	git fetch && git checkout cheri_rvfi_dii &&\
 	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
 	make install && cp libfesvr.so lib/
