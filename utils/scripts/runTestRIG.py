@@ -147,7 +147,7 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     if log:
       cmd += ["-l"]
 
-    if extension != "":
+    if extension != "" and extension != "cheri":
       cmd += ["--extension={:s}".format(extension)]
 
   ##############################################################################
