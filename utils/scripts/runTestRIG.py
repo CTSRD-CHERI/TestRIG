@@ -200,11 +200,11 @@ def main():
     kill_rvfi_dii_servers(a,b)
     raise
   
-  def kill_n_exit(sig, frame):
+  def handle_SIGINT(sig, frame):
     kill_rvfi_dii_servers(a,b)
     exit(0)
 
-  signal.signal(signal.SIGINT, kill_n_exit)
+  signal.signal(signal.SIGINT, handle_SIGINT)
 
   time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
   try:
