@@ -56,7 +56,7 @@ def auto_pos_int (x):
 def auto_write_fd (fname):
   return open(fname, 'w')
 
-known_rvfi_dii = set({'spike','rvbs'})
+known_rvfi_dii = set({'spike','rvbs','manual'})
 known_vengine  = set({'QCVEngine'})
 known_architectures = set({'rv32i','rv64i','rv32ixcheri'})
 
@@ -156,6 +156,9 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     cmd = [args.path_to_rvbs]
     if log:
       cmd += ["+itrace"]
+  ##############################################################################
+  elif (name == 'manual'):
+    return None
   ##############################################################################
   else:
     print("Unknown rvfi-dii server {:s}".format(name))
