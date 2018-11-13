@@ -196,6 +196,8 @@ def main():
       print("killing implementation B's rvfi-dii server")
       servB.kill()
 
+  a = None
+  b = None
   try:
     a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
     b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
