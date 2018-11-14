@@ -161,7 +161,10 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
       cmd += ["+itrace"]
   ##############################################################################
   elif (name == 'sail'):
-    cmd = [args.path_to_sail_riscv, "-m", "-r", str(port)]
+    if 'c' in isa:
+      cmd = [args.path_to_sail_riscv, "-m", "-r", str(port)]
+    else:
+      cmd = [args.path_to_sail_riscv, "-C", "-m", "-r", str(port)]
   ##############################################################################
   elif (name == 'manual'):
     return None
