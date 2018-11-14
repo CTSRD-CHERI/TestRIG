@@ -66,12 +66,19 @@ spike-cheri:
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
 	make install && cp libfesvr.so lib/
 
-.PHONY: clean-riscv-implementations clean-rvbs
+sail:
+	$(MAKE) -C riscv-implementations/sail sail
+	$(MAKE) -C riscv-implementations/sail/riscv riscv_rvfi
 
-clean-riscv-implementations: clean-rvbs clean-spike
+.PHONY: clean-riscv-implementations clean-rvbs clean-sail
+
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail
 
 clean-rvbs:
 	$(MAKE) -C riscv-implementations/RVBS mrproper-rvfi-dii
 
 clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
+
+clean-sail:
+	$(MAKE) -C riscv-implementations/sail/riscv clean

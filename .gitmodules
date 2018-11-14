@@ -7,3 +7,7 @@
 [submodule "riscv-implementations/riscv-isa-sim"]
 	path = riscv-implementations/riscv-isa-sim
 	url = git@github.com:CTSRD-CHERI/riscv-isa-sim.git
+[submodule "riscv-implementations/sail"]
+	path = riscv-implementations/sail
+	url = https://github.com/rems-project/sail.git
+	branch = rvfi-dii

@@ -56,9 +56,9 @@ def auto_pos_int (x):
 def auto_write_fd (fname):
   return open(fname, 'w')
 
-known_rvfi_dii = set({'spike','rvbs','manual'})
+known_rvfi_dii = set({'spike','rvbs','sail','manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({'rv32i','rv64i','rv32ixcheri'})
+known_architectures = set({'rv32i','rv64i','rv64ic','rv32ixcheri'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
@@ -103,6 +103,9 @@ parser.add_argument('--path-to-spike', metavar='PATH', type=str,
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
+  help="The PATH to the QCVEngine executable")
+parser.add_argument('--path-to-sail-riscv', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail/riscv/riscv_rvfi"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
   default='rv32i',
@@ -156,6 +159,9 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     cmd = [args.path_to_rvbs]
     if log:
       cmd += ["+itrace"]
+  ##############################################################################
+  elif (name == 'sail'):
+    cmd = [args.path_to_sail_riscv, "-m", "-r", str(port)]
   ##############################################################################
   elif (name == 'manual'):
     return None
