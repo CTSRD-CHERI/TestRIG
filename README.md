@@ -56,6 +56,7 @@ Currently, the provided modules are:
 - [BSV-RVFI-DII](https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git)
 - [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
 - [Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
+- [Sail RISC-V model](https://github.com/rems-project/sail)
 
 The root makefile can currently build the Quick Check Verification Engine, Spike, and the RVBS implementation.
 The dependencies for the Quick Check Verification Engine are:
@@ -67,3 +68,10 @@ The dependencies for Spike are:
 You can verify a default configuration by executing:
 - `make`
 - `utils/scripts/runTestRIG.py`
+
+The dependencies for the Sail model can be installed using
+[opam](http://opam.ocaml.org/) by following the instructions from the
+[Sail wiki](https://github.com/rems-project/sail/wiki/OPAMInstall).
+The Sail tool itself will be rebuilt by the module, so you can add
+`--deps-only` to the `opam install` command to avoid building it
+twice.
