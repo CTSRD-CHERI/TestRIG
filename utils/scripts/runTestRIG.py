@@ -86,6 +86,8 @@ parser.add_argument('--implementation-B-log', metavar='PATH',
 parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known_vengine,
   default='QCVEngine',
   help="The verification engine to use. (one of {:s})".format(str(known_vengine)))
+parser.add_argument('--instruction-gen-port', metavar='PORT', default=None, type=auto_int,
+  help="Use instruction generator on given port.")
 # general configuration args
 parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=1, type=auto_int,
   help="Specify a number of seconds to wait between server creation and verification engine startup.")
@@ -187,6 +189,8 @@ def spawn_vengine(name, mport, iport, arch):
     cmd += ['-n', str(args.number_of_tests)]
     if args.verbose > 0:
       cmd += ['-v']
+    if args.instruction_gen_port:
+      cmd += ['-i', str(args.instruction_gen_port)]
     p = sub.Popen(cmd)
     return p
   else:

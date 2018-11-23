@@ -57,6 +57,7 @@ import Test.QuickCheck.Monadic
 import System.Environment
 import System.Directory
 import System.Console.GetOpt
+import System.IO.Unsafe
 import Data.Maybe ( isJust, fromMaybe )
 import Data.List
 import System.FilePath.Windows
@@ -79,6 +80,7 @@ data Options = Options
     , instTraceFile :: Maybe FilePath
     , instDirectory :: Maybe FilePath
     , arch          :: String
+    , instrPort     :: Maybe String
     } deriving Show
 
 defaultOptions = Options
@@ -90,7 +92,8 @@ defaultOptions = Options
     , impBIP        = "127.0.0.1"
     , instTraceFile = Nothing
     , instDirectory = Nothing
-    , arch          = "32i"      
+    , arch          = "32i"
+    , instrPort     = Nothing
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -122,6 +125,9 @@ options =
   , Option ['r']     ["architecture"]
       (ReqArg (\ f opts -> opts { arch = map toLower f }) "ARCHITECTURE")
         "Specify ARCHITECTURE to be verified (e.g. 32i)"
+  , Option ['i']     ["instruction generator port"]
+      (ReqArg (\ f opts -> opts { instrPort = Just f }) "PORT")
+        "Connect to an external instruction generator on PORT"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -144,6 +150,8 @@ main = withSocketsDo $ do
   addrImp <- resolve (impBIP flags) (impBPort flags)
   modSoc <- open addrMod
   impSoc <- open addrImp
+  addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
+  instrSoc <- mapM open addrInstr
   --
   let checkResult = if (optVerbose flags)
                     then verboseCheckResult
@@ -184,26 +192,30 @@ main = withSocketsDo $ do
           let fullCulledFileNames = map (\x -> directory ++ "/" ++ x) culledFileNames
           mapM_ checkFile fullCulledFileNames
         Nothing -> do
-          when (((arch flags) =~ ("i"::String)) ::Bool) (
-            do
-              print "rv32i Arithmetic Verification:"
-              checkGen genArithmetic
-              print "rv32i Memory Verification:"
-              checkGen genMemory
-              print "rv32i Control Flow Verification:"
-              checkGen genControlFlow
-              print "rv32i All Verification:"
-              checkGen genAll)
-          when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
-            do
-              print "xCHERI Capability Inspection Verification:"
-              checkGen genCHERIinspection
-              print "xCHERI Capability Arithmetic Verification:"
-              checkGen genCHERIarithmetic
-              print "xCHERI Capability Miscellaneous Verification:"
-              checkGen genCHERImisc
-              print "xCHERI Capability Control Flow Verification:"
-              checkGen genCHERIcontrol)
+          case instrSoc of
+            Nothing -> do
+              when (((arch flags) =~ ("i"::String)) ::Bool) (
+                do
+                  print "rv32i Arithmetic Verification:"
+                  checkGen genArithmetic
+                  print "rv32i Memory Verification:"
+                  checkGen genMemory
+                  print "rv32i Control Flow Verification:"
+                  checkGen genControlFlow
+                  print "rv32i All Verification:"
+                  checkGen genAll)
+              when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
+                do
+                  print "xCHERI Capability Inspection Verification:"
+                  checkGen genCHERIinspection
+                  print "xCHERI Capability Arithmetic Verification:"
+                  checkGen genCHERIarithmetic
+                  print "xCHERI Capability Miscellaneous Verification:"
+                  checkGen genCHERImisc
+                  print "xCHERI Capability Control Flow Verification:"
+                  checkGen genCHERIcontrol)
+            Just sock -> do
+              checkGen (genInstrServer sock)
   --
   close modSoc
   close impSoc
@@ -263,3 +275,14 @@ receiveExecutionTrace doLog sock = do
     else do
       remainderOfTrace <- receiveExecutionTrace doLog sock
       return (traceEntry:remainderOfTrace)
+
+--------------------------------------------------------------------------------
+
+genInstrServer :: Socket -> Gen Integer
+genInstrServer sock = do
+  seed :: Int32 <- arbitraryBoundedRandom
+  let msg = unsafePerformIO (
+        do
+          sendAll sock (encode seed)
+          recv sock 4)
+  return (toInteger (decode (BS.reverse msg) :: Int32))
