@@ -214,11 +214,11 @@ infix 9 -->
 (-->) :: Apply f a => String -> f -> (Integer, Int) -> Maybe a
 pat --> rhs = decodeOne pat rhs
 
-decode :: Int -> Integer -> [(Integer, Int) -> Maybe a] -> a
+decode :: Int -> Integer -> [(Integer, Int) -> Maybe a] -> Maybe a
 decode n subj alts =
   case catMaybes [alt (subj, n) | alt <- alts] of
-    [] -> error "Codec.decode: pattern match failed"
-    match:rest -> match
+    [] -> Nothing
+    match:rest -> Just match
 
 rangedVars :: [Token] -> [String]
 rangedVars toks = nub [v | Range v hi lo <- reverse toks]

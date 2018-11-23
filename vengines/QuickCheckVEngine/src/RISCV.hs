@@ -41,4 +41,6 @@ import CHERI
 -- Instruction pretty printer
 pretty :: Integer -> String
 pretty instr = 
-  decode 32 instr (integer_instructions_dissasembly_list ++ cheri_instructions_dissasembly_list)
+  case decode 32 instr (integer_instructions_dissasembly_list ++ cheri_instructions_dissasembly_list) of
+    Nothing -> "Unknown instruction"
+    Just i -> i
