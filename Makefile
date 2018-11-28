@@ -39,13 +39,21 @@ QCVengine:
 	cabal configure &&\
 	cabal build
 
+sail-generator:
+	cd vengines/sail-riscv-test-generation &&\
+	make
+
 .PHONY: clean-vengines clean-QCVEngine
 
-clean-vengines: clean-QCVEngine
+clean-vengines: clean-QCVEngine clean-sail-generator
 
 clean-QCVEngine:
 	cd vengines/QuickCheckVEngine &&\
 	cabal clean
+
+clean-sail-generator:
+	cd vengines/sail-riscv-test-generation &&\
+	make clean
 
 # RISCV implementations
 ################################################################################
