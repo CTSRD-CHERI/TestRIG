@@ -281,6 +281,8 @@ receiveExecutionTrace doLog sock = do
 genInstrServer :: Socket -> Gen Integer
 genInstrServer sock = do
   seed :: Int32 <- arbitraryBoundedRandom
+  -- This should be safe so long as the server returns the same instruction when
+  -- given the same seed.
   let msg = unsafePerformIO (
         do
           sendAll sock (encode seed)
