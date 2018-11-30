@@ -11,3 +11,6 @@
 	path = riscv-implementations/sail
 	url = https://github.com/rems-project/sail.git
 	branch = rvfi-dii
+[submodule "vengines/sail-riscv-test-generation"]
+	path = vengines/sail-riscv-test-generation
+	url = https://github.com/rems-project/sail-riscv-test-generation.git

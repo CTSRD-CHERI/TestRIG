@@ -58,7 +58,8 @@ def auto_write_fd (fname):
 
 known_rvfi_dii = set({'spike','rvbs','sail','manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({'rv32i','rv64i','rv64ic','rv32ixcheri'})
+known_architectures = set({'rv32i','rv64i','rv64ic','rv64g','rv64gc','rv32ixcheri'})
+known_generators = set({'internal','sail','manual'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
@@ -110,6 +111,16 @@ parser.add_argument('--path-to-sail-riscv', metavar='PATH', type=str,
 parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
   default='rv32i',
   help="The architecture to verify. (one of {:s})".format(str(known_architectures)))
+parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
+  default='internal',
+  help="The instruction generator to use. (one of {:s})".format(str(known_generators)))
+parser.add_argument('--path-to-generator', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/sail-riscv-test-generation/main.native"),
+  help="The PATH to the instruction generation (not needed for internal or manual generators)")
+parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_int,
+  help="Use instruction generator on given port.")
+parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
+  help="Log instruction generator output")
 
 args = parser.parse_args()
 
@@ -187,10 +198,43 @@ def spawn_vengine(name, mport, iport, arch):
     cmd += ['-n', str(args.number_of_tests)]
     if args.verbose > 0:
       cmd += ['-v']
+    if (args.generator != 'internal'):
+      cmd += ['-i', str(args.generator_port)]
     p = sub.Popen(cmd)
     return p
   else:
+    if generator:
+      generator.kill()
     print("Unknown verification engine {:s}".format(name))
+
+#######################################
+# spawn instruction generation engine #
+#######################################
+
+def spawn_generator(name, arch, log):
+  if name == "sail":
+    if log:
+      use_log = log
+    elif args.verbose > 0:
+      use_log = os.sys.stdout
+    else:
+      use_log = open(os.devnull,"w")
+
+    if 'x' in arch:
+      # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
+      [isa, extension] = arch.split('x')
+    else:
+      # No extension specified in the architecture string
+      [isa, extension] = [arch, ""]
+    cmd = [args.path_to_generator, '-p', str(args.generator_port)]
+    if not ('c' in isa):
+      cmd += ['-no_compressed']
+
+    generator = sub.Popen(cmd, stdout=use_log, stderr=use_log)
+    print('spawned sail instruction generator on port: {:d}'.format(args.generator_port))
+    return generator
+  else:
+    return None
 
 #################
 # main function #
@@ -207,15 +251,19 @@ def main():
 
   a = None
   b = None
+  generator = None
   try:
     a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
     b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
+    generator = spawn_generator(args.generator, args.architecture, args.generator_log)
   except:
     kill_rvfi_dii_servers(a,b)
     raise
   
   def handle_SIGINT(sig, frame):
     kill_rvfi_dii_servers(a,b)
+    if generator:
+      generator.kill()
     exit(0)
 
   signal.signal(signal.SIGINT, handle_SIGINT)
@@ -224,10 +272,14 @@ def main():
   try:
     e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, args.architecture)
   except:
+    if generator:
+      generator.kill()
     kill_rvfi_dii_servers(a,b)
     raise
   e.wait()
   print('verification engine run terminated')
+  if generator:
+    generator.kill()
   kill_rvfi_dii_servers(a,b)
   exit(0)
 
