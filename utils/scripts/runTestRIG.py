@@ -119,6 +119,8 @@ parser.add_argument('--path-to-generator', metavar='PATH', type=str,
   help="The PATH to the instruction generation (not needed for internal or manual generators)")
 parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_int,
   help="Use instruction generator on given port.")
+parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
+  help="Log instruction generator output")
 
 args = parser.parse_args()
 
@@ -209,10 +211,15 @@ def spawn_vengine(name, mport, iport, arch):
 # spawn instruction generation engine #
 #######################################
 
-def spawn_generator(name, arch):
-  # This ought to redirect output to a log, but for now display it on the console
-  # so that you can see what the failing instructions were
+def spawn_generator(name, arch, log):
   if name == "sail":
+    if log:
+      use_log = log
+    elif args.verbose > 0:
+      use_log = os.sys.stdout
+    else:
+      use_log = open(os.devnull,"w")
+
     if 'x' in arch:
       # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
       [isa, extension] = arch.split('x')
@@ -222,7 +229,8 @@ def spawn_generator(name, arch):
     cmd = [args.path_to_generator, '-p', str(args.generator_port)]
     if not ('c' in isa):
       cmd += ['-no_compressed']
-    generator = sub.Popen(cmd)
+
+    generator = sub.Popen(cmd, stdout=use_log, stderr=use_log)
     print('spawned sail instruction generator on port: {:d}'.format(args.generator_port))
     return generator
   else:
@@ -247,7 +255,7 @@ def main():
   try:
     a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
     b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
-    generator = spawn_generator(args.generator, args.architecture)
+    generator = spawn_generator(args.generator, args.architecture, args.generator_log)
   except:
     kill_rvfi_dii_servers(a,b)
     raise
