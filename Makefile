@@ -75,8 +75,7 @@ spike-cheri:
 	make install && cp libfesvr.so lib/
 
 sail:
-	$(MAKE) -C riscv-implementations/sail sail
-	$(MAKE) -C riscv-implementations/sail/riscv riscv_rvfi
+	$(MAKE) -C riscv-implementations/sail-riscv riscv_rvfi
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
@@ -89,4 +88,4 @@ clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
 
 clean-sail:
-	$(MAKE) -C riscv-implementations/sail/riscv clean
+	$(MAKE) -C riscv-implementations/sail-riscv clean
