@@ -51,6 +51,7 @@ import System.IO
 import Test.QuickCheck
 import RISCV
 import RVxxI
+import Text.Printf
 
 rvfi_cmd_instruction = 1 :: Word8
 rvfi_cmd_end = 0 :: Word8
@@ -147,9 +148,10 @@ instance Eq RVFI_DII_Execution where
 instance Show RVFI_DII_Execution where
   show tok
     | rvfi_halt tok /= 0 = "halt token"
-    | otherwise = "  Trap:" ++ (show ((rvfi_trap tok) /= 0)) ++
-                  "  PCWD:0x" ++ (showHex (rvfi_pc_wdata tok) "") ++
-                  "  RWD:0x" ++ (showHex (rvfi_rd_wdata tok) "") ++
-                  "  MA:0x" ++ (showHex (rvfi_mem_addr tok) "") ++
-                  "  MWD:0x" ++ (showHex (rvfi_mem_wdata tok) "") ++
-                  "  I:0x" ++ (showHex (rvfi_exe_insn tok) "") ++ " " ++ pretty (toInteger (rvfi_exe_insn tok)) ++ "\n"
+    | otherwise = printf "Trap: %5s, PCWD: 0x%016x, RWD: 0x%016x, MA: 0x%016x, MWD: 0x%016x, I: 0x%016x (%s)" 
+                  (show ((rvfi_trap tok) /= 0)) -- Trap
+                  (rvfi_pc_wdata tok)           -- PCWD
+                  (rvfi_rd_wdata tok)           -- RWD
+                  (rvfi_mem_addr tok)           -- MA
+                  (rvfi_mem_wdata tok)          -- MWD
+                  (rvfi_exe_insn tok) (pretty (toInteger (rvfi_exe_insn tok))) -- Inst

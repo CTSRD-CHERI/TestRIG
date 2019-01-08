@@ -146,10 +146,10 @@ main = withSocketsDo $ do
   (flags, leftover) <- commandOpts rawArgs
   when (optVerbose flags) $ print flags
   -- initialize model and implementation sockets
-  addrMod <- resolve (impAIP flags) (impAPort flags)
-  addrImp <- resolve (impBIP flags) (impBPort flags)
-  modSoc <- open addrMod
-  impSoc <- open addrImp
+  addrA <- resolve (impAIP flags) (impAPort flags)
+  addrB <- resolve (impBIP flags) (impBPort flags)
+  socA <- open addrA
+  socB <- open addrB
   addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
   instrSoc <- mapM open addrInstr
   --
@@ -160,7 +160,7 @@ main = withSocketsDo $ do
               then verboseCheck
               else quickCheck
   let checkGen gen = do
-      result <- checkResult (withMaxSuccess (nTests flags) (prop (listOf (rvfi_dii_gen gen)) modSoc impSoc (optVerbose flags)))
+      result <- checkResult (withMaxSuccess (nTests flags) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags)))
       case result of
         Failure {} -> do
           --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
@@ -179,7 +179,7 @@ main = withSocketsDo $ do
   let checkFile (fileName :: FilePath) = do
       print ("Reading trace from " ++ fileName ++ ":")
       trace <- read_rvfi_inst_trace fileName
-      check (withMaxSuccess 1 (prop (return trace) modSoc impSoc (optVerbose flags)))
+      check (withMaxSuccess 1 (prop (return trace) socA socB (optVerbose flags)))
   --
   case (instTraceFile flags) of
     Just fileName -> do
@@ -217,8 +217,8 @@ main = withSocketsDo $ do
             Just sock -> do
               checkGen (genInstrServer sock)
   --
-  close modSoc
-  close impSoc
+  close socA
+  close socB
   --
   where
     resolve host port = do
@@ -233,20 +233,23 @@ main = withSocketsDo $ do
 --------------------------------------------------------------------------------
         
 prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Property
-prop gen modSoc impSoc doLog = forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
+prop gen socA socB doLog = forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
   let instTraceTerminated = (instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
                                             rvfi_time = 1,
                                             rvfi_ins_insn = 0
                                           }])
-  sendInstructionTrace modSoc instTraceTerminated
-  sendInstructionTrace impSoc instTraceTerminated
+  sendInstructionTrace socA instTraceTerminated
+  sendInstructionTrace socB instTraceTerminated
 
-  when doLog $ print " model          Trace "
-  modTrace <- receiveExecutionTrace doLog modSoc
-  when doLog $ print " implementation Trace "
-  impTrace <- receiveExecutionTrace doLog impSoc
+  when doLog $ putStrLn "----------------------------------------------------------------------"
+  when doLog $ putStrLn "Socket A Trace (model)"
+  when doLog $ putStrLn "----------------------"
+  modTrace <- receiveExecutionTrace doLog socA
+  when doLog $ putStrLn "Socket B Trace (implementation)"
+  when doLog $ putStrLn "-------------------------------"
+  impTrace <- receiveExecutionTrace doLog socB
 
   return (and (zipWith (==) modTrace impTrace)))))
 
@@ -269,7 +272,7 @@ receiveExecutionTrace :: Bool -> Socket -> IO ([RVFI_DII_Execution])
 receiveExecutionTrace doLog sock = do
   msg <- recv sock 88
   let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
-  when doLog $ print traceEntry
+  when doLog $ putStrLn ("\t"++(show traceEntry))
   if ((rvfi_halt traceEntry) == 1)
     then return [traceEntry]
     else do
