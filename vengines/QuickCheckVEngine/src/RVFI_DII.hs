@@ -133,7 +133,7 @@ maskUpper x = (x Data.Bits..&. 0x00000000FFFFFFFF)
 
 maskWith :: Word64 -> Word8 -> Word64
 maskWith a b = a Data.Bits..&. mask
-               where mask = BW.fromListBE $ concatMap ((take 8).repeat) (BW.toListLE b)
+               where mask = BW.fromListLE $ concatMap ((take 8).repeat) (BW.toListLE b)
 
 instance Eq RVFI_DII_Execution where
   x == y
@@ -148,10 +148,11 @@ instance Eq RVFI_DII_Execution where
 instance Show RVFI_DII_Execution where
   show tok
     | rvfi_halt tok /= 0 = "halt token"
-    | otherwise = printf "Trap: %5s, PCWD: 0x%016x, RWD: 0x%016x, MA: 0x%016x, MWD: 0x%016x, I: 0x%016x (%s)" 
+    | otherwise = printf "Trap: %5s, PCWD: 0x%016x, RWD: 0x%016x, MA: 0x%016x, MWD: 0x%016x, MWM: 0b%08b, I: 0x%016x (%s)"
                   (show ((rvfi_trap tok) /= 0)) -- Trap
                   (rvfi_pc_wdata tok)           -- PCWD
                   (rvfi_rd_wdata tok)           -- RWD
                   (rvfi_mem_addr tok)           -- MA
                   (rvfi_mem_wdata tok)          -- MWD
+                  (rvfi_mem_wmask tok)          -- MWM
                   (rvfi_exe_insn tok) (pretty (toInteger (rvfi_exe_insn tok))) -- Inst

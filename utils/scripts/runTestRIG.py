@@ -94,9 +94,12 @@ parser.add_argument('-v', '--verbose', action='count', default=0,
   help="Increase verbosity level by adding more \"v\".")
 parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
   default=100, help="Runs the verification engine for NTESTS tests.")
+parser.add_argument('-t', '--trace-file', metavar= 'FILENAME', type=str,
+  help="Runs the test specified in FILENAME")
 parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
   #default='rvbs-rv32i-rvfi-dii',
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/rvbs-rv32i-rvfi-dii"),
+  #default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/rvbs-rv64i-rvfi-dii"),
   help="The PATH to the rvbs executable")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
@@ -106,7 +109,7 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('--path-to-sail-riscv', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-riscv/riscv_rvfi"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-riscv/c_emulator/riscv_rvfi"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
   default='rv32i',
@@ -200,6 +203,8 @@ def spawn_vengine(name, mport, iport, arch):
       cmd += ['-v']
     if (args.generator != 'internal'):
       cmd += ['-i', str(args.generator_port)]
+    if (args.trace_file):
+      cmd += ['-t', args.trace_file]
     p = sub.Popen(cmd)
     return p
   else:

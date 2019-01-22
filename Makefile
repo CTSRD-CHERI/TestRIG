@@ -59,8 +59,19 @@ clean-sail-generator:
 ################################################################################
 riscv-implementations: rvbs spike
 
-rvbs:
+rvbs: rvbs-rv32i
+
+rvbs-rv32i:
 	$(MAKE) -C riscv-implementations/RVBS rvfi-dii
+
+rvbs-rv32ic:
+	$(MAKE) -C riscv-implementations/RVBS RVC=1 rvfi-dii
+
+rvbs-rv64i:
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 rvfi-dii
+
+rvbs-rv64ic:
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVC=1 rvfi-dii
 
 spike:
 	cd riscv-implementations/riscv-isa-sim &&\
@@ -75,7 +86,7 @@ spike-cheri:
 	make install && cp libfesvr.so lib/
 
 sail:
-	$(MAKE) -C riscv-implementations/sail-riscv riscv_rvfi
+	$(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
@@ -83,6 +94,9 @@ clean-riscv-implementations: clean-rvbs clean-spike clean-sail
 
 clean-rvbs:
 	$(MAKE) -C riscv-implementations/RVBS mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS RVC=1 mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVC=1 mrproper-rvfi-dii
 
 clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
