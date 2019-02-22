@@ -67,11 +67,17 @@ rvbs-rv32i:
 rvbs-rv32ic:
 	$(MAKE) -C riscv-implementations/RVBS RVC=1 rvfi-dii
 
+rvbs-rv32ixcheri:
+	$(MAKE) -C riscv-implementations/RVBS RVXCHERI=1 rvfi-dii
+
 rvbs-rv64i:
 	$(MAKE) -C riscv-implementations/RVBS XLEN=64 rvfi-dii
 
 rvbs-rv64ic:
 	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVC=1 rvfi-dii
+
+rvbs-rv64ixcheri:
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVXCHERI=1 rvfi-dii
 
 spike:
 	cd riscv-implementations/riscv-isa-sim &&\
