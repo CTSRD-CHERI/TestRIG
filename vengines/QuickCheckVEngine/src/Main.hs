@@ -191,7 +191,7 @@ main = withSocketsDo $ do
           return ()
         other -> return ()
   let checkFile (fileName :: FilePath) = do
-      print ("Reading trace from " ++ fileName ++ ":")
+      putStrLn $ "Reading trace from " ++ fileName ++ ":"
       trace <- read_rvfi_inst_trace_file fileName
       checkSingle trace
   --
@@ -210,24 +210,26 @@ main = withSocketsDo $ do
             Nothing -> do
               when (((arch flags) =~ ("i"::String)) ::Bool) (
                 do
-                  print "rv32i Arithmetic Verification:"
+                  putStrLn "rv32i Arithmetic Verification:"
                   checkGen genArithmetic
-                  print "rv32i Memory Verification:"
+                  putStrLn "rv32i Memory Verification:"
                   checkGen genMemory
-                  print "rv32i Control Flow Verification:"
+                  putStrLn "rv32i Control Flow Verification:"
                   checkGen genControlFlow
-                  print "rv32i All Verification:"
-                  checkGen genAll)
+                  putStrLn "rv32i All Verification:"
+                  checkGen genAll
+                  )
               when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
                 do
-                  print "xCHERI Capability Inspection Verification:"
+                  putStrLn "xCHERI Capability Inspection Verification:"
                   checkGen genCHERIinspection
-                  print "xCHERI Capability Arithmetic Verification:"
+                  putStrLn "xCHERI Capability Arithmetic Verification:"
                   checkGen genCHERIarithmetic
-                  print "xCHERI Capability Miscellaneous Verification:"
+                  putStrLn "xCHERI Capability Miscellaneous Verification:"
                   checkGen genCHERImisc
-                  print "xCHERI Capability Control Flow Verification:"
-                  checkGen genCHERIcontrol)
+                  putStrLn "xCHERI Capability Control Flow Verification:"
+                  checkGen genCHERIcontrol
+                  )
             Just sock -> do
               checkGen (genInstrServer sock)
   --
