@@ -150,6 +150,20 @@ main = withSocketsDo $ do
   addrB <- resolve (impBIP flags) (impBPort flags)
   socA <- open addrA
   socB <- open addrB
+  sendInstructionTrace socA ([RVFI_DII_Instruction {
+                                            padding   = 0,
+                                            rvfi_cmd  = rvfi_cmd_end,
+                                            rvfi_time = 1,
+                                            rvfi_ins_insn = [0]
+                                          }])
+  _ <- receiveExecutionTrace False socA
+  sendInstructionTrace socB ([RVFI_DII_Instruction {
+                                            padding   = 0,
+                                            rvfi_cmd  = rvfi_cmd_end,
+                                            rvfi_time = 1,
+                                            rvfi_ins_insn = [0]
+                                          }])
+  _ <- receiveExecutionTrace False socB
   addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
   instrSoc <- mapM open addrInstr
   --
