@@ -168,15 +168,12 @@ main = withSocketsDo $ do
   instrSoc <- mapM open addrInstr
   --
   let checkResult = if (optVerbose flags)
-                    then verboseCheckResult
-                    else quickCheckResult
-  let check = if (optVerbose flags)
-              then verboseCheck
-              else quickCheck
+                    then verboseCheckWithResult
+                    else quickCheckWithResult
   let checkSingle trace = do
       quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True)
   let checkGen gen = do
-      result <- checkResult (withMaxSuccess (nTests flags) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags)))
+      result <- checkResult (Args Nothing (nTests flags) 1 2048 True 1000) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags))
       case result of
         Failure {} -> do
           writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
