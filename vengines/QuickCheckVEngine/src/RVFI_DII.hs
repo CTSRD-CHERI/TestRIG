@@ -52,6 +52,7 @@ import Test.QuickCheck
 import RISCV
 import RVxxI
 import Text.Printf
+import Data.List.Split
 
 rvfi_cmd_instruction = 1 :: Word8
 rvfi_cmd_end = 0 :: Word8
@@ -96,15 +97,18 @@ instance Show RVFI_DII_Instruction where
                ++ " # " ++ pretty (toInteger (rvfi_ins_insn inst_tok))
   showList inst_toks = showString (unlines (map show inst_toks))
 
-read_rvfi_inst_trace :: FilePath -> IO [RVFI_DII_Instruction]
-read_rvfi_inst_trace inFile = do
+read_rvfi_inst_trace :: [String] -> [RVFI_DII_Instruction]
+read_rvfi_inst_trace inStr =
+  let lns = map (head . (splitOn "#")) inStr in           -- Remove comments
+  let trimmed = filter (not . null) lns in                -- Remove empty lines
+  let insts = map ((drop 2) .(!! 1) . words) trimmed in   -- Take only encoded instruction
+  map (fromInteger .fst . head . readHex) insts
+
+read_rvfi_inst_trace_file :: FilePath -> IO [RVFI_DII_Instruction]
+read_rvfi_inst_trace_file inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
-  let lns = drop 1 (lines contents)
-  let trimmed = filter (not . null) lns
-  let insts = map ((drop 2) .(!! 1) . words) trimmed
-  let rvfi_trace = map (fromInteger .fst . head . readHex) insts
-  return rvfi_trace
+  return $ read_rvfi_inst_trace (lines contents)
 
 data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_intr :: Word8,

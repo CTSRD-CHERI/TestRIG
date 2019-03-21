@@ -8,6 +8,6 @@ executable QCVEngine
   main-is:             Main.hs
   -- other-modules:       
   other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
-  build-depends:       base, QuickCheck, bytestring, network, binary, directory, filepath, bitwise, regex-posix
+  build-depends:       base, QuickCheck, bytestring, network, binary, directory, filepath, bitwise, regex-posix, split
   hs-source-dirs:      src
   default-language:    Haskell98

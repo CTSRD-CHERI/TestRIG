@@ -173,12 +173,15 @@ main = withSocketsDo $ do
   let check = if (optVerbose flags)
               then verboseCheck
               else quickCheck
+  let checkSingle trace = do
+      quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True)
   let checkGen gen = do
       result <- checkResult (withMaxSuccess (nTests flags) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags)))
       case result of
         Failure {} -> do
-          --writeFile "last_failure.S" ("# last failing test case:\n" ++ (failingTestCase result))
           writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
+          putStrLn "Replaying shrunk failed test case:"
+          checkSingle (read_rvfi_inst_trace (failingTestCase result))
           putStrLn "Save this trace? (y?)"
           ans <- getLine
           when (ans == "y" || ans == "Y") $ do
@@ -192,8 +195,8 @@ main = withSocketsDo $ do
         other -> return ()
   let checkFile (fileName :: FilePath) = do
       print ("Reading trace from " ++ fileName ++ ":")
-      trace <- read_rvfi_inst_trace fileName
-      check (withMaxSuccess 1 (prop (return trace) socA socB (optVerbose flags)))
+      trace <- read_rvfi_inst_trace_file fileName
+      checkSingle trace
   --
   case (instTraceFile flags) of
     Just fileName -> do
