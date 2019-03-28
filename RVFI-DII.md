@@ -82,7 +82,7 @@ That is, all general-purpose register values must be set to zero, CSRs to reset 
 
 ## 64KiB Memory at 0x80000000
 Memory must be 64KiB in size and mapped at 0x80000000.
-Test generators are responsable to attempt to generate addresses within this 64KiB region.
+Test generators are responsible to attempt to generate addresses within this 64KiB region.
 
 # Potential RVFI-DII extensions
 
