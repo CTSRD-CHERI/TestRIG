@@ -282,11 +282,17 @@ sendInstruction sock inst = do
   sendAll sock (BS.reverse (encode inst))
   return ()
 
+-- Receive a fixed number of bytes
+receiveBlocking :: Int64 -> Socket -> IO(BS.ByteString)
+receiveBlocking n sock = if toInteger(n) == 0 then return empty else do
+  received <- recv sock n;
+  remainder <- receiveBlocking (n - BS.length(received)) sock
+  return $ BS.append received remainder
 
 -- Receive an execution trace
 receiveExecutionTrace :: Bool -> Socket -> IO ([RVFI_DII_Execution])
 receiveExecutionTrace doLog sock = do
-  msg <- recv sock 88
+  msg <- receiveBlocking 88 sock
   let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
   when doLog $ putStrLn ("\t"++(show traceEntry))
   if ((rvfi_halt traceEntry) == 1)
