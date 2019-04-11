@@ -103,17 +103,17 @@ options =
         "Turn on verbose output"
   , Option ['n']     ["number-of-tests"]
       (ReqArg (\ f opts -> opts { nTests = read f }) "NUMTESTS")
-        "Specify NUMTESTS the sumber of tests to run"
+        "Specify NUMTESTS the number of tests to run"
   , Option ['a']     ["implementation-A-port"]
       (ReqArg (\ f opts -> opts { impAPort = f }) "PORT")
         "Specify which PORT to use for implementation A"
-  , Option ['A']     ["implementaton-A-ip"]
+  , Option ['A']     ["implementation-A-ip"]
       (ReqArg (\ f opts -> opts { impAIP = f }) "IP")
         "Specify which IP to use for implementation A"
   , Option ['b']     ["implementation-B-port"]
       (ReqArg (\ f opts -> opts { impBPort = f }) "PORT")
         "Specify which PORT to use for implementation B"
-  , Option ['B']     ["implementaton-B-ip"]
+  , Option ['B']     ["implementation-B-ip"]
       (ReqArg (\ f opts -> opts { impBIP = f }) "IP")
         "Specify which IP to use for implementation B"
   , Option ['t']     ["trace-file"]
@@ -135,7 +135,7 @@ commandOpts argv =
   case getOpt Permute options argv of
       (o,n,[]  ) -> return (foldl (flip id) defaultOptions o, n)
       (_,_,errs) -> ioError (userError (concat errs ++ usageInfo header options))
-  where header = "Usage: QCTestRIG [OPTION...] files..."
+  where header = "Usage: QCVEngine [OPTION...] files..."
 
 --------------------------------------------------------------------------------
 
@@ -148,8 +148,8 @@ main = withSocketsDo $ do
   -- initialize model and implementation sockets
   addrA <- resolve (impAIP flags) (impAPort flags)
   addrB <- resolve (impBIP flags) (impBPort flags)
-  socA <- open addrA
-  socB <- open addrB
+  socA <- open "implementation-A" addrA
+  socB <- open "implementation-B" addrB
   sendInstructionTrace socA ([RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
@@ -165,7 +165,7 @@ main = withSocketsDo $ do
                                           }])
   _ <- receiveExecutionTrace False socB
   addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
-  instrSoc <- mapM open addrInstr
+  instrSoc <- mapM (open "instruction-generator-port") addrInstr
   --
   let checkResult = if (optVerbose flags)
                     then verboseCheckWithResult
@@ -241,7 +241,8 @@ main = withSocketsDo $ do
         let hints = defaultHints { addrSocketType = Stream }
         addr:_ <- getAddrInfo (Just hints) (Just host) (Just port)
         return addr
-    open addr = do
+    open dest addr = do
+        putStrLn ("connecting to " ++ dest ++ " ...")
         sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
         connect sock (addrAddress addr)
         return sock

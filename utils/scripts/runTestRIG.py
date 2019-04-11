@@ -160,6 +160,10 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   ##############################################################################
   if (name == 'spike'):
     cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa), "-m0x80000000:0x10000"]
+    if "LD_LIBRARY_PATH" in env2:
+      env2["LD_LIBRARY_PATH"] = "%s:%s" % (env2["LD_LIBRARY_PATH"], op.dirname(args.path_to_spike))
+    else:
+      env2["LD_LIBRARY_PATH"] = op.dirname(args.path_to_spike)
 
     if log:
       cmd += ["-l"]
@@ -187,6 +191,7 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     print("Unknown rvfi-dii server {:s}".format(name))
     return None
   ##############################################################################
+  print("running rvfi-dii server as: ", " ".join(cmd))
   p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
   print('spawned {:s} rvfi-dii server on port: {:d}'.format(name, port))
   return p
@@ -205,6 +210,7 @@ def spawn_vengine(name, mport, iport, arch):
       cmd += ['-i', str(args.generator_port)]
     if (args.trace_file):
       cmd += ['-t', args.trace_file]
+    print("running qcvengine as: ", " ".join(cmd))
     p = sub.Popen(cmd)
     return p
   else:
@@ -235,6 +241,7 @@ def spawn_generator(name, arch, log):
     if not ('c' in isa):
       cmd += ['-no_compressed']
 
+    print("running sail generator as: ", " ".join(cmd))
     generator = sub.Popen(cmd, stdout=use_log, stderr=use_log)
     print('spawned sail instruction generator on port: {:d}'.format(args.generator_port))
     return generator
