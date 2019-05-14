@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 # Copyright (c) 2018 Alexandre Joannou
+# Copyright (c) 2019 Peter Rugg
 # All rights reserved.
 #
 # This software was developed by SRI International and the University of
@@ -92,6 +93,8 @@ parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=1, type=a
   help="Specify a number of seconds to wait between server creation and verification engine startup.")
 parser.add_argument('-v', '--verbose', action='count', default=0,
   help="Increase verbosity level by adding more \"v\".")
+parser.add_argument('-S', '--save-dir', metavar= 'SAVEDIR', type=str,
+  help="Keep running, saving each failure to directory provided.")
 parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
   default=100, help="Runs the verification engine for NTESTS tests.")
 parser.add_argument('-t', '--trace-file', metavar= 'FILENAME', type=str,
@@ -209,7 +212,10 @@ def spawn_vengine(name, mport, iport, arch):
     if (args.generator != 'internal'):
       cmd += ['-i', str(args.generator_port)]
     if (args.trace_file):
+      print("using trace_file {:s}".format(args.trace_file))
       cmd += ['-t', args.trace_file]
+    if (args.save_dir):
+      cmd += ['-s', args.save_dir]
     print("running qcvengine as: ", " ".join(cmd))
     p = sub.Popen(cmd)
     return p

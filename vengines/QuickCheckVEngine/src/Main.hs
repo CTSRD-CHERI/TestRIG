@@ -81,6 +81,7 @@ data Options = Options
     , instDirectory :: Maybe FilePath
     , arch          :: String
     , instrPort     :: Maybe String
+    , saveDir       :: Maybe FilePath
     } deriving Show
 
 defaultOptions = Options
@@ -94,6 +95,7 @@ defaultOptions = Options
     , instDirectory = Nothing
     , arch          = "32i"
     , instrPort     = Nothing
+    , saveDir       = Nothing
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -128,6 +130,9 @@ options =
   , Option ['i']     ["instruction generator port"]
       (ReqArg (\ f opts -> opts { instrPort = Just f }) "PORT")
         "Connect to an external instruction generator on PORT"
+  , Option ['s']     ["save-dir"]
+      (ReqArg (\ f opts -> opts { saveDir = Just f }) "PATH")
+        "Keep running, saving any new failures to files"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -172,23 +177,28 @@ main = withSocketsDo $ do
                     else quickCheckWithResult
   let checkSingle trace = do
       quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True)
-  let checkGen gen = do
-      result <- checkResult (Args Nothing (nTests flags) 1 2048 True 1000) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags))
+  let checkGen gen remainingTests = do
+      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags))
       case result of
         Failure {} -> do
           writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
           putStrLn "Replaying shrunk failed test case:"
-          checkSingle (read_rvfi_inst_trace (failingTestCase result))
-          putStrLn "Save this trace? (y?)"
-          ans <- getLine
-          when (ans == "y" || ans == "Y") $ do
-            putStrLn "What <fileName>.S?"
-            fileName <- getLine
-            putStrLn "One-line description?"
-            comment <- getLine
-            writeFile (fileName ++ ".S") ("# " ++ comment
-                                          ++ "\n" ++ (unlines (failingTestCase result)))
-          return ()
+          checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result))))
+          case (saveDir flags) of
+            Nothing -> do
+              putStrLn "Save this trace? (y?)"
+              ans <- getLine
+              when (ans == "y" || ans == "Y") $ do
+                putStrLn "What <fileName>.S?"
+                fileName <- getLine
+                putStrLn "One-line description?"
+                comment <- getLine
+                writeFile (fileName ++ ".S") ("# " ++ comment
+                                              ++ "\n" ++ (unlines (failingTestCase result)))
+              return ()
+            Just dir -> do
+              writeFile (dir ++ "/failure" ++ (show (remainingTests - (numTests result))) ++ ".S") ("# Automatically generated failing test case" ++ "\n" ++ (unlines (failingTestCase result)))
+              checkGen gen (remainingTests - (numTests result))
         other -> return ()
   let checkFile (fileName :: FilePath) = do
       putStrLn $ "Reading trace from " ++ fileName ++ ":"
@@ -211,27 +221,27 @@ main = withSocketsDo $ do
               when (((arch flags) =~ ("i"::String)) ::Bool) (
                 do
                   putStrLn "rv32i Arithmetic Verification:"
-                  checkGen genArithmetic
+                  checkGen genArithmetic  (nTests flags)
                   putStrLn "rv32i Memory Verification:"
-                  checkGen genMemory
+                  checkGen genMemory (nTests flags)
                   putStrLn "rv32i Control Flow Verification:"
-                  checkGen genControlFlow
+                  checkGen genControlFlow (nTests flags)
                   putStrLn "rv32i All Verification:"
-                  checkGen genAll
+                  checkGen genAll (nTests flags)
                   )
               when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
                 do
                   putStrLn "xCHERI Capability Inspection Verification:"
-                  checkGen genCHERIinspection
+                  checkGen genCHERIinspection (nTests flags)
                   putStrLn "xCHERI Capability Arithmetic Verification:"
-                  checkGen genCHERIarithmetic
+                  checkGen genCHERIarithmetic (nTests flags)
                   putStrLn "xCHERI Capability Miscellaneous Verification:"
-                  checkGen genCHERImisc
+                  checkGen genCHERImisc (nTests flags)
                   putStrLn "xCHERI Capability Control Flow Verification:"
-                  checkGen genCHERIcontrol
+                  checkGen genCHERIcontrol (nTests flags)
                   )
             Just sock -> do
-              checkGen (genInstrServer sock)
+              checkGen (genInstrServer sock) (nTests flags)
   --
   close socA
   close socB
