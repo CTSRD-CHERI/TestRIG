@@ -57,7 +57,7 @@ def auto_pos_int (x):
 def auto_write_fd (fname):
   return open(fname, 'w')
 
-known_rvfi_dii = set({'spike','rvbs','sail','manual'})
+known_rvfi_dii = set({'spike','rvbs','sail','piccolo','manual'})
 known_vengine  = set({'QCVEngine'})
 known_architectures = set({'rv32i','rv64i','rv64ic','rv64g','rv64gc','rv32ixcheri','rv64ixcheri'})
 known_generators = set({'internal','sail','manual'})
@@ -107,6 +107,9 @@ parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
   help="The PATH to the spike executable")
+parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV64IUxCHERI_Piccolo_bluesim/exe_HW_sim"),
+  help="The PATH to the Piccolo executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
@@ -180,6 +183,10 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     cmd = [args.path_to_rvbs]
     if log:
       cmd += ["+itrace"]
+  ##############################################################################
+  elif (name == 'piccolo'):
+    env2["RVFI_DII_PORT"] = str(port)
+    cmd = [args.path_to_piccolo]
   ##############################################################################
   elif (name == 'sail'):
     if 'c' in isa:
@@ -277,7 +284,7 @@ def main():
   except:
     kill_rvfi_dii_servers(a,b)
     raise
-  
+
   def handle_SIGINT(sig, frame):
     kill_rvfi_dii_servers(a,b)
     if generator:
