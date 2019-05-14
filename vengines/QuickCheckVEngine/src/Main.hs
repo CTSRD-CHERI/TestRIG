@@ -265,7 +265,7 @@ main = withSocketsDo $ do
 
 --------------------------------------------------------------------------------
 prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Int -> Property
-prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrinkBypass ( \instTrace -> monadicIO ( run ( do
+prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
   let instTraceTerminated = ( instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
