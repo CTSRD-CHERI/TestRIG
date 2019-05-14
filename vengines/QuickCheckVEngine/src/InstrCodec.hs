@@ -237,20 +237,20 @@ scatter (tok:toks) env =
                      ++ scatter toks env
 
 class Encode a b | b -> a where
-  enc :: [a] -> String -> b
+  enc :: [a] -> [String] -> b
 
-instance Encode Integer Integer where
-  enc args fmt = fromBitList (scatter toks (zip (rangedVars toks) args))
-    where toks = tokenise fmt
+instance Encode Integer [Integer] where
+  enc args fmt = map (fromBitList . (\x -> scatter x (zip (rangedVars (head toks)) args))) toks
+    where toks = map tokenise fmt
 
-instance Encode (Gen Integer) (Gen Integer) where
+instance Encode (Gen Integer) (Gen [Integer]) where
   enc args fmt = do
       vals <- sequence args
-      return $ fromBitList (scatter toks (zip (rangedVars toks) vals))
-    where toks = tokenise fmt
+      return $ map (fromBitList . (\x -> scatter x (zip (rangedVars (head toks)) vals))) toks
+    where toks = map tokenise fmt
 
 instance Encode a b => Encode a (a -> b) where
   enc args fmt a = enc (args ++ [a]) fmt
 
-encode :: Encode a b => String -> b
+encode :: Encode a b => [String] -> b
 encode = enc []

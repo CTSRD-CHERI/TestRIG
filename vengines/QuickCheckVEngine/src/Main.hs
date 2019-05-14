@@ -39,6 +39,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Main (main) where
 
 import qualified Control.Exception as E
@@ -49,6 +50,7 @@ import Network.Socket.ByteString.Lazy --(recv, sendAll)
 import Data.Int
 import Data.Binary
 import Data.Char
+import qualified InstrCodec as C
 import Text.Printf
 import Text.Regex.Posix
 import Control.Monad
@@ -67,6 +69,7 @@ import RVFI_DII
 import RISCV
 import CHERI
 import RVxxI
+import GHC.Generics (Generic)
 import System.Timeout
 
 -- command line arguments
@@ -165,14 +168,14 @@ main = withSocketsDo $ do
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
                                             rvfi_time = 1,
-                                            rvfi_ins_insn = 0
+                                            rvfi_ins_insn = [0]
                                           }])
   _ <- receiveExecutionTrace False socA
   sendInstructionTrace socB ([RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
                                             rvfi_time = 1,
-                                            rvfi_ins_insn = 0
+                                            rvfi_ins_insn = [0]
                                           }])
   _ <- receiveExecutionTrace False socB
   addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
@@ -264,14 +267,55 @@ main = withSocketsDo $ do
         return sock
 
 --------------------------------------------------------------------------------
+
+rePack x b = RVFI_DII_Instruction {padding = padding x, rvfi_cmd = rvfi_cmd x, rvfi_time = rvfi_time x, rvfi_ins_insn = [fromInteger(C.fromBitList b)]}
+
+unPack x = C.toBitList (toInteger (head(rvfi_ins_insn x)))
+
+getDest x =  take 5 (drop 7 (unPack x))
+
+getR1 instr = take 5 (drop 15 (unPack instr))
+
+getR2 instr = take 5 (drop 20 (unPack instr))
+
+setDest dest instr = rePack instr $ (take 7) (unPack instr) ++ dest ++ (drop 12) (unPack instr)
+
+setR1 src instr = rePack instr $ take 15 (unPack instr) ++ src ++ (drop 20) (unPack instr)
+
+setR2 src instr = rePack instr $ take 20 (unPack instr) ++ src ++ (drop 25) (unPack instr)
+
+--isBypass instr = ((C.fromBitList (take 12 raw) == 0xfea) && (C.fromBitList (take 3 (drop 17 raw)) == 0) && (C.fromBitList (take 7 (drop 25 raw)) == 0x5b)) || (((take 12 raw) == C.toBitList 0) && ((take 3 (drop 17 raw)) == C.toBitList 0) && ((take 7 (drop 25 raw)) == C.toBitList 0x13)) where raw = unPack instr
+isBypass instr = (C.fromBitList (take 12 (drop 20 raw)) == 0xfea) where raw = unPack instr
+
+prependAll x xs = map (\y -> x:y) xs
+
+substitute :: [RVFI_DII_Instruction] -> C.BitList -> C.BitList -> [RVFI_DII_Instruction]
+substitute [] _ _ = []
+substitute (x:xs) old new = (((if getR1 x == old then setR1 new else id)
+                            . (if getR2 x == old then setR2 new else id) --TODO Watch out for hitting instructions in one implementation and not the other when there is no RS2 field
+                            )x):(if getDest x == old then xs else substitute xs old new)
+
+shrinkForward :: [RVFI_DII_Instruction] -> [[RVFI_DII_Instruction]]
+shrinkForward [] = []
+shrinkForward (x:xs) = (if (isBypass x) then [(substitute xs (getDest x) (getR1 x))] else []) ++ (prependAll x (shrinkForward xs))
+
+shrinkBypass :: [RVFI_DII_Instruction] -> [[RVFI_DII_Instruction]]
+shrinkBypass xs = (shrink xs) ++ (bypass xs) ++ (shrinkForward xs) where
+  bypass [] = []
+  bypass (x:xs) = (prependAllRots x (rvfi_ins_insn x) xs) ++ (prependAll x (bypass xs)) where
+    prependAllRots x [] xs = []
+    prependAllRots x [y] xs = []
+    prependAllRots x (y:(y1:ys)) xs = ((RVFI_DII_Instruction {padding = (padding x), rvfi_cmd = (rvfi_cmd x), rvfi_time = (rvfi_time x), rvfi_ins_insn = y1:ys}):xs):(prependAllRots x (y1:ys) xs)
+
 prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Int -> Property
 prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrinkBypass ( \instTrace -> monadicIO ( run ( do
   let instTraceTerminated = ( instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
                                             rvfi_time = 1,
-                                            rvfi_ins_insn = 0
-                                          }])
+                                            rvfi_ins_insn = [0]
+                                          }]
+                               )
   sendInstructionTrace socA instTraceTerminated
   sendInstructionTrace socB instTraceTerminated
 
@@ -297,10 +341,20 @@ sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
 sendInstructionTrace sock instTrace =
   mapM_ (sendInstruction sock) instTrace
 
+data Sendable_RVFI_DII_Instruction = Sendable_RVFI_DII_Instruction {
+  spadding   :: Word8,
+  srvfi_cmd  :: Word8,
+  srvfi_time :: Word16,
+  srvfi_ins_insn :: Word32
+} deriving (Generic)
+instance Binary Sendable_RVFI_DII_Instruction
+truncateInst :: RVFI_DII_Instruction -> Sendable_RVFI_DII_Instruction
+truncateInst x = Sendable_RVFI_DII_Instruction { spadding = padding x, srvfi_cmd = rvfi_cmd x, srvfi_time = rvfi_time x, srvfi_ins_insn = head(rvfi_ins_insn x)}
+
 -- Send a single instruction
 sendInstruction :: Socket -> RVFI_DII_Instruction -> IO ()
 sendInstruction sock inst = do
-  sendAll sock (BS.reverse (encode inst))
+  sendAll sock (BS.reverse (encode (truncateInst inst)))
   return ()
 
 -- Receive a fixed number of bytes
@@ -324,7 +378,7 @@ receiveExecutionTrace doLog sock = do
 
 --------------------------------------------------------------------------------
 
-genInstrServer :: Socket -> Gen Integer
+genInstrServer :: Socket -> Gen [Integer]
 genInstrServer sock = do
   seed :: Int32 <- arbitraryBoundedRandom
   -- This should be safe so long as the server returns the same instruction when
@@ -333,4 +387,4 @@ genInstrServer sock = do
         do
           sendAll sock (encode seed)
           recv sock 4)
-  return (toInteger (decode (BS.reverse msg) :: Int32))
+  return ([toInteger (decode (BS.reverse msg) :: Int32)])

@@ -45,48 +45,49 @@ import RVxxI
 ---------------------
 
 -- Capability Inspection
-cgetperm                  = "1111111 00000 cs1[4:0] 000 rd[4:0] 1011011"
-cgettype                  = "1111111 00001 cs1[4:0] 000 rd[4:0] 1011011"
-cgetbase                  = "1111111 00010 cs1[4:0] 000 rd[4:0] 1011011"
-cgetlen                   = "1111111 00011 cs1[4:0] 000 rd[4:0] 1011011"
-cgettag                   = "1111111 00100 cs1[4:0] 000 rd[4:0] 1011011"
-cgetsealed                = "1111111 00101 cs1[4:0] 000 rd[4:0] 1011011"
-cgetoffset                = "1111111 00110 cs1[4:0] 000 rd[4:0] 1011011"
-cgetaddr                  = "1111111 01111 cs1[4:0] 000 rd[4:0] 1011011"
+cgetperm                  = ["1111111 00000 cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011"]
+cgettype                  = ["1111111 00001 cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011"]
+cgetbase                  = ["1111111 00010 cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "000000000000 00000 000 rd[4:0] 0010011"]
+cgetlen                   = ["1111111 00011 cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "111111111111 00000 000 rd[4:0] 0010011"]
+cgettag                   = ["1111111 00100 cs1[4:0] 000 rd[4:0] 1011011", "000000000001 00000 000 rd[4:0] 0010011", "000000000000 00000 000 rd[4:0] 0010011"]
+cgetsealed                = ["1111111 00101 cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "000000000001 00000 000 rd[4:0] 0010011", "000000000000 00000 000 rd[4:0] 0010011"]
+cgetoffset                = ["1111111 00110 cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "000000000000 00000 000 rd[4:0] 0010011"]
+cgetaddr                  = ["1111111 01111 cs1[4:0] 000 rd[4:0] 1011011", "000000000000 cs1[4:0] 000 rd[4:0] 0010011"]
 
 -- Capability Modification
-cseal                     = "0001011 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cunseal                   = "0001100 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-candperm                  = "0001101 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cbuildcap                 = "0011101 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-ccopytype                 = "0011110 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-ccseal                    = "0011111 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-ccleartag                 = "1111111 01011 cs1[4:0] 000 cd[4:0] 1011011"
+cseal                     = ["0001011 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 00100 cs1[4:0] 000 cd[4:0] 1011011", "1111111 01010 cs2[4:0] 000 cd[4:0] 1011011"]
+cunseal                   = ["0001100 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 00100 cs1[4:0] 000 cd[4:0] 1011011", "1111111 01010 cs2[4:0] 000 cd[4:0] 1011011"]
+candperm                  = ["0001101 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+cbuildcap                 = ["0011101 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 00100 cs2[4:0] 000 cd[4:0] 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+ccopytype                 = ["0011110 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 00100 cs2[4:0] 000 cd[4:0] 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+ccseal                    = ["0011111 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 00100 cs2[4:0] 000 cd[4:0] 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+ccleartag                 = ["1111111 01011 cs1[4:0] 000 cd[4:0] 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
 
 -- Capability Pointer Arithmetic
-csetoffset                = "0001111 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cincoffset                = "0010001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-csetbounds                = "0001000 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-csetboundsexact           = "0001001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cincoffsetimmediate       = "imm[11:0] cs1[4:0] 001 cd[4:0] 1011011"
-csetboundsimmediate       = "imm[11:0] cs1[4:0] 010 cd[4:0] 1011011"
-ctoptr                    = "0010010 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cfromptr                  = "0010011 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cspecialrw                = "0000001 cSP[4:0] cs1[4:0] 000 cd[4:0] 1011011"
-cmove                     = "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"
+csetoffset                = ["0001111 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011", "000000000000 cs1[4:0] 000 cd[4:0] 0010011"]
+cincoffset                = ["0010001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+csetbounds                = ["0001000 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+csetboundsexact           = ["0001001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+cincoffsetimmediate       = ["imm[11:0] cs1[4:0] 001 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011", "imm[11:0] cs1[4:0] 000 cd[4:0] 0010011"]
+csetboundsimmediate       = ["imm[11:0] cs1[4:0] 010 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+ctoptr                    = ["0010010 cs2[4:0] cs1[4:0] 000 rd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "000000000000 cs1[4:0] 000 rd[4:0] 0010011"]
+cfromptr                  = ["0010011 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"]
+cspecialrw                = ["0000001 cSP[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011", "1111111 01010 00000 000 cd[4:0] 1011011"]
+cmove                     = ["1111111 01010 cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011"]
 
 -- Control Flow
-cjalr                     = "1111111 01100 cs1[4:0] 000 cd[4:0] 1011011"
-ccall                     = "1111111 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+cjalr                     = ["1111111 01100 cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011"]
+ccall                     = ["1111111 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011", "1111111 00100 cs1[4:0] 000 00001 1011011"]
 -- creturn is a special case of ccall, which would mess up decoding!
 
 
 -- Register Clearing
-clear                     = "1111111 01101 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
-fpclear                   = "1111111 10000 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
+clear                     = ["1111111 01101 q[1:0] imm[7:5] 000 imm[4:0] 1011011"]
+fpclear                   = ["1111111 10000 q[1:0] imm[7:5] 000 imm[4:0] 1011011"]
 
--- Memory -- Needs further refinement
-cmem                      = "0010010 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"
+-- Memory
+cload                      = ["1111101 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"]
+cstore                     = ["1111100 ct[4:0] cb[4:0] 000 mop[4:0] 1011011"]
 
 -----------------------------
 -- Instruction pretty printer
@@ -98,39 +99,40 @@ pretty_reg_clear instr imm qt =
 
 cheri_instructions_dissasembly_list :: [DecodeBranch String]
 cheri_instructions_dissasembly_list = [
-     cgetperm            --> prettyR_2op "cgetperm"
-   , cgettype            --> prettyR_2op "cgettype"
-   , cgetbase            --> prettyR_2op "cgetbase"
-   , cgetlen             --> prettyR_2op "cgetlen"
-   , cgettag             --> prettyR_2op "cgettag"
-   , cgetsealed          --> prettyR_2op "cgetsealed"
-   , cgetoffset          --> prettyR_2op "cgetoffset"
-   , cgetaddr            --> prettyR_2op "cgetaddr"
-   , cseal               --> prettyR "cseal"
-   , cunseal             --> prettyR "cunseal"
-   , candperm            --> prettyR "candperm"
-   , csetoffset          --> prettyR "csetoffset"
-   , cincoffset          --> prettyR "cincoffset"
-   , csetbounds          --> prettyR "csetbounds"
-   , csetboundsexact     --> prettyR "csetboundsexact"
-   , cbuildcap           --> prettyR "cbuildcap"
-   , ccopytype           --> prettyR "ccopytype"
-   , ccseal              --> prettyR "ccseal"
-   , ccleartag           --> prettyR_2op "ccleartag"
-   , cincoffsetimmediate --> prettyI "cincoffsetimmediate"
-   , csetboundsimmediate --> prettyI "csetboundsimmediate"
-   , ctoptr              --> prettyR "ctoptr"
-   , cfromptr            --> prettyR "cfromptr"
-   , cspecialrw          --> prettyR "cspecialrw"
-   , cmove               --> prettyR_2op "cmove"
-   , cjalr               --> prettyR_2op "cjalr"
-   , ccall               --> prettyR "ccall"
-   , clear               --> pretty_reg_clear "clear"
-   , fpclear             --> pretty_reg_clear "fpclear"
-   , cmem                --> prettyR "cmem"
+     head(cgetperm)            --> prettyR_2op "cgetperm"
+   , head(cgettype)            --> prettyR_2op "cgettype"
+   , head(cgetbase)            --> prettyR_2op "cgetbase"
+   , head(cgetlen)             --> prettyR_2op "cgetlen"
+   , head(cgettag)             --> prettyR_2op "cgettag"
+   , head(cgetsealed)          --> prettyR_2op "cgetsealed"
+   , head(cgetoffset)          --> prettyR_2op "cgetoffset"
+   , head(cgetaddr)            --> prettyR_2op "cgetaddr"
+   , head(cseal)               --> prettyR "cseal"
+   , head(cunseal)             --> prettyR "cunseal"
+   , head(candperm)            --> prettyR "candperm"
+   , head(csetoffset)          --> prettyR "csetoffset"
+   , head(cincoffset)          --> prettyR "cincoffset"
+   , head(csetbounds)          --> prettyR "csetbounds"
+   , head(csetboundsexact)     --> prettyR "csetboundsexact"
+   , head(cbuildcap)           --> prettyR "cbuildcap"
+   , head(ccopytype)           --> prettyR "ccopytype"
+   , head(ccseal)              --> prettyR "ccseal"
+   , head(ccleartag)           --> prettyR_2op "ccleartag"
+   , head(cincoffsetimmediate) --> prettyI "cincoffsetimmediate"
+   , head(csetboundsimmediate) --> prettyI "csetboundsimmediate"
+   , head(ctoptr)              --> prettyR "ctoptr"
+   , head(cfromptr)            --> prettyR "cfromptr"
+   , head(cspecialrw)          --> prettyR "cspecialrw"
+   , head(cmove)               --> prettyR_2op "cmove"
+   , head(cjalr)               --> prettyR_2op "cjalr"
+   , head(ccall)               --> prettyR "ccall"
+   , head(clear)               --> pretty_reg_clear "clear"
+   , head(fpclear)             --> pretty_reg_clear "fpclear"
+   , head(cload)               --> prettyCLoad
+   , head(cstore)              --> prettyCStore
   ]
 
-genCHERIinspection :: Gen Integer
+genCHERIinspection :: Gen [Integer]
 genCHERIinspection =
   frequency [
       (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
@@ -144,7 +146,7 @@ genCHERIinspection =
     , (8,  encode cgetaddr src dest)
   ]
 
-genCHERIarithmetic :: Gen Integer
+genCHERIarithmetic :: Gen [Integer]
 genCHERIarithmetic =
   frequency [
       (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
@@ -160,7 +162,7 @@ genCHERIarithmetic =
     , (8,  encode cmove src dest)
   ]
 
-genCHERImisc :: Gen Integer
+genCHERImisc :: Gen [Integer]
 genCHERImisc =
   frequency [
       (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
@@ -176,7 +178,7 @@ genCHERImisc =
     , (8,  encode ccleartag src dest)
   ]
 
-genCHERIcontrol :: Gen Integer
+genCHERIcontrol :: Gen [Integer]
 genCHERIcontrol =
   frequency [
       (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)

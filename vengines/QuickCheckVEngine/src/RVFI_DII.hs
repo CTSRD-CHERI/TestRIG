@@ -61,7 +61,7 @@ data RVFI_DII_Instruction = RVFI_DII_Instruction {
   padding   :: Word8,
   rvfi_cmd  :: Word8,
   rvfi_time :: Word16,
-  rvfi_ins_insn :: Word32
+  rvfi_ins_insn :: [Word32]
 } deriving (Generic)
 instance Binary RVFI_DII_Instruction
 instance Num RVFI_DII_Instruction where
@@ -70,7 +70,7 @@ instance Num RVFI_DII_Instruction where
       padding   = 0,
       rvfi_cmd  = rvfi_cmd_instruction,
       rvfi_time = 1,
-      rvfi_ins_insn = fromInteger i
+      rvfi_ins_insn = [fromInteger i]
     }
 instance Arbitrary RVFI_DII_Instruction where
   arbitrary = do
@@ -79,22 +79,22 @@ instance Arbitrary RVFI_DII_Instruction where
       padding   = 0,
       rvfi_cmd  = rvfi_cmd_instruction,
       rvfi_time = 1,
-      rvfi_ins_insn = fromInteger inst
+      rvfi_ins_insn = map fromInteger inst
     }
 
-rvfi_dii_gen :: Gen Integer -> Gen RVFI_DII_Instruction
+rvfi_dii_gen :: Gen [Integer] -> Gen RVFI_DII_Instruction
 rvfi_dii_gen instGenerator = do
   inst <- instGenerator
   return RVFI_DII_Instruction {
     padding   = 0,
     rvfi_cmd  = rvfi_cmd_instruction,
     rvfi_time = 1,
-    rvfi_ins_insn = (fromInteger inst)
+    rvfi_ins_insn = map fromInteger inst
   }
 
 instance Show RVFI_DII_Instruction where
-  show inst_tok = ".4byte 0x" ++ (showHex (rvfi_ins_insn inst_tok) "")
-               ++ " # " ++ pretty (toInteger (rvfi_ins_insn inst_tok))
+  show inst_tok = ".4byte 0x" ++ (showHex (head(rvfi_ins_insn inst_tok)) "")
+               ++ " # " ++ pretty (toInteger (head(rvfi_ins_insn inst_tok)))
   showList inst_toks = showString (unlines (map show inst_toks))
 
 read_rvfi_inst_trace :: [String] -> [RVFI_DII_Instruction]
