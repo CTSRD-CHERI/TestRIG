@@ -58,7 +58,7 @@ import System.Environment
 import System.Directory
 import System.Console.GetOpt
 import System.IO.Unsafe
-import Data.Maybe ( isJust, fromMaybe )
+import Data.Maybe ( isJust, isNothing, fromMaybe )
 import Data.List
 import System.FilePath.Windows
 import System.Exit
@@ -67,6 +67,7 @@ import RVFI_DII
 import RISCV
 import CHERI
 import RVxxI
+import System.Timeout
 
 -- command line arguments
 --------------------------------------------------------------------------------
@@ -82,6 +83,7 @@ data Options = Options
     , arch          :: String
     , instrPort     :: Maybe String
     , saveDir       :: Maybe FilePath
+    , timeoutDelay  :: Int
     } deriving Show
 
 defaultOptions = Options
@@ -96,6 +98,7 @@ defaultOptions = Options
     , arch          = "32i"
     , instrPort     = Nothing
     , saveDir       = Nothing
+    , timeoutDelay  = 2000000 -- 2 seconds
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -133,6 +136,9 @@ options =
   , Option ['s']     ["save-dir"]
       (ReqArg (\ f opts -> opts { saveDir = Just f }) "PATH")
         "Keep running, saving any new failures to files"
+  , Option ['T']     ["timeout"]
+      (ReqArg (\ f opts -> opts { timeoutDelay = read f }) "TIMEOUT")
+        "Timeout after TIMEOUT microseconds of A or B not responding"
   ]
 
 commandOpts :: [String] -> IO (Options, [String])
@@ -176,9 +182,9 @@ main = withSocketsDo $ do
                     then verboseCheckWithResult
                     else quickCheckWithResult
   let checkSingle trace = do
-      quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True)
+      quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True (timeoutDelay flags))
   let checkGen gen remainingTests = do
-      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags))
+      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags) (timeoutDelay flags))
       case result of
         Failure {} -> do
           writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
@@ -258,10 +264,9 @@ main = withSocketsDo $ do
         return sock
 
 --------------------------------------------------------------------------------
-        
-prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Property
-prop gen socA socB doLog = forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
-  let instTraceTerminated = (instTrace ++ [RVFI_DII_Instruction {
+prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Int -> Property
+prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrinkBypass ( \instTrace -> monadicIO ( run ( do
+  let instTraceTerminated = ( instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
                                             rvfi_time = 1,
@@ -273,12 +278,17 @@ prop gen socA socB doLog = forAllShrink gen shrink ( \instTrace -> monadicIO ( r
   when doLog $ putStrLn "----------------------------------------------------------------------"
   when doLog $ putStrLn "Socket A Trace (model)"
   when doLog $ putStrLn "----------------------"
-  modTrace <- receiveExecutionTrace doLog socA
+  m_modTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socA
+  when (isNothing m_modTrace) $ putStrLn("Error: Timeout")
   when doLog $ putStrLn "Socket B Trace (implementation)"
   when doLog $ putStrLn "-------------------------------"
-  impTrace <- receiveExecutionTrace doLog socB
+  m_impTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socB
+  when (isNothing m_impTrace) $ putStrLn("Error: Timeout")
 
-  return (and (zipWith (==) modTrace impTrace)))))
+  return $ case (m_modTrace, m_impTrace) of
+             (Just modTrace, Just impTrace) -> (and (zipWith (==) modTrace impTrace))
+             _                              -> False
+  )))
 
 --------------------------------------------------------------------------------
 
