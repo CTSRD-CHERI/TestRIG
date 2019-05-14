@@ -137,17 +137,17 @@ maskUpper x = (x Data.Bits..&. 0x00000000FFFFFFFF)
 
 maskWith :: Word64 -> Word8 -> Word64
 maskWith a b = a Data.Bits..&. mask
-               where mask = BW.fromListLE $ concatMap (reverse.dropWhile(not).reverse.((take 8).repeat)) (BW.toListLE b)
+               where mask = BW.fromListLE $ concatMap ((take 8).repeat) (BW.toListLE b)
 
 instance Eq RVFI_DII_Execution where
   x == y
     | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
-    | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (maskUpper (rvfi_pc_wdata x)) == (maskUpper (rvfi_pc_wdata y))
-    | otherwise = (maskUpper (rvfi_exe_insn x)) == (maskUpper (rvfi_exe_insn y)) &&
-                  (maskUpper (rvfi_rd_wdata x)) == (maskUpper (rvfi_rd_wdata y)) &&
+    | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (rvfi_pc_wdata x) == (rvfi_pc_wdata y)
+    | otherwise = (rvfi_exe_insn x) == (rvfi_exe_insn y) &&
+                  (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
                   (rvfi_mem_wmask x) == (rvfi_mem_wmask y) &&
-                  ((rvfi_mem_wmask x == 0) || ((maskUpper (rvfi_mem_addr x)) == (maskUpper (rvfi_mem_addr y)))) &&
-                  (maskUpper (rvfi_pc_wdata x)) == (maskUpper (rvfi_pc_wdata y)) &&
+                  ((rvfi_mem_wmask x == 0) || ((rvfi_mem_addr x) == (rvfi_mem_addr y))) &&
+                  (rvfi_pc_wdata x) == (rvfi_pc_wdata y) &&
                   (maskWith (rvfi_mem_wdata x) (rvfi_mem_wmask x)) == (maskWith (rvfi_mem_wdata y) (rvfi_mem_wmask y))
 
 instance Show RVFI_DII_Execution where
