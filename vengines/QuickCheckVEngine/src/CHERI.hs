@@ -92,9 +92,75 @@ cmem                      = "0010010 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"
 -- Instruction pretty printer
 -----------------------------
 
+prettyCLoad :: Integer -> Integer -> Integer -> String
+prettyCLoad mop rs1 rd =
+  concat [instr, " ", reg rd, ", ", reg rs1, "[0]"]
+    where instr = case mop of 0x00 -> "LBddc"
+                              0x01 -> "LHddc"
+                              0x02 -> "LWddc"
+                              0x03 -> "LDddc"
+                              0x04 -> "LBUddc"
+                              0x05 -> "LHUddc"
+                              0x06 -> "LWUddc"
+                              0x07 -> "LDUddc"
+                              0x08 -> "LBcap"
+                              0x09 -> "LHcap"
+                              0x0a -> "LWcap"
+                              0x0b -> "LDcap"
+                              0x0c -> "LBUcap"
+                              0x0d -> "LHUcap"
+                              0x0e -> "LWUcap"
+                              0x0f -> "LDUcap"
+                              0x10 -> "LRddc.B"
+                              0x11 -> "LRddc.H"
+                              0x12 -> "LRddc.W"
+                              0x13 -> "LRddc.D"
+                              0x14 -> "LRddc.Q"
+                              0x15 -> "INVALID"
+                              0x16 -> "INVALID"
+                              0x17 -> "LQddc"
+                              0x18 -> "LRcap.B"
+                              0x19 -> "LRcap.H"
+                              0x1a -> "LRcap.W"
+                              0x1b -> "LRcap.D"
+                              0x1c -> "LRcap.Q"
+                              0x1d -> "INVALID"
+                              0x1e -> "INVALID"
+                              0x1f -> "LQcap"
+                              _    -> "INVALID"
+
+prettyCStore :: Integer -> Integer -> Integer -> String
+prettyCStore rs2 rs1 mop =
+  concat [instr, " ", reg rs2, ", ", reg rs1, "[0]"]
+    where instr = case mop of 0x00 -> "SBddc"
+                              0x01 -> "SHddc"
+                              0x02 -> "SWddc"
+                              0x03 -> "SDddc"
+                              0x04 -> "SQddc"
+                              0x08 -> "SBcap"
+                              0x09 -> "SHcap"
+                              0x0a -> "SWcap"
+                              0x0b -> "SDcap"
+                              0x0c -> "SQcap"
+                              0x10 -> "SCddc.B"
+                              0x11 -> "SCddc.H"
+                              0x12 -> "SCddc.W"
+                              0x13 -> "SCddc.D"
+                              0x14 -> "SCddc.Q"
+                              0x18 -> "SCcap.B"
+                              0x19 -> "SCcap.H"
+                              0x1a -> "SCcap.W"
+                              0x1b -> "SCcap.D"
+                              0x1c -> "SCcap.Q"
+                              _ -> "INVALID"
+
 -- R-type, 2-operand pretty printer
 pretty_reg_clear instr imm qt =
   concat [instr, " ", int qt, ", ", int imm]
+
+-- Generate bits but exclude some patterns
+bitsExcl :: Int -> [Integer] -> Gen Integer
+bitsExcl w excl = do bitsAttempt <- bits w; if elem bitsAttempt excl then bitsExcl w excl else return bitsAttempt
 
 cheri_instructions_dissasembly_list :: [DecodeBranch String]
 cheri_instructions_dissasembly_list = [
