@@ -57,7 +57,12 @@ clean-sail-generator:
 
 # RISCV implementations
 ################################################################################
-riscv-implementations: rvbs spike
+riscv-implementations: rvbs spike piccolo
+
+piccolo-cheri:
+	$(MAKE) -C riscv-implementations/Piccolo/builds -f Resources/Build_all.mk ARCH=RV64IUxCHERI SIM=bluesim RVFI_DII=RVFI_DII build
+
+piccolo: piccolo-cheri #for now, just testing CHERI implementation.
 
 rvbs: rvbs-rv32i
 
@@ -82,7 +87,7 @@ rvbs-rv64ixcheri:
 spike:
 	cd riscv-implementations/riscv-isa-sim &&\
 	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
-	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-misaligned &&\
+	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii &&\
 	make install && cp libfesvr.so lib/
 
 spike-cheri:
@@ -96,7 +101,7 @@ sail:
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo
 
 clean-rvbs:
 	$(MAKE) -C riscv-implementations/RVBS mrproper-rvfi-dii
@@ -109,3 +114,6 @@ clean-spike:
 
 clean-sail:
 	$(MAKE) -C riscv-implementations/sail-riscv clean
+
+clean-piccolo:
+	rm -rf riscv-implementations/Piccolo/builds/RV*

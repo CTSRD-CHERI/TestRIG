@@ -13,3 +13,6 @@
 [submodule "riscv-implementations/sail-riscv"]
 	path = riscv-implementations/sail-riscv
 	url = https://github.com/rems-project/sail-riscv.git
+[submodule "riscv-implementations/Piccolo"]
+	path = riscv-implementations/Piccolo
+	url = git@github.com:CTSRD-CHERI/Piccolo.git
