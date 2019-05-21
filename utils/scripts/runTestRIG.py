@@ -266,47 +266,44 @@ def spawn_generator(name, arch, log):
 #################
 
 def main():
-  def kill_rvfi_dii_servers(servA, servB):
+  def kill_procs(servA, servB, gen, vengine):
     if servA:
       print("killing implementation A's rvfi-dii server")
       servA.kill()
     if servB:
       print("killing implementation B's rvfi-dii server")
       servB.kill()
-
-  a = None
-  b = None
-  generator = None
-  try:
-    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
-    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
-    generator = spawn_generator(args.generator, args.architecture, args.generator_log)
-  except:
-    kill_rvfi_dii_servers(a,b)
-    raise
+    if generator:
+      print("killing generator")
+      gen.kill()
+    if vengine:
+      print("killing vengine")
+      vengine.kill()
 
   def handle_SIGINT(sig, frame):
-    kill_rvfi_dii_servers(a,b)
-    if generator:
-      generator.kill()
+    kill_procs(a,b,generator,e)
     exit(0)
 
   signal.signal(signal.SIGINT, handle_SIGINT)
 
-  time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
+  a = None
+  b = None
+  e = None
+  generator = None
   try:
+    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
+    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
+
+    time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
+
     e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, args.architecture)
-  except:
-    if generator:
-      generator.kill()
-    kill_rvfi_dii_servers(a,b)
-    raise
-  e.wait()
-  print('verification engine run terminated')
-  if generator:
-    generator.kill()
-  kill_rvfi_dii_servers(a,b)
-  exit(0)
+    generator = spawn_generator(args.generator, args.architecture, args.generator_log)
+
+    e.wait()
+  finally:
+    print('run terminated')
+    kill_procs(a,b,generator,e)
+    exit(0)
 
 if __name__ == "__main__":
   main()
