@@ -99,6 +99,9 @@ spike-cheri:
 sail:
 	$(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
 
+sail-cheri:
+	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/riscv_rvfi
+
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
 clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo
@@ -114,6 +117,9 @@ clean-spike:
 
 clean-sail:
 	$(MAKE) -C riscv-implementations/sail-riscv clean
+
+clean-sail-cheri:
+	$(MAKE) -C riscv-implementations/sail-cheri-riscv clean
 
 clean-piccolo:
 	rm -rf riscv-implementations/Piccolo/builds/RV*

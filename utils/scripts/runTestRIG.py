@@ -115,7 +115,7 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('--path-to-sail-riscv', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-riscv/c_emulator/riscv_rvfi"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-cheri-riscv/c_emulator/riscv_rvfi"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
   default='rv32i',
