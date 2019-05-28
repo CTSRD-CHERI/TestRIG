@@ -66,23 +66,23 @@ piccolo: piccolo-cheri #for now, just testing CHERI implementation.
 
 rvbs: rvbs-rv32i
 
-rvbs-rv32i:
-	$(MAKE) -C riscv-implementations/RVBS rvfi-dii
+rvbs-rv32IZicsrZifencei:
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 RVZIFENCEI=1 rvfi-dii
 
-rvbs-rv32ic:
-	$(MAKE) -C riscv-implementations/RVBS RVC=1 rvfi-dii
+rvbs-rv32IZicsrZifenceiC:
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 RVZIFENCEI=1 RVC=1 rvfi-dii
 
-rvbs-rv32ixcheri:
-	$(MAKE) -C riscv-implementations/RVBS RVXCHERI=1 rvfi-dii
+rvbs-rv32IZicsrZifenceiXcheri:
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 RVZIFENCEI=1 RVXCHERI=1 rvfi-dii
 
-rvbs-rv64i:
-	$(MAKE) -C riscv-implementations/RVBS XLEN=64 rvfi-dii
+rvbs-rv64IZicsrZifencei:
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVZICSR=1 RVZIFENCEI=1 rvfi-dii
 
-rvbs-rv64ic:
-	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVC=1 rvfi-dii
+rvbs-rv64IZicsrZifenceiC:
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVZICSR=1 RVZIFENCEI=1 RVC=1 rvfi-dii
 
-rvbs-rv64ixcheri:
-	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVXCHERI=1 rvfi-dii
+rvbs-rv64IZicsrZifenceiXcheri:
+	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVZICSR=1 RVZIFENCEI=1 RVXCHERI=1 rvfi-dii
 
 spike:
 	cd riscv-implementations/riscv-isa-sim &&\
@@ -107,10 +107,10 @@ sail-cheri:
 clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo
 
 clean-rvbs:
-	$(MAKE) -C riscv-implementations/RVBS mrproper-rvfi-dii
-	$(MAKE) -C riscv-implementations/RVBS RVC=1 mrproper-rvfi-dii
-	$(MAKE) -C riscv-implementations/RVBS XLEN=64 mrproper-rvfi-dii
-	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVC=1 mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 RVC=1 mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 XLEN=64 mrproper-rvfi-dii
+	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 XLEN=64 RVC=1 mrproper-rvfi-dii
 
 clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
