@@ -99,11 +99,12 @@ parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
   default=100, help="Runs the verification engine for NTESTS tests.")
 parser.add_argument('-t', '--trace-file', metavar= 'FILENAME', type=str,
   help="Runs the test specified in FILENAME")
-parser.add_argument('--path-to-rvbs', metavar='PATH', type=str,
+parser.add_argument('-d', '--trace-dir', metavar= 'DIRNAME', type=str,
+  help="Runs the tests contained in DIRNAME")
+parser.add_argument('--path-to-rvbs-dir', metavar='PATH', type=str,
   #default='rvbs-rv32i-rvfi-dii',
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/rvbs-rv32i-rvfi-dii"),
-  #default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/rvbs-rv64i-rvfi-dii"),
-  help="The PATH to the rvbs executable")
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/"),
+  help="The PATH to the rvbs executable directory")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
   help="The PATH to the spike executable")
@@ -145,6 +146,17 @@ def input_y_n(prompt):
   s = input(prompt)
   return s.lower() in ["", "y", "ye", "yes"]
 
+# figure out which rvs simulator to use
+rvbs_sim = {
+  'rv32i': "rvbs-rv32IZicsrZifencei",
+  'rv64i': "rvbs-rv64IZicsrZifencei",
+  'rv64ic': "rvbs-rv64IZicsrZifenceiC",
+  'rv64g': "rvbs-rv64IZicsrZifencei",
+  'rv64gc': "rvbs-rv64IZicsrZifenceiC",
+  'rv32ixcheri': "rvbs-rv32IZicsrZifenceiXcheri",
+  'rv64ixcheri': "rvbs-rv64IZicsrZifenceiXcheri"
+}.get(args.architecture, "rvbs-rv64IZicsrZifenceiXcheri")+"-rvfi-dii"
+
 #########################
 # spawn rvfi_dii server #
 #########################
@@ -176,11 +188,10 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
 
     if extension != "" and extension != "cheri":
       cmd += ["--extension={:s}".format(extension)]
-
   ##############################################################################
   elif (name == 'rvbs'):
     env2["RVFI_DII_PORT"] = str(port)
-    cmd = [args.path_to_rvbs]
+    cmd = [op.join(args.path_to_rvbs_dir, rvbs_sim)]
     if log:
       cmd += ["+itrace"]
   ##############################################################################
@@ -221,6 +232,9 @@ def spawn_vengine(name, mport, iport, arch):
     if (args.trace_file):
       print("using trace_file {:s}".format(args.trace_file))
       cmd += ['-t', args.trace_file]
+    if (args.trace_dir):
+      print("using trace_dir {:s}".format(args.trace_dir))
+      cmd += ['-d', args.trace_dir]
     if (args.save_dir):
       cmd += ['-s', args.save_dir]
     print("running qcvengine as: ", " ".join(cmd))
