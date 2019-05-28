@@ -53,11 +53,13 @@ cgettag                   = "1111111 00100 cs1[4:0] 000 rd[4:0] 1011011"
 cgetsealed                = "1111111 00101 cs1[4:0] 000 rd[4:0] 1011011"
 cgetoffset                = "1111111 00110 cs1[4:0] 000 rd[4:0] 1011011"
 cgetaddr                  = "1111111 01111 cs1[4:0] 000 rd[4:0] 1011011"
+cgetflags                 = "1111111 00111 cs1[4:0] 000 rd[4:0] 1011011"
 
 -- Capability Modification
 cseal                     = "0001011 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 cunseal                   = "0001100 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 candperm                  = "0001101 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+csetflags                 = "0001110 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 cbuildcap                 = "0011101 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 ccopytype                 = "0011110 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 ccseal                    = "0011111 cs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
@@ -77,7 +79,7 @@ cmove                     = "1111111 01010 cs1[4:0] 000 cd[4:0] 1011011"
 
 -- Control Flow
 cjalr                     = "1111111 01100 cs1[4:0] 000 cd[4:0] 1011011"
-ccall                     = "1111111 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+ccall                     = "1111110 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 -- creturn is a special case of ccall, which would mess up decoding!
 
 
@@ -86,7 +88,12 @@ clear                     = "1111111 01101 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
 fpclear                   = "1111111 10000 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
 
 -- Memory -- Needs further refinement
-cmem                      = "0010010 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"
+cload                      = "1111101 mop[4:0] cb[4:0] 000 cd[4:0] 1011011"
+cstore                     = "1111100 rs1[4:0] rs2[4:0] 000 mop[4:0] 1011011"
+lq                         = "imm[11:0] rs1[4:0] 010 cd[4:0] 0001111"
+sq                         = "imm[11:5] cs2[4:0] rs1[4:0] 100 imm[4:0] 0100011"
+
+--TODO ctestsubset
 
 -----------------------------
 -- Instruction pretty printer
@@ -193,7 +200,12 @@ cheri_instructions_dissasembly_list = [
    , ccall               --> prettyR "ccall"
    , clear               --> pretty_reg_clear "clear"
    , fpclear             --> pretty_reg_clear "fpclear"
-   , cmem                --> prettyR "cmem"
+   , cload               --> prettyCLoad
+   , cstore              --> prettyCStore
+   , cgetflags           --> prettyR_2op "cgetflags"
+   , csetflags           --> prettyR "csetflags"
+   , sq                  --> prettyS "sq"
+   , lq                  --> prettyL "lq"
   ]
 
 genCHERIinspection :: Gen Integer
