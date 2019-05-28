@@ -192,11 +192,9 @@ main = withSocketsDo $ do
           checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result))))
           case (saveDir flags) of
             Nothing -> do
-              putStrLn "Save this trace? (y?)"
-              ans <- getLine
-              when (ans == "y" || ans == "Y") $ do
-                putStrLn "What <fileName>.S?"
-                fileName <- getLine
+              putStrLn "Save this trace (give file name or leave empty to ignore)?"
+              fileName <- getLine
+              when (not $ null fileName) $ do
                 putStrLn "One-line description?"
                 comment <- getLine
                 writeFile (fileName ++ ".S") ("# " ++ comment
