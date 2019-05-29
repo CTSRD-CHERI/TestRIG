@@ -110,6 +110,10 @@ src = choose (0, 5)
 bits :: Int -> Gen Integer
 bits w = choose (0, 2^w - 1)
 
+-- Generate but exclude some patterns
+exclude :: [Integer] -> Gen Integer -> Gen Integer
+exclude excl orig = do attempt <- orig; if elem attempt excl then exclude excl orig else return attempt
+
 -- Power of two values clustered around 1.
 geomBits :: Int -> Int -> Gen Integer
 geomBits hi lo = frequency [(2^(32-i), return (2^i))| i <- [lo..(hi-1)]]

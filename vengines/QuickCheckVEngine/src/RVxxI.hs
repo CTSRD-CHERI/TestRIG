@@ -36,6 +36,7 @@ import InstrCodec
 import Test.QuickCheck
 import Control.Monad
 import ISA_Helpers
+import Template
 
 ---------------------
 -- RV32I instructions
@@ -125,93 +126,68 @@ integer_instructions_dissasembly_list = [
   , fence_i --> "fence_i"
   , resrvd  --> "reserved"
   ]
- 
-genAll :: Gen Integer
-genAll =
-  frequency [
-    (8,  encode addi  (bits 12) src dest)
-  , (8,  encode slti  (bits 12) src dest)
-  , (8,  encode sltiu (bits 12) src dest)
-  , (8,  encode andi  (bits 12) src dest)
-  , (8,  encode ori   (bits 12) src dest)
-  , (8,  encode xori  (bits 12) src dest)
-  , (8,  encode slli  (bits 12) src dest)
-  , (8,  encode srli  (bits 12) src dest)
-  , (8,  encode srai  (bits 12) src dest)
-  , (8,  encode lui   (bits 20) dest)
-  , (32, encode lui   (oneof [return 0x80008]) dest)
-  , (8,  encode auipc (bits 20) dest)
-  , (8,  encode jal   (bits 20) dest)
-  , (8,  encode jalr  (bits 12) src dest)
-  , (8,  encode beq   (bits 12) src src)
-  , (8,  encode bne   (bits 12) src src)
-  , (8,  encode bge   (bits 12) src src)
-  , (8,  encode bgeu  (bits 12) src src)
-  , (8,  encode lb    offset src dest)
-  , (8,  encode lbu   offset src dest)
-  , (8,  encode lh    offset src dest)
-  , (8,  encode lhu   offset src dest)
-  , (8,  encode lw    offset src dest)
-  , (8,  encode sb    offset src src)
-  , (8,  encode sh    offset src src)
-  , (8,  encode sw    offset src src)
-  , (8,  encode fence (bits 4) (bits 4))
-  , (8,  encode fence_i)
+
+rvArith :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvArith src1 src2 dest imm longImm = [
+    encode add   src1 src2 dest
+  , encode slt   src1 src2 dest
+  , encode sltu  src1 src2 dest
+  , encode andr  src1 src2 dest
+  , encode orr   src1 src2 dest
+  , encode xorr  src1 src2 dest
+  , encode sll   src1 src2 dest
+  , encode srl   src1 src2 dest
+  , encode sub   src1 src2 dest
+  , encode sra   src1 src2 dest
+  , encode addi  imm src1 dest
+  , encode slti  imm src1 dest
+  , encode sltiu imm src1 dest
+  , encode andi  imm src1 dest
+  , encode ori   imm src1 dest
+  , encode xori  imm src1 dest
+  , encode slli  imm src1 dest
+  , encode srli  imm src1 dest
+  , encode srai  imm src1 dest
+  , encode lui   longImm dest
   ]
 
-genArithmetic :: Gen Integer
-genArithmetic =
-  frequency [
-    (8,  encode add   src src dest)
-  , (8,  encode slt   src src dest)
-  , (8,  encode sltu  src src dest)
-  , (8,  encode andr  src src dest)
-  , (8,  encode orr   src src dest)
-  , (8,  encode xorr  src src dest)
-  , (8,  encode sll   src src dest)
-  , (8,  encode srl   src src dest)
-  , (8,  encode sub   src src dest)
-  , (8,  encode sra   src src dest)
-  , (16, encode addi  (bits 12) src dest)
-  , (8,  encode slti  (bits 12) src dest)
-  , (8,  encode sltiu (bits 12) src dest)
-  , (8,  encode andi  (bits 12) src dest)
-  , (8,  encode ori   (bits 12) src dest)
-  , (16, encode xori  (bits 12) src dest)
-  , (8,  encode slli  (bits 12) src dest)
-  , (8,  encode srli  (bits 12) src dest)
-  , (8,  encode srai  (bits 12) src dest)
-  , (16, encode lui   (bits 20) dest)
+rvCtrl :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCtrl src1 src2 dest imm longImm = [
+    encode auipc longImm dest
+  , encode jal   longImm dest
+  , encode jalr  imm src1 dest
+  , encode beq   imm src1 src2
+  , encode bne   imm src1 src2
+  , encode bge   imm src1 src2
+  , encode bgeu  imm src1 src2
   ]
 
-genMemory :: Gen Integer
-genMemory =
-  frequency [
-    (8,  encode addi (geomBits 11 0) src dest)
-  , (8,  encode ori  (geomBits 11 0) src dest)
-  , (16, encode lui  (oneof [return 0x80008]) dest)
-  , (8,  encode lb    (geomBits 11 0) src dest)
-  , (8,  encode lbu   (geomBits 11 0) src dest)
-  , (8,  encode lh    (geomBits 11 1) src dest)
-  , (8,  encode lhu   (geomBits 11 1) src dest)
-  , (8,  encode lw    (geomBits 11 2) src dest)
-  , (8,  encode sb    (geomBits 11 0) src src)
-  , (8,  encode sh    (geomBits 11 1) src src)
-  , (8,  encode sw    (geomBits 11 2) src src)
-  , (2,  encode fence (bits 4) (bits 4))
-  , (2,  encode fence_i)
+rvLoad :: Integer -> Integer -> Integer -> [Integer]
+rvLoad src dest imm = [
+    encode lb    imm src dest
+  , encode lbu   imm src dest
+  , encode lh    imm src dest
+  , encode lhu   imm src dest
+  , encode lw    imm src dest
   ]
 
-genControlFlow :: Gen Integer
-genControlFlow =
-  frequency [
-    (8,  encode addi (geomBits 11 2) src dest)
-  , (8,  encode ori  (geomBits 11 2) src dest)
-  , (8,  encode auipc (bits 20) dest)
-  , (8,  encode jal   (bits 20) dest)
-  , (8,  encode jalr  (bits 12) src dest)
-  , (8,  encode beq   (bits 12) src src)
-  , (8,  encode bne   (bits 12) src src)
-  , (8,  encode bge   (bits 12) src src)
-  , (8,  encode bgeu  (bits 12) src src)
+rvStore :: Integer -> Integer -> Integer -> [Integer]
+rvStore srcAddr srcData imm = [
+    encode sb    imm srcData srcAddr
+  , encode sh    imm srcData srcAddr
+  , encode sw    imm srcData srcAddr
   ]
+
+rvFence :: Integer -> Integer -> [Integer]
+rvFence fenceOp1 fenceOp2 = [
+    encode fence fenceOp1 fenceOp2
+  , encode fence_i
+  ]
+
+rvMem :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer] --TODO alignment
+rvMem srcAddr srcData dest imm fenceOp1 fenceOp2 =
+  (rvLoad srcAddr dest imm) ++ (rvStore srcAddr srcData imm) ++ (rvFence fenceOp1 fenceOp2)
+
+rvAll :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 =
+  (rvArith srcAddr srcData dest imm longImm) ++ (rvMem srcAddr srcData dest imm fenceOp1 fenceOp2) ++ (rvCtrl srcAddr srcData dest imm longImm)

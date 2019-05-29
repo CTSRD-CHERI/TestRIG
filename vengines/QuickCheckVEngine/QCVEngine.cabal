@@ -9,5 +9,5 @@ executable QCVEngine
   -- other-modules:       
   other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
   build-depends:       base, QuickCheck, bytestring, network, binary, directory, filepath, bitwise, regex-posix, split
-  hs-source-dirs:      src
+  hs-source-dirs:      src templates
   default-language:    Haskell98

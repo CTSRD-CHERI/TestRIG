@@ -39,6 +39,7 @@ import Test.QuickCheck
 import Control.Monad
 import ISA_Helpers
 import RVxxI
+import Template
 
 ---------------------
 -- CHERI instructions
@@ -165,10 +166,6 @@ prettyCStore rs2 rs1 mop =
 pretty_reg_clear instr imm qt =
   concat [instr, " ", int qt, ", ", int imm]
 
--- Generate bits but exclude some patterns
-bitsExcl :: Int -> [Integer] -> Gen Integer
-bitsExcl w excl = do bitsAttempt <- bits w; if elem bitsAttempt excl then bitsExcl w excl else return bitsAttempt
-
 cheri_instructions_dissasembly_list :: [DecodeBranch String]
 cheri_instructions_dissasembly_list = [
      cgetperm            --> prettyR_2op "cgetperm"
@@ -208,59 +205,58 @@ cheri_instructions_dissasembly_list = [
    , lq                  --> prettyL "lq"
   ]
 
-genCHERIinspection :: Gen Integer
-genCHERIinspection =
-  frequency [
-      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
-    , (8,  encode cgetperm src dest)
-    , (8,  encode cgettype src dest)
-    , (8,  encode cgetbase src dest)
-    , (8,  encode cgetlen src dest)
-    , (8,  encode cgettag src dest)
-    , (8,  encode cgetsealed src dest)
-    , (8,  encode cgetoffset src dest)
-    , (8,  encode cgetaddr src dest)
+rvCHERIinspection :: Integer -> Integer -> [Integer]
+rvCHERIinspection src dest = [
+    encode cgetperm src dest
+ ,  encode cgettype src dest
+ ,  encode cgetbase src dest
+ ,  encode cgetlen src dest
+ ,  encode cgettag src dest
+ ,  encode cgetsealed src dest
+ ,  encode cgetoffset src dest
+ ,  encode cgetaddr src dest
+ ,  encode cgetflags src dest
   ]
 
-genCHERIarithmetic :: Gen Integer
-genCHERIarithmetic =
-  frequency [
-      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
-    , (8,  encode addi (geomBits 11 2) src dest)
-    , (8,  encode csetoffset src src dest)
-    , (8,  encode cincoffset src src dest)
-    , (8,  encode csetbounds src src dest)
-    , (8,  encode csetboundsexact src src dest)
-    , (8,  encode cincoffsetimmediate (bits 12) src dest)
-    , (8,  encode csetboundsimmediate (bits 12) src dest)
-    , (8,  encode ctoptr     src src dest)
-    , (8,  encode cfromptr   src src dest)
-    , (8,  encode cmove src dest)
+rvCHERIarithmetic :: Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERIarithmetic src1 src2 imm dest = [
+    encode csetoffset src1 src2 dest
+ ,  encode cincoffset src1 src2 dest
+ ,  encode csetbounds src1 src2 dest
+ ,  encode csetboundsexact src1 src2 dest
+ ,  encode csetboundsimmediate imm src1 dest
+ ,  encode cincoffsetimmediate imm src1 dest
+ ,  encode ctoptr     src1 src2 dest
+ ,  encode cfromptr   src1 src2 dest
   ]
 
-genCHERImisc :: Gen Integer
-genCHERImisc =
-  frequency [
-      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
-    , (8,  encode addi (geomBits 11 2) src dest)
-    , (8,  encode cincoffsetimmediate (bits 12) src dest)
-    , (8,  encode csetboundsimmediate (bits 12) src dest)
-    , (8,  encode cseal     src src dest)
-    , (8,  encode cunseal   src src dest)
-    , (8,  encode candperm  src src dest)
-    , (8,  encode cbuildcap src src dest)
-    , (8,  encode ccopytype src src dest)
-    , (8,  encode ccseal    src src dest)
-    , (8,  encode ccleartag src dest)
+rvCHERImisc :: Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERImisc src1 src2 imm dest = [
+    encode cseal     src1 src2 dest
+ ,  encode cunseal   src1 src2 dest
+ ,  encode candperm  src1 src2 dest
+ ,  encode cbuildcap src1 src2 dest
+ ,  encode csetflags src1 src2 dest
+ ,  encode ccopytype src1 src2 dest
+ ,  encode ccseal    src1 src2 dest
+ ,  encode ccleartag src1 dest
   ]
 
-genCHERIcontrol :: Gen Integer
-genCHERIcontrol =
-  frequency [
-      (8,  encode cspecialrw (oneof [return 0x1]) (oneof [return 0x0]) dest)
-    , (8,  encode addi (geomBits 11 2) src dest)
-    , (8,  encode cincoffsetimmediate (bits 12) src dest)
-    , (8,  encode csetboundsimmediate (bits 12) src dest)
-    , (8,  encode cjalr src dest)
-    , (8,  encode ccall src src dest)
+rvCHERIcontrol :: Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERIcontrol src1 src2 imm dest = [
+    encode cjalr src1 dest
+ ,  encode ccall src1 src2 dest
   ]
+
+rvCHERImem :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERImem srcAddr srcData imm mop dest = [
+    encode cload mop srcAddr dest
+ ,  encode cstore srcData srcAddr mop
+ ,  encode lq imm srcAddr dest
+ ,  encode sq imm srcData srcAddr
+  ]
+
+rvCHERIall :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERIall src1 src2 imm mop dest =
+  (rvCHERIinspection src1 dest) ++ (rvCHERIarithmetic src1 src2 imm dest) ++ (rvCHERImisc src1 src2 imm dest)
+  ++ (rvCHERIcontrol src1 src2 imm dest) ++ (rvCHERImem src1 src2 imm mop dest)

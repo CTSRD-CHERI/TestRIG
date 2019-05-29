@@ -67,7 +67,16 @@ import RVFI_DII
 import RISCV
 import CHERI
 import RVxxI
+import Template
 import System.Timeout
+
+import GenAll
+import GenArithmetic
+import GenMemory
+import RandomTest
+import GenControlFlow
+import MemUtils
+import GenCHERI
 
 -- command line arguments
 --------------------------------------------------------------------------------
@@ -184,7 +193,7 @@ main = withSocketsDo $ do
   let checkSingle trace = do
       quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True (timeoutDelay flags))
   let checkGen gen remainingTests = do
-      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (listOf (rvfi_dii_gen gen)) socA socB (optVerbose flags) (timeoutDelay flags))
+      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) (timeoutDelay flags))
       case result of
         Failure {} -> do
           writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
@@ -224,28 +233,32 @@ main = withSocketsDo $ do
             Nothing -> do
               when (((arch flags) =~ ("i"::String)) ::Bool) (
                 do
-                  putStrLn "rv32i Arithmetic Verification:"
-                  checkGen genArithmetic  (nTests flags)
-                  putStrLn "rv32i Memory Verification:"
-                  checkGen genMemory (nTests flags)
-                  putStrLn "rv32i Control Flow Verification:"
-                  checkGen genControlFlow (nTests flags)
-                  putStrLn "rv32i All Verification:"
-                  checkGen genAll (nTests flags)
+                  putStrLn "rvxxi Arithmetic Verification:"
+                  checkGen (genTest $ repeatTillEnd genArithmetic)  (nTests flags)
+                  putStrLn "rvxxi Memory Verification:"
+                  checkGen (genTest $ repeatTillEnd genMemory) (nTests flags)
+                  putStrLn "rvxxi Control Flow Verification:"
+                  checkGen (genTest $ repeatTillEnd genControlFlow) (nTests flags)
+                  putStrLn "rvxxi All Verification:"
+                  checkGen (genTest $ repeatTillEnd genAll) (nTests flags)
+                  putStrLn "rvxxi Template:"
+                  checkGen (genTest $ repeatTillEnd randomTest) (nTests flags)
                   )
               when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
                 do
                   putStrLn "xCHERI Capability Inspection Verification:"
-                  checkGen genCHERIinspection (nTests flags)
+                  checkGen (genTest $ repeatTillEnd genCHERIinspection) (nTests flags)
                   putStrLn "xCHERI Capability Arithmetic Verification:"
-                  checkGen genCHERIarithmetic (nTests flags)
+                  checkGen (genTest $ repeatTillEnd genCHERIarithmetic) (nTests flags)
                   putStrLn "xCHERI Capability Miscellaneous Verification:"
-                  checkGen genCHERImisc (nTests flags)
+                  checkGen (genTest $ repeatTillEnd genCHERImisc) (nTests flags)
                   putStrLn "xCHERI Capability Control Flow Verification:"
-                  checkGen genCHERIcontrol (nTests flags)
+                  checkGen (genTest $ repeatTillEnd genCHERIcontrol) (nTests flags)
+                  putStrLn "xCHERI Template:"
+                  checkGen (genTest $ randomCHERITest) (nTests flags)
                   )
             Just sock -> do
-              checkGen (genInstrServer sock) (nTests flags)
+              checkGen (listOf $ genInstrServer sock) (nTests flags)
   --
   close socA
   close socB

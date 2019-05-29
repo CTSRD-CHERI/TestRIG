@@ -53,6 +53,8 @@ import RISCV
 import RVxxI
 import Text.Printf
 import Data.List.Split
+import Template
+import GenArithmetic
 
 rvfi_cmd_instruction = 1 :: Word8
 rvfi_cmd_end = 0 :: Word8
@@ -72,24 +74,23 @@ instance Num RVFI_DII_Instruction where
       rvfi_time = 1,
       rvfi_ins_insn = fromInteger i
     }
+
 instance Arbitrary RVFI_DII_Instruction where
   arbitrary = do
-    inst <- genArithmetic
+    inst <- genTest genArithmetic
     return RVFI_DII_Instruction {
       padding   = 0,
       rvfi_cmd  = rvfi_cmd_instruction,
       rvfi_time = 1,
-      rvfi_ins_insn = fromInteger inst
+      rvfi_ins_insn = fromInteger $ head inst
     }
 
-rvfi_dii_gen :: Gen Integer -> Gen RVFI_DII_Instruction
-rvfi_dii_gen instGenerator = do
-  inst <- instGenerator
-  return RVFI_DII_Instruction {
+inst_to_rvfi_dii :: Integer -> RVFI_DII_Instruction
+inst_to_rvfi_dii inst = RVFI_DII_Instruction {
     padding   = 0,
     rvfi_cmd  = rvfi_cmd_instruction,
     rvfi_time = 1,
-    rvfi_ins_insn = (fromInteger inst)
+    rvfi_ins_insn = fromInteger inst
   }
 
 instance Show RVFI_DII_Instruction where
