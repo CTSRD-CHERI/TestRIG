@@ -59,7 +59,7 @@ def auto_write_fd (fname):
 
 known_rvfi_dii = set({'spike','rvbs','sail','piccolo','manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({'rv32i','rv64i','rv64ic','rv64g','rv64gc','rv32ixcheri','rv64ixcheri'})
+known_architectures = set({'rv32i','rv64i','rv64ic','rv64g','rv64gc','rv32ixcheri','rv64ixcheri', 'rvxcheri'})
 known_generators = set({'internal','sail','manual'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')

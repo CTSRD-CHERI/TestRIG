@@ -60,6 +60,7 @@ import System.Console.GetOpt
 import System.IO.Unsafe
 import Data.Maybe ( isJust, isNothing, fromMaybe )
 import Data.List
+import Data.List.Split
 import System.FilePath.Windows
 import System.Exit
 import System.IO
@@ -165,6 +166,7 @@ main = withSocketsDo $ do
   rawArgs <- getArgs
   (flags, leftover) <- commandOpts rawArgs
   when (optVerbose flags) $ print flags
+  let archStrings = splitOn "x" (arch flags)
   -- initialize model and implementation sockets
   addrA <- resolve (impAIP flags) (impAPort flags)
   addrB <- resolve (impBIP flags) (impBPort flags)
@@ -231,7 +233,7 @@ main = withSocketsDo $ do
         Nothing -> do
           case instrSoc of
             Nothing -> do
-              when (((arch flags) =~ ("i"::String)) ::Bool) (
+              when ((head archStrings) =~ ("i"::String)) (
                 do
                   putStrLn "rvxxi Arithmetic Verification:"
                   checkGen (genTest $ repeatTillEnd genArithmetic)  (nTests flags)
@@ -244,7 +246,7 @@ main = withSocketsDo $ do
                   putStrLn "rvxxi Template:"
                   checkGen (genTest $ repeatTillEnd randomTest) (nTests flags)
                   )
-              when (((arch flags) =~ ("xcheri"::String)) ::Bool) (
+              when (elem "cheri" archStrings) (
                 do
                   putStrLn "xCHERI Capability Inspection Verification:"
                   checkGen (genTest $ repeatTillEnd genCHERIinspection) (nTests flags)
