@@ -1,21 +1,21 @@
-[submodule "utils/BSV-RVFI-DII"]
+[submodule "BSV-RVFI-DII"]
 	path = utils/BSV-RVFI-DII
 	url = https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git
-[submodule "riscv-implementations/RVBS"]
+[submodule "RVBS"]
 	path = riscv-implementations/RVBS
 	url = https://github.com/CTSRD-CHERI/RVBS.git
-[submodule "riscv-implementations/riscv-isa-sim"]
+[submodule "riscv-isa-sim"]
 	path = riscv-implementations/riscv-isa-sim
-	url = git@github.com:CTSRD-CHERI/riscv-isa-sim.git
-[submodule "vengines/sail-riscv-test-generation"]
+	url = https://github.com/CTSRD-CHERI/riscv-isa-sim.git
+[submodule "sail-riscv-test-generation"]
 	path = vengines/sail-riscv-test-generation
 	url = https://github.com/rems-project/sail-riscv-test-generation.git
-[submodule "riscv-implementations/sail-riscv"]
+[submodule "sail-riscv"]
 	path = riscv-implementations/sail-riscv
 	url = https://github.com/rems-project/sail-riscv.git
-[submodule "riscv-implementations/Piccolo"]
+[submodule "Piccolo"]
 	path = riscv-implementations/Piccolo
-	url = git@github.com:CTSRD-CHERI/Piccolo.git
-[submodule "riscv-implementations/sail-cheri-riscv"]
+	url = https://github.com/CTSRD-CHERI/Piccolo.git
+[submodule "sail-cheri-riscv"]
 	path = riscv-implementations/sail-cheri-riscv
-	url = git@github.com:CTSRD-CHERI/sail-cheri-riscv.git
+	url = https://github.com/CTSRD-CHERI/sail-cheri-riscv.git
