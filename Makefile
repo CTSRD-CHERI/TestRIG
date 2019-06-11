@@ -64,7 +64,7 @@ piccolo-cheri:
 
 piccolo: piccolo-cheri #for now, just testing CHERI implementation.
 
-rvbs: rvbs-rv32i
+rvbs: rvbs-rv32IZicsrZifencei
 
 rvbs-rv32IZicsrZifencei:
 	$(MAKE) -C riscv-implementations/RVBS RVZICSR=1 RVZIFENCEI=1 rvfi-dii
