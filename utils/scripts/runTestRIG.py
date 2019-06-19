@@ -66,7 +66,7 @@ parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
 # model args
 parser.add_argument('-a', '--implementation-A', metavar='IMP', choices=known_rvfi_dii,
-  default='rvbs',
+  default='sail',
   help="The implementation A to use. (one of {:s})".format(str(known_rvfi_dii)))
 parser.add_argument('--implementation-A-port', metavar='PORT', type=auto_int, default=5000,
   help="The port to use for implementation A's rvfi-dii server")
