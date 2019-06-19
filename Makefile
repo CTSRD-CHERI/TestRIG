@@ -57,7 +57,7 @@ clean-sail-generator:
 
 # RISCV implementations
 ################################################################################
-riscv-implementations: rvbs spike piccolo
+riscv-implementations: spike sail
 
 piccolo-cheri:
 	$(MAKE) -C riscv-implementations/Piccolo/builds -f Resources/Build_all.mk ARCH=RV64IUxCHERI SIM=bluesim RVFI_DII=RVFI_DII build
