@@ -40,9 +40,10 @@ The implementation should have a mode where instructions are consumed exlusively
 An implementation should then deliver a trace report at the end of execution detailing implementation behaviour in response to that instruction in the RVFI-DII format.
 The RVFI-DII communication uses a single socket with the itrace consumed and the etrace be delivered over the same socket.
 
-Currently, The RVFI-DII interface is known to be implemented by:
+Currently, the RVFI-DII interface is known to be implemented by:
 - [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
 - [Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
+- [Sail RISC-V model](https://github.com/rems-project/sail-riscv)
 
 ## Getting started
 
