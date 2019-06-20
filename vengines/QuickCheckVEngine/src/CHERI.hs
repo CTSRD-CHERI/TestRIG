@@ -68,6 +68,7 @@ ccleartag                 = "1111111 01011 cs1[4:0] 000 cd[4:0] 1011011"
 
 -- Capability Pointer Arithmetic
 csetoffset                = "0001111 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
+csetaddr                  = "0010000 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 cincoffset                = "0010001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 csetbounds                = "0001000 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 csetboundsexact           = "0001001 rs2[4:0] cs1[4:0] 000 cd[4:0] 1011011"
@@ -180,6 +181,7 @@ cheri_instructions_dissasembly_list = [
    , cunseal             --> prettyR "cunseal"
    , candperm            --> prettyR "candperm"
    , csetoffset          --> prettyR "csetoffset"
+   , csetaddr            --> prettyR "csetaddr"
    , cincoffset          --> prettyR "cincoffset"
    , csetbounds          --> prettyR "csetbounds"
    , csetboundsexact     --> prettyR "csetboundsexact"
@@ -221,6 +223,7 @@ rvCHERIinspection src dest = [
 rvCHERIarithmetic :: Integer -> Integer -> Integer -> Integer -> [Integer]
 rvCHERIarithmetic src1 src2 imm dest = [
     encode csetoffset src1 src2 dest
+ ,  encode csetaddr   src1 src2 dest
  ,  encode cincoffset src1 src2 dest
  ,  encode csetbounds src1 src2 dest
  ,  encode csetboundsexact src1 src2 dest
