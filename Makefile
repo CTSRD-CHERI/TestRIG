@@ -100,7 +100,7 @@ sail:
 	$(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
 
 sail-cheri:
-	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/riscv_rvfi
+	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/cheri_riscv_rvfi
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
