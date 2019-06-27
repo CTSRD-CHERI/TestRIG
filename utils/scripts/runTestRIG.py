@@ -114,10 +114,11 @@ parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
+  #default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist-newstyle/build/x86_64-linux/ghc-8.6.3/QCVEngine-0.1.0.0/x/QCVEngine/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
-parser.add_argument('--path-to-sail-riscv', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-cheri-riscv/c_emulator/cheri_riscv_rvfi"),
-  help="The PATH to the QCVEngine executable")
+parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-cheri-riscv/c_emulator/"),
+  help="The PATH to the sail-riscv executable directory")
 parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
   default='rv32i',
   help="The architecture to verify. (one of {:s})".format(str(known_architectures)))
@@ -146,7 +147,7 @@ def input_y_n(prompt):
   s = input(prompt)
   return s.lower() in ["", "y", "ye", "yes"]
 
-# figure out which rvs simulator to use
+# figure out which rvbs simulator to use
 rvbs_sim = {
   'rv32i': "rvbs-rv32IZicsrZifencei",
   'rv64i': "rvbs-rv64IZicsrZifencei",
@@ -156,6 +157,17 @@ rvbs_sim = {
   'rv32ixcheri': "rvbs-rv32IZicsrZifenceiXcheri",
   'rv64ixcheri': "rvbs-rv64IZicsrZifenceiXcheri"
 }.get(args.architecture, "rvbs-rv64IZicsrZifenceiXcheri")+"-rvfi-dii"
+
+# figure out which sail simulator to use
+sail_sim = {
+  'rv32i': "cheri_riscv_rvfi_RV32",
+  'rv64i': "cheri_riscv_rvfi_RV64",
+  'rv64ic': "cheri_riscv_rvfi_RV64",
+  'rv64g': "cheri_riscv_rvfi_RV64",
+  'rv64gc': "cheri_riscv_rvfi_RV64",
+  'rv32ixcheri': "cheri_riscv_rvfi_RV32",
+  'rv64ixcheri': "cheri_riscv_rvfi_RV64"
+}.get(args.architecture, "cheri_riscv_rvfi_RV64")
 
 #########################
 # spawn rvfi_dii server #
@@ -200,10 +212,11 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     cmd = [args.path_to_piccolo]
   ##############################################################################
   elif (name == 'sail'):
+    full_sail_sim = op.join(args.path_to_sail_riscv_dir, sail_sim)
     if 'c' in isa:
-      cmd = [args.path_to_sail_riscv, "-m", "-r", str(port)]
+      cmd = [full_sail_sim, "-m", "-r", str(port)]
     else:
-      cmd = [args.path_to_sail_riscv, "-C", "-m", "-r", str(port)]
+      cmd = [full_sail_sim, "-C", "-m", "-r", str(port)]
   ##############################################################################
   elif (name == 'manual'):
     return None
