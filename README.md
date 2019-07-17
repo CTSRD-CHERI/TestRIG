@@ -63,13 +63,14 @@ The root makefile can currently build the Quick Check Verification Engine, Spike
 The dependencies for the Quick Check Verification Engine are:
 - cabal `sudo apt-get install cabal-install && cabal update`
 - Haskell Quick Check verification engine dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
+
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
-
-You can verify a default configuration by executing:
-- `make`
-- `utils/scripts/runTestRIG.py`
 
 The dependencies for the Sail model can be installed using
 [opam](http://opam.ocaml.org/) by following the instructions from the
 [Sail wiki](https://github.com/rems-project/sail/wiki/OPAMInstall).
+
+You can verify a default configuration by executing:
+- `make`
+- `utils/scripts/runTestRIG.py`
