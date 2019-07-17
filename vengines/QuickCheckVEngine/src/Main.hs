@@ -233,7 +233,7 @@ main = withSocketsDo $ do
         Nothing -> do
           case instrSoc of
             Nothing -> do
-              when ((head archStrings) =~ ("i"::String)) (
+              when (((head archStrings) =~ ("i"::String)) || ((head archStrings) =~ ("g"::String))) (
                 do
                   putStrLn "rvxxi Arithmetic Verification:"
                   checkGen (genTest $ repeatTillEnd genArithmetic)  (nTests flags)
