@@ -213,10 +213,10 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   ##############################################################################
   elif (name == 'sail'):
     full_sail_sim = op.join(args.path_to_sail_riscv_dir, sail_sim)
-    if 'c' in isa:
+    if 'c' in isa.split('x')[0]:
       cmd = [full_sail_sim, "-r", str(port)]
     else:
-      cmd = [full_sail_sim, "-r", str(port)]
+      cmd = [full_sail_sim, "-C", "-r", str(port)]
   ##############################################################################
   elif (name == 'manual'):
     return None
