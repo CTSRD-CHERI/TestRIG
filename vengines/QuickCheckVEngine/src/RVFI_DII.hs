@@ -145,6 +145,7 @@ instance Eq RVFI_DII_Execution where
     | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
     | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (rvfi_pc_wdata x) == (rvfi_pc_wdata y)
     | otherwise = (maskUpper $ rvfi_exe_insn x) == (maskUpper $ rvfi_exe_insn y) &&
+                  (rvfi_trap x) == (rvfi_trap y) && (rvfi_halt x) == (rvfi_halt y) &&
                   (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
                   (rvfi_mem_wmask x) == (rvfi_mem_wmask y) &&
                   ((rvfi_mem_wmask x == 0) || ((rvfi_mem_addr x) == (rvfi_mem_addr y))) &&
