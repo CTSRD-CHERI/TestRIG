@@ -233,16 +233,17 @@ rvCHERIarithmetic src1 src2 imm dest = [
  ,  encode cfromptr   src1 src2 dest
   ]
 
-rvCHERImisc :: Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERImisc src1 src2 imm dest = [
-    encode cseal     src1 src2 dest
- ,  encode cunseal   src1 src2 dest
- ,  encode candperm  src1 src2 dest
- ,  encode cbuildcap src1 src2 dest
- ,  encode csetflags src1 src2 dest
- ,  encode ccopytype src1 src2 dest
- ,  encode ccseal    src1 src2 dest
- ,  encode ccleartag src1 dest
+rvCHERImisc :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERImisc src1 src2 srcScr imm dest = [
+    encode cseal      src1 src2 dest
+ ,  encode cunseal    src1 src2 dest
+ ,  encode candperm   src1 src2 dest
+ ,  encode cbuildcap  src1 src2 dest
+ ,  encode csetflags  src1 src2 dest
+ ,  encode ccopytype  src1 src2 dest
+ ,  encode ccseal     src1 src2 dest
+ ,  encode ccleartag  src1 dest
+ ,  encode cspecialrw srcScr src1 dest
   ]
 
 rvCHERIcontrol :: Integer -> Integer -> Integer -> Integer -> [Integer]
@@ -255,11 +256,13 @@ rvCHERImem :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
 rvCHERImem srcAddr srcData imm mop dest = [
     encode cload mop srcAddr dest
  ,  encode cstore srcData srcAddr mop
- ,  encode lq imm srcAddr dest
- ,  encode sq imm srcData srcAddr
+ ,  encode ld imm srcAddr dest
+ ,  encode sd imm srcAddr srcAddr
+-- ,  encode lq imm srcAddr dest
+-- ,  encode sq imm srcData srcAddr
   ]
 
-rvCHERIall :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERIall src1 src2 imm mop dest =
-  (rvCHERIinspection src1 dest) ++ (rvCHERIarithmetic src1 src2 imm dest) ++ (rvCHERImisc src1 src2 imm dest)
+rvCHERIall :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvCHERIall src1 src2 srcScr imm mop dest =
+  (rvCHERIinspection src1 dest) ++ (rvCHERIarithmetic src1 src2 imm dest) ++ (rvCHERImisc src1 src2 srcScr imm dest)
   ++ (rvCHERIcontrol src1 src2 imm dest) ++ (rvCHERImem src1 src2 imm mop dest)

@@ -108,7 +108,7 @@ defaultOptions = Options
     , arch          = "32i"
     , instrPort     = Nothing
     , saveDir       = Nothing
-    , timeoutDelay  = 2000000 -- 2 seconds
+    , timeoutDelay  = 10000000 -- 10 seconds
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -193,7 +193,7 @@ main = withSocketsDo $ do
                     then verboseCheckWithResult
                     else quickCheckWithResult
   let checkSingle trace = do
-      quickCheckWith (Args Nothing 1 1 2048 True 0) (prop (return trace) socA socB True (timeoutDelay flags))
+      quickCheckWith (Args Nothing 1 1 2048 True 1000) (prop (return trace) socA socB True (timeoutDelay flags))
   let checkGen gen remainingTests = do
       result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) (timeoutDelay flags))
       case result of

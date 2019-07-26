@@ -109,7 +109,7 @@ parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
   help="The PATH to the spike executable")
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV64IUxCHERI_Piccolo_bluesim/exe_HW_sim"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IUxCHERI_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
@@ -214,9 +214,9 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   elif (name == 'sail'):
     full_sail_sim = op.join(args.path_to_sail_riscv_dir, sail_sim)
     if 'c' in isa:
-      cmd = [full_sail_sim, "-m", "-r", str(port)]
+      cmd = [full_sail_sim, "-r", str(port)]
     else:
-      cmd = [full_sail_sim, "-C", "-m", "-r", str(port)]
+      cmd = [full_sail_sim, "-r", str(port)]
   ##############################################################################
   elif (name == 'manual'):
     return None
