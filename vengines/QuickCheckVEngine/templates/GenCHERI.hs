@@ -30,6 +30,7 @@ randomCHERITest = Random $ do {
                               (10, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2),
                               (10, uniform $ rvCHERIall srcAddr srcData imm mop dest srcScr),
                               (10, Single $ encode cspecialrw srcScr srcAddr dest),
+                              (10, switchEncodingMode),
                               (10, cspecialRWChain),
                               (if remaining > 10 then 1 else 0, surroundWithMemAccess randomCHERITest)] in
         if remaining > 10 then return $ Sequence [test, randomCHERITest] else return test}
@@ -55,6 +56,18 @@ legalCapStore addrReg = Random $ do {
      , Single $ encode add addrReg tmpReg addrReg
      , Single $ encode cstore dataReg addrReg 0x4
   ]}
+
+switchEncodingMode = Random $ do {
+     tmpReg1 <- src;
+     tmpReg2 <- src;
+     mode <- elements [0, 1];
+     return $ Sequence [
+     Single $ encode cspecialrw 0 0 tmpReg1,
+     Single $ encode addi mode 0 tmpReg2,
+     Single $ encode csetflags tmpReg2 tmpReg1 tmpReg1,
+     Single $ encode cspecialrw 28 tmpReg1 0, --Also write trap vector so we stay in cap mode
+     Single $ encode cjalr tmpReg1 0
+     ]}
 
 cspecialRWChain = Random $ do {
      tmpReg1 <- src;
