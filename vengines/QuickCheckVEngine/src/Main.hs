@@ -108,7 +108,7 @@ defaultOptions = Options
     , arch          = "32i"
     , instrPort     = Nothing
     , saveDir       = Nothing
-    , timeoutDelay  = 10000000 -- 10 seconds
+    , timeoutDelay  = 20000000 -- 20 seconds
     }
 
 options :: [OptDescr (Options -> Options)]
