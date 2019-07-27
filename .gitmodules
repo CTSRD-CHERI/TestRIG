@@ -19,3 +19,6 @@
 [submodule "sail-cheri-riscv"]
 	path = riscv-implementations/sail-cheri-riscv
 	url = https://github.com/CTSRD-CHERI/sail-cheri-riscv.git
+[submodule "riscv-implementations/Piccolo"]
+	path = riscv-implementations/Piccolo
+	url = https://github.com/CTSRD-CHERI/Piccolo
