@@ -74,3 +74,14 @@ The dependencies for the Sail model can be installed using
 You can verify a default configuration by executing:
 - `make`
 - `utils/scripts/runTestRIG.py`
+
+
+## Example Configurations
+### CHERI 64-bit: Sail vs Spike
+Executing the following commands will compare Sail and Spike with the 64-bit version of the RISC-V instruction set and CHERI extensions enabled, assuming that you've initialized the sumblodules and have installed all the dependencies described above.
+```sh
+$ make
+$ make sail-rv64-cheri
+$ make spike-cheri
+$ utils/scripts/runTestRIG.py -a sail -b spike -r rv64ixcheri
+```
