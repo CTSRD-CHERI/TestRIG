@@ -97,7 +97,7 @@ spike:
 spike-cheri:
 	cd riscv-implementations/riscv-isa-sim &&\
 	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
-	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
+	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
 	make install && cp libfesvr.so lib/
 
 sail:
