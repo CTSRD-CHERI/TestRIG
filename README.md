@@ -77,6 +77,12 @@ You can verify a default configuration by executing:
 
 
 ## Example Configurations
+Look at the `Makefile` to see different targets to compare against each other. Also use the following command to figure out the different options for running TestRIG:
+
+```sh
+$ utils/scripts/runTestRIG.py --help
+```
+
 ### CHERI 64-bit: Sail vs Spike
 Executing the following commands will compare Sail and Spike with the 64-bit version of the RISC-V instruction set and CHERI extensions enabled, assuming that you've initialized the sumblodules and have installed all the dependencies described above.
 ```sh
