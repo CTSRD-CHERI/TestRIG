@@ -57,10 +57,13 @@ def auto_pos_int (x):
 def auto_write_fd (fname):
   return open(fname, 'w')
 
-known_rvfi_dii = set({'spike','rvbs','sail','piccolo','manual'})
+known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({'rv32i','rv64i','rv64ic','rv64g','rv64gc','rv32ixcheri','rv64ixcheri', 'rvxcheri'})
-known_generators = set({'internal','sail','manual'})
+known_architectures = set({ 'rv32i', 'rv64i', 'rv64ic', 'rv64g', 'rv64gc'
+                          , 'rv32ixcheri', 'rv32icxcheri'
+                          , 'rv64ixcheri', 'rv64icxcheri'
+                          , 'rvxcheri' })
+known_generators = set({'internal', 'sail', 'manual'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
@@ -155,8 +158,10 @@ rvbs_sim = {
   'rv64g': "rvbs-rv64IZicsrZifencei",
   'rv64gc': "rvbs-rv64IZicsrZifenceiC",
   'rv32ixcheri': "rvbs-rv32IZicsrZifenceiXcheri",
-  'rv64ixcheri': "rvbs-rv64IZicsrZifenceiXcheri"
-}.get(args.architecture, "rvbs-rv64IZicsrZifenceiXcheri")+"-rvfi-dii"
+  'rv32icxcheri': "rvbs-rv32ICZicsrZifenceiXcheri",
+  'rv64ixcheri': "rvbs-rv64IZicsrZifenceiXcheri",
+  'rv64icxcheri': "rvbs-rv64ICZicsrZifenceiXcheri"
+}.get(args.architecture, "rvbs-rv64ICZicsrZifenceiXcheri")+"-rvfi-dii"
 
 # figure out which sail simulator to use
 sail_sim = {
@@ -166,7 +171,9 @@ sail_sim = {
   'rv64g': "cheri_riscv_rvfi_RV64",
   'rv64gc': "cheri_riscv_rvfi_RV64",
   'rv32ixcheri': "cheri_riscv_rvfi_RV32",
-  'rv64ixcheri': "cheri_riscv_rvfi_RV64"
+  'rv32icxcheri': "cheri_riscv_rvfi_RV32",
+  'rv64ixcheri': "cheri_riscv_rvfi_RV64",
+  'rv64icxcheri': "cheri_riscv_rvfi_RV64"
 }.get(args.architecture, "cheri_riscv_rvfi_RV64")
 
 #########################
