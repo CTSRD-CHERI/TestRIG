@@ -35,13 +35,14 @@ module Template where
 
 import Test.QuickCheck
 
-data Template = Single Integer | Distribution [(Int, Template)] | Sequence [Template] | Random (Gen Template)
+data Template = Empty | Single Integer | Distribution [(Int, Template)] | Sequence [Template] | Random (Gen Template)
 
 --Turn a test template into a single instance of a test
 genTest :: Template -> Gen [Integer]
 genTest x = do {y <- genTest1 x; size <- getSize; return $ take size y} --TODO make this an argument
 
 genTest1 :: Template -> Gen [Integer]
+genTest1 (Empty) = return []
 genTest1 (Single x) = return [x]
 genTest1 (Distribution xs) = do {y <- frequency (map (\(a,b) -> (a, return b)) xs); genTest y}
 genTest1 (Sequence x) = genSeq x

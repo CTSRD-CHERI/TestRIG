@@ -167,6 +167,12 @@ prettyCStore rs2 rs1 mop =
 pretty_reg_clear instr imm qt =
   concat [instr, " ", int qt, ", ", int imm]
 
+pretty_ccall instr idc pcc selector =
+  concat [instr, " ", reg pcc, ", ", reg idc, ", ", int selector]
+
+pretty_cspecialrw instr idx cs1 cd =
+  concat [instr, " ", reg cd, ", ", reg cs1, ", ", int idx]
+
 cheri_instructions_dissasembly_list :: [DecodeBranch String]
 cheri_instructions_dissasembly_list = [
      cgetperm            --> prettyR_2op "cgetperm"
@@ -193,10 +199,10 @@ cheri_instructions_dissasembly_list = [
    , csetboundsimmediate --> prettyI "csetboundsimmediate"
    , ctoptr              --> prettyR "ctoptr"
    , cfromptr            --> prettyR "cfromptr"
-   , cspecialrw          --> prettyR "cspecialrw"
+   , cspecialrw          --> pretty_cspecialrw "cspecialrw"
    , cmove               --> prettyR_2op "cmove"
    , cjalr               --> prettyR_2op "cjalr"
-   , ccall               --> prettyR "ccall"
+   , ccall               --> pretty_ccall "ccall"
    , clear               --> pretty_reg_clear "clear"
    , fpclear             --> pretty_reg_clear "fpclear"
    , cload               --> prettyCLoad
