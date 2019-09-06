@@ -22,3 +22,6 @@
 [submodule "riscv-implementations/Piccolo"]
 	path = riscv-implementations/Piccolo
 	url = https://github.com/CTSRD-CHERI/Piccolo
+[submodule "riscv-implementations/ibex"]
+	path = riscv-implementations/ibex
+	url = git@github.com:CTSRD-CHERI/ibex.git

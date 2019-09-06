@@ -125,6 +125,9 @@ sail-rv32-cheri:
 sail-rv64-cheri:
 	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/cheri_riscv_rvfi_RV64
 
+ibex-rv32ic-cheri:
+	$(MAKE) -C riscv-implementations/ibex/verilator
+
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
 clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo
@@ -169,3 +172,6 @@ clean-sail-rv64-cheri:
 
 clean-piccolo:
 	rm -rf riscv-implementations/Piccolo/builds/RV*
+
+clean-ibex:
+	$(MAKE) -C riscv-implementations/ibex/verilator clean

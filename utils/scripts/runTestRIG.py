@@ -57,9 +57,9 @@ def auto_pos_int (x):
 def auto_write_fd (fname):
   return open(fname, 'w')
 
-known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'manual'})
+known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'ibex', 'manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({ 'rv32i', 'rv64i', 'rv64ic', 'rv64g', 'rv64gc'
+known_architectures = set({ 'rv32i', 'rv32ic', 'rv64i', 'rv64ic', 'rv64g', 'rv64gc'
                           , 'rv32ixcheri', 'rv32icxcheri'
                           , 'rv64ixcheri', 'rv64icxcheri'
                           , 'rvxcheri' })
@@ -114,6 +114,9 @@ parser.add_argument('--path-to-spike', metavar='PATH', type=str,
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IUxCHERI_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
+parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
+  help="The PATH to the Ibex executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
@@ -153,6 +156,7 @@ def input_y_n(prompt):
 # figure out which rvbs simulator to use
 rvbs_sim = {
   'rv32i': "rvbs-rv32IZicsrZifencei",
+  'rv32ic': "rvbs-rv32IZicsrZifenceiC",
   'rv64i': "rvbs-rv64IZicsrZifencei",
   'rv64ic': "rvbs-rv64IZicsrZifenceiC",
   'rv64g': "rvbs-rv64IZicsrZifencei",
@@ -166,6 +170,7 @@ rvbs_sim = {
 # figure out which sail simulator to use
 sail_sim = {
   'rv32i': "cheri_riscv_rvfi_RV32",
+  'rv32ic': "cheri_riscv_rvfi_RV32",
   'rv64i': "cheri_riscv_rvfi_RV64",
   'rv64ic': "cheri_riscv_rvfi_RV64",
   'rv64g': "cheri_riscv_rvfi_RV64",
@@ -224,6 +229,9 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
       cmd = [full_sail_sim, "-r", str(port)]
     else:
       cmd = [full_sail_sim, "-C", "-r", str(port)]
+  ##############################################################################
+  elif (name == 'ibex'):
+    cmd = [args.path_to_ibex, 'localhost', str(port)]
   ##############################################################################
   elif (name == 'manual'):
     return None
@@ -285,7 +293,7 @@ def spawn_generator(name, arch, log):
       # No extension specified in the architecture string
       [isa, extension] = [arch, ""]
     cmd = [args.path_to_generator, '-p', str(args.generator_port)]
-    if not ('c' in isa):
+    if not ('c' in isa.split('x')[0]):
       cmd += ['-no_compressed']
 
     print("running sail generator as: ", " ".join(cmd))
