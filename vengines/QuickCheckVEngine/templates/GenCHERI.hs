@@ -56,12 +56,13 @@ randomCHERITest = Random $ do {
     longImm <- (bits 20);
     fenceOp1 <- (bits 4);
     fenceOp2 <- (bits 4);
+    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     srcScr <- elements [28, 29, 30, 31];
     let test =  Distribution [(if remaining > 10 then 5 else 0, legalLoad),
                               (if remaining > 10 then 5 else 0, legalStore),
                               (if remaining > 10 then 5 else 0, legalCapLoad srcAddr dest),
                               (if remaining > 10 then 5 else 0, legalCapStore srcAddr),
-                              (10, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2),
+                              (10, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr),
                               (10, uniform $ rvCHERIall srcAddr srcData imm mop dest srcScr),
                               (10, Single $ encode cspecialrw srcScr srcAddr dest),
                               (10, switchEncodingMode),
@@ -144,9 +145,10 @@ genCHERIinspection = Random $ do {
     longImm <- bits 20;
     fenceOp1 <- bits 3;
     fenceOp2 <- bits 3;
+    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
       (1, uniform $ rvCHERIinspection srcAddr dest)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]}
+    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
 
 genCHERIarithmetic :: Template
 genCHERIarithmetic = Random $ do {
@@ -157,9 +159,10 @@ genCHERIarithmetic = Random $ do {
     longImm <- bits 20;
     fenceOp1 <- bits 3;
     fenceOp2 <- bits 3;
+    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
       (1, uniform $ rvCHERIarithmetic srcAddr srcData imm dest)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]}
+    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
 
 genCHERImisc :: Template
 genCHERImisc = Random $ do {
@@ -171,9 +174,10 @@ genCHERImisc = Random $ do {
     fenceOp1 <- bits 3;
     fenceOp2 <- bits 3;
     srcScr <- elements [0, 1, 28, 29, 30, 31];
+    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
       (1, uniform $ rvCHERImisc srcAddr srcData imm dest srcScr)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]}
+    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
 
 genCHERIcontrol :: Template
 genCHERIcontrol = Random $ do {
@@ -184,6 +188,7 @@ genCHERIcontrol = Random $ do {
     longImm <- bits 20;
     fenceOp1 <- bits 3;
     fenceOp2 <- bits 3;
+    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
       (1, uniform $ rvCHERIcontrol srcAddr srcData imm dest)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]}
+    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}

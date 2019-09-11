@@ -196,10 +196,15 @@ rvFence fenceOp1 fenceOp2 = [
   , encode fence_i
   ]
 
+rvCSR :: Integer -> Integer -> Integer -> [Integer]
+rvCSR src dest imm = [
+    encode csrrs imm src dest
+  ]
+
 rvMem :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer] --TODO alignment
 rvMem srcAddr srcData dest imm fenceOp1 fenceOp2 =
   (rvLoad srcAddr dest imm) ++ (rvStore srcAddr srcData imm) ++ (rvFence fenceOp1 fenceOp2)
 
-rvAll :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
-rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 =
-  (rvArith srcAddr srcData dest imm longImm) ++ (rvMem srcAddr srcData dest imm fenceOp1 fenceOp2) ++ (rvCtrl srcAddr srcData dest imm longImm)
+rvAll :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr =
+  (rvArith srcAddr srcData dest imm longImm) ++ (rvMem srcAddr srcData dest imm fenceOp1 fenceOp2) ++ (rvCtrl srcAddr srcData dest imm longImm) ++ (rvCSR srcData dest csrAddr)

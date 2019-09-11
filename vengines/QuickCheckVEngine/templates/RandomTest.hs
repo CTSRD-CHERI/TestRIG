@@ -52,8 +52,9 @@ randomTest = Random $ do {
     longImm <- (bits 20);
     fenceOp1 <- (bits 4);
     fenceOp2 <- (bits 4);
+    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     let test =  Distribution [(if remaining > 10 then 1 else 0, legalLoad),
                               (if remaining > 10 then 1 else 0, legalStore), 
-                              (10, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2),
+                              (10, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr),
                               (if remaining > 10 then 1 else 0, surroundWithMemAccess randomTest)] in
         if remaining > 10 then return $ Sequence [test, randomTest] else return test}
