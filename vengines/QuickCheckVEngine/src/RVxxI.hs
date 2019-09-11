@@ -85,6 +85,9 @@ sd      = "imm[11:5] rs2[4:0] rs1[4:0] 011 imm[4:0] 0100011"
 fence   = "0000 pred[3:0] succ[3:0] 00000 000 00000 0001111"
 fence_i = "0000 0000 0000 00000 001 00000 0001111"
 resrvd  = "0000 0000 0000 00000 000 00000 0000000"
+mret    = "0011 0000 0010 00000 000 00000 1110011"
+ecall   = "000000000000 00000 000 00000 1110011"
+csrrs   = "imm[11:0] rs1[4:0] 010 rd[4:0] 1110011"
 
 integer_instructions_dissasembly_list :: [DecodeBranch String]
 integer_instructions_dissasembly_list = [
@@ -131,6 +134,9 @@ integer_instructions_dissasembly_list = [
   , fence   --> prettyF
   , fence_i --> "fence_i"
   , resrvd  --> "reserved"
+  , mret    --> "mret"
+  , ecall   --> "ecall"
+  , csrrs   --> prettyI "csrrs"
   ]
 
 rvArith :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
