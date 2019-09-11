@@ -90,7 +90,7 @@ ccall                     = "1111110 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 -- creturn is a special case of ccall, which would mess up decoding!
 
 -- Assertion
---TODO ctestsubset
+ctestsubset               = "0100000 cs2[4:0] cs1[4:0] 000 rd[4:0] 1011011"
 
 -- Register Clearing
 clear                     = "1111111 01101 q[1:0] imm[7:5] 000 imm[4:0] 1011011"
@@ -208,6 +208,7 @@ cheri_instructions_dissasembly_list = [
    , cmove               --> prettyR_2op "cmove"
    , cjalr               --> prettyR_2op "cjalr"
    , ccall               --> pretty_ccall "ccall"
+   , ctestsubset         --> prettyR "ctestsubset"
    , clear               --> pretty_reg_clear "clear"
    , fpclear             --> pretty_reg_clear "fpclear"
    , cload               --> prettyCLoad
@@ -242,6 +243,7 @@ rvCHERIarithmetic src1 src2 imm dest = [
  ,  encode cincoffsetimmediate imm src1 dest
  ,  encode ctoptr     src1 src2 dest
  ,  encode cfromptr   src1 src2 dest
+ ,  encode ctestsubset src1 src2 dest
   ]
 
 rvCHERImisc :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
