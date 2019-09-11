@@ -55,13 +55,12 @@ import Control.Monad
 import Test.QuickCheck
 import Test.QuickCheck.Monadic
 import System.Environment
-import System.Directory
+import System.FilePath.Find
 import System.Console.GetOpt
 import System.IO.Unsafe
 import Data.Maybe ( isJust, isNothing, fromMaybe )
 import Data.List
 import Data.List.Split
-import System.FilePath.Windows
 import System.Exit
 import System.IO
 import RVFI_DII
@@ -227,10 +226,8 @@ main = withSocketsDo $ do
     Nothing -> do
       case (instDirectory flags) of
         Just directory -> do
-          fileNames <- getDirectoryContents directory
-          let culledFileNames = filter (\x -> (takeExtension x) == ".S") fileNames
-          let fullCulledFileNames = map (\x -> directory ++ "/" ++ x) culledFileNames
-          mapM_ checkFile fullCulledFileNames
+          fileNames <- System.FilePath.Find.find always (extension ==? ".S") directory
+          mapM_ checkFile fileNames
         Nothing -> do
           case instrSoc of
             Nothing -> do
