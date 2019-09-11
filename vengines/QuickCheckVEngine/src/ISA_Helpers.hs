@@ -81,8 +81,6 @@ prettyF pred succ =
 prettyR_2op instr cs1 cd =
   concat [instr, " ", reg cd, ", ", reg cs1]
 
-
-
 -------------------------------
 -- Random instruction generator
 -------------------------------

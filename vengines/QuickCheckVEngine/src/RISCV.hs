@@ -36,11 +36,12 @@ import InstrCodec
 import Test.QuickCheck
 import Control.Monad
 import RVxxI
+import RVxxM
 import CHERI
 
 -- Instruction pretty printer
 pretty :: Integer -> String
-pretty instr = 
+pretty instr =
   case decode 32 instr (integer_instructions_dissasembly_list ++ cheri_instructions_dissasembly_list) of
     Nothing -> "Unknown instruction"
     Just i -> i

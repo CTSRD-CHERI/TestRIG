@@ -53,7 +53,7 @@ data Token =
   deriving (Show)
 
 tokenise :: String -> [Token]
-tokenise = init [] 
+tokenise = init []
   where
     isBit c = c == '0' || c == '1'
 
@@ -65,7 +65,7 @@ tokenise = init []
 
     var str acc [] = init (Var (reverse str) : acc) []
     var str acc (c:cs)
-      | c == '[' = high (reverse str) acc cs 
+      | c == '[' = high (reverse str) acc cs
       | c == ' ' = init (Var (reverse str) : acc) cs
       | otherwise = var (c:str) acc cs
 
@@ -198,12 +198,12 @@ instance Apply f a => Apply (Integer -> f) a where
   apply f (arg:args) = apply (f (fromBitList arg)) args
 
 decodeOne :: Apply f a => String -> f -> (Integer, Int) -> Maybe a
-decodeOne fmt rhs = 
+decodeOne fmt rhs =
   let toks = tokenise fmt
   in  \(subj, w) ->
         let
           subj' = w#subj
-        in 
+        in
           if   matches subj' toks
           then Just $ apply rhs (args subj' (tag toks))
           else Nothing
@@ -229,7 +229,7 @@ scatter (tok:toks) env =
   case tok of
     Lit bs -> [b == '1' | b <- bs] ++ scatter toks env
     Var v -> error "Codec.scatter: unranged vars not supported"
-    Range v hi lo -> 
+    Range v hi lo ->
       case lookup v env of
         Nothing -> error ("Unknown variable " ++ v)
         Just i  -> let bs = toBitList i ++ repeat False in

@@ -47,7 +47,7 @@ import Data.Binary
 import Data.String
 import Numeric (readHex, showHex, showIntAtBase)
 import GHC.Generics (Generic)
-import System.IO 
+import System.IO
 import Test.QuickCheck
 import RISCV
 import RVxxI

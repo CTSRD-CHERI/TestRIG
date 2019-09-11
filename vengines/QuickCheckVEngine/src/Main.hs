@@ -77,6 +77,7 @@ import GenMemory
 import RandomTest
 import GenControlFlow
 import MemUtils
+import GenMulDiv
 import GenCHERI
 
 -- command line arguments
@@ -245,6 +246,11 @@ main = withSocketsDo $ do
                   checkGen (genTest $ repeatTillEnd genAll) (nTests flags)
                   putStrLn "rvxxi Template:"
                   checkGen (genTest $ repeatTillEnd randomTest) (nTests flags)
+                  )
+              when (((head archStrings) =~ ("m"::String)) || ((head archStrings) =~ ("g"::String))) (
+                do
+                  putStrLn "rvxxm Verification:"
+                  checkGen (genTest $ repeatTillEnd genMulDiv)  (nTests flags)
                   )
               when (elem "cheri" archStrings) (
                 do
