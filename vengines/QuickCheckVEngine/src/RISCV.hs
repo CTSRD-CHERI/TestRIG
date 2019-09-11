@@ -2,7 +2,13 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2018 Matthew Naylor
+-- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
+--
+-- This software was developed by SRI International and the University of
+-- Cambridge Computer Laboratory (Department of Computer Science and
+-- Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
+-- DARPA SSITH research programme.
 --
 -- This software was partly developed by the University of Cambridge
 -- Computer Laboratory as part of the Partially-Ordered Event-Triggered
@@ -42,6 +48,8 @@ import CHERI
 -- Instruction pretty printer
 pretty :: Integer -> String
 pretty instr =
-  case decode 32 instr (integer_instructions_dissasembly_list ++ cheri_instructions_dissasembly_list) of
+  case decode 32 instr ( integer_instructions_dissasembly_list
+                      ++ muldiv_instructions_dissasembly_list
+                      ++ cheri_instructions_dissasembly_list) of
     Nothing -> "Unknown instruction"
     Just i -> i
