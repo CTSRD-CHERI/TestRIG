@@ -1,13 +1,20 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
+-- Copyright (c) 2018 Jonathan Woodruff
+-- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
 -- Cambridge Computer Laboratory (Department of Computer Science and
 -- Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
 -- DARPA SSITH research programme.
+--
+-- This software was partly developed by the University of Cambridge
+-- Computer Laboratory as part of the Partially-Ordered Event-Triggered
+-- Systems (POETS) project, funded by EPSRC grant EP/N031768/1.
 --
 -- Redistribution and use in source and binary forms, with or without
 -- modification, are permitted provided that the following conditions
@@ -31,19 +38,55 @@
 -- SUCH DAMAGE.
 --
 
-module MemUtils where
+module Templates.Utils where
 
+import Test.QuickCheck (Gen, choose, frequency, oneof)
 import InstrCodec
-import Test.QuickCheck
-import ISA_Helpers
-import RVxxI
 import Template
+import RISCV.RV32_I
 
+-- Generate random destination register
+-- Use 6 registers with a geometic distribution
+dest :: Gen Integer
+dest = choose (0, 5)
+-- dest =
+--   frequency [
+--     (32, return 1)
+--   , (16, return 2)
+--   , (8,  return 3)
+--   , (4,  return 4)
+--   , (2,  return 5)
+--   , (1,  return 0)
+--   ]
+
+-- Generate random source register
+-- Use 6 registers with a uniform distribution
+src :: Gen Integer
+src = choose (0, 5)
+
+-- Generate random integer with given bit-width
+bits :: Int -> Gen Integer
+bits w = choose (0, 2^w - 1)
+
+-- Generate but exclude some patterns
+exclude :: [Integer] -> Gen Integer -> Gen Integer
+exclude excl orig = do attempt <- orig; if elem attempt excl then exclude excl orig else return attempt
+
+-- Power of two values clustered around 1.
+geomBits :: Int -> Int -> Gen Integer
+geomBits hi lo = frequency [(2^(32-i), return (2^i))| i <- [lo..(hi-1)]]
+
+-- Generate memory offset
+memOffset :: Gen Integer
+memOffset = oneof [return 0, return 1, return 64, return 65]
+
+-- Memory load Template
 loadOp :: Integer -> Integer -> Template
-loadOp reg dest = uniform $ rvLoad reg dest 0
+loadOp reg dest = uniform $ rv32_i_load reg dest 0
 
+-- Memory store Template
 storeOp :: Integer -> Integer -> Template
-storeOp regAddr regData = uniform $ rvStore regAddr regData 0
+storeOp regAddr regData = uniform $ rv32_i_store regAddr regData 0
 
 storeToAddress :: Integer -> Integer -> Integer -> Integer -> Integer -> Template
 storeToAddress regAddr regData offset value shift = Sequence [
@@ -95,3 +138,16 @@ legalStore = Random $ do {
      , Single $ encode add addrReg tmpReg addrReg
      , storeOp dataReg addrReg
 ]}
+
+prepReg32 :: Integer -> Template
+prepReg32 dst = Random $ do imm       <- bits 12
+                            longImm   <- bits 20
+                            return $ Sequence [ Single $ encode lui  longImm dst
+                                              , Single $ encode xori imm dst dst
+                                              ]
+
+prepReg64 :: Integer -> Template
+prepReg64 dst = repeatTest 6 $ Random $ do val <- bits 12
+                                           return $ Sequence [ Single $ encode slli  12 dst dst
+                                                             , Single $ encode xori val dst dst
+                                                             ]

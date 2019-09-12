@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -31,43 +32,35 @@
 -- SUCH DAMAGE.
 --
 
-module GenArithmetic where
+module Templates.GenControlFlow (
+  gen_rv32_i_controlflow
+) where
 
 import InstrCodec
 import Test.QuickCheck
-import ISA_Helpers
-import RVxxI
+import RISCV.RV32_I
 import Template
+import Templates.Utils
 
-genArithmetic :: Template
-genArithmetic = Random $ do {
-  imm      <- bits 12;
-  src1     <- src;
-  src2     <- src;
-  dest     <- dest;
-  longImm  <- bits 20;
-  fenceOp1 <- bits 4;
-  fenceOp2 <- bits 4;
-  offset   <- offset;
-  return $ Distribution [
-    (8,  Single $ encode add   src1 src2 dest)
-  , (8,  Single $ encode slt   src1 src2 dest)
-  , (8,  Single $ encode sltu  src1 src2 dest)
-  , (8,  Single $ encode andr  src1 src2 dest)
-  , (8,  Single $ encode orr   src1 src2 dest)
-  , (8,  Single $ encode xorr  src1 src2 dest)
-  , (8,  Single $ encode sll   src1 src2 dest)
-  , (8,  Single $ encode srl   src1 src2 dest)
-  , (8,  Single $ encode sub   src1 src2 dest)
-  , (8,  Single $ encode sra   src1 src2 dest)
-  , (16, Single $ encode addi  imm src2 dest)
-  , (8,  Single $ encode slti  imm src2 dest)
-  , (8,  Single $ encode sltiu imm src2 dest)
-  , (8,  Single $ encode andi  imm src2 dest)
-  , (8,  Single $ encode ori   imm src2 dest)
-  , (16, Single $ encode xori  imm src2 dest)
-  , (8,  Single $ encode slli  imm src2 dest)
-  , (8,  Single $ encode srli  imm src2 dest)
-  , (8,  Single $ encode srai  imm src2 dest)
-  , (16, Single $ encode lui   longImm dest)
-  ]}
+gen_rv32_i_controlflow :: Template
+gen_rv32_i_controlflow = genControlFlow
+
+genControlFlow :: Template
+genControlFlow = Random $
+  do imm     <- bits 12
+     src1    <- src
+     src2    <- src
+     dest    <- dest
+     longImm <- bits 20
+     offset  <- geomBits 11 2
+     let insts = [ (8, Single $ encode addi  offset src1 dest)
+                 , (8, Single $ encode ori   offset src1 dest)
+                 , (8, Single $ encode auipc longImm dest)
+                 , (8, Single $ encode jal   longImm dest)
+                 , (8, Single $ encode jalr  imm src1 dest)
+                 , (8, Single $ encode beq   imm src1 src2)
+                 , (8, Single $ encode bne   imm src1 src2)
+                 , (8, Single $ encode bge   imm src1 src2)
+                 , (8, Single $ encode bgeu  imm src1 src2)
+                 ]
+     return $ Distribution insts

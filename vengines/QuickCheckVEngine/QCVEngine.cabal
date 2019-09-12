@@ -5,9 +5,16 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 executable QCVEngine
+  hs-source-dirs:      src .
   main-is:             Main.hs
-  -- other-modules:       
-  other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
   build-depends:       base, QuickCheck, bytestring, network, binary, directory, filemanip, bitwise, regex-posix, split
-  hs-source-dirs:      src templates
+  other-modules:       InstrCodec, RISCV,
+                       RISCV.ArchDesc, RISCV.Helpers, RISCV.InstPretty,
+                       RISCV.RV32_I, RISCV.RV32_M, RISCV.RV32_Xcheri, RISCV.RV32_Zicsr, RISCV.RV32_Zifencei,
+                       RISCV.RV64_I, RISCV.RV64_M,
+                       RVFI_DII, Template,
+                       Templates.GenAll, Templates.GenArithmetic, Templates.GenCHERI,
+                       Templates.GenControlFlow, Templates.GenMemory, Templates.GenMulDiv,
+                       Templates.RandomTest, Templates.Utils
+  other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
   default-language:    Haskell98

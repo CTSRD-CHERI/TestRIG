@@ -1,7 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2018 Matthew Naylor
+-- Copyright (c) 2019 Peter Rugg
 -- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
@@ -9,10 +9,6 @@
 -- Cambridge Computer Laboratory (Department of Computer Science and
 -- Technology) under DARPA contract HR0011-18-C-0016 ("ECATS"), as part of the
 -- DARPA SSITH research programme.
---
--- This software was partly developed by the University of Cambridge
--- Computer Laboratory as part of the Partially-Ordered Event-Triggered
--- Systems (POETS) project, funded by EPSRC grant EP/N031768/1.
 --
 -- Redistribution and use in source and binary forms, with or without
 -- modification, are permitted provided that the following conditions
@@ -36,24 +32,48 @@
 -- SUCH DAMAGE.
 --
 
-module RISCV (
-  module RISCV.ArchDesc
-, module RISCV.InstPretty
-, module RISCV.RV32_I
-, module RISCV.RV32_M
-, module RISCV.RV32_Zicsr
-, module RISCV.RV32_Zifencei
-, module RISCV.RV32_Xcheri
-, module RISCV.RV64_I
-, module RISCV.RV64_M
+module Templates.GenMemory (
+  gen_rv32_i_memory
+, gen_rv32_i_zifencei_memory
+, gen_rv64_i_memory
+, gen_rv64_i_zifencei_memory
 ) where
 
-import RISCV.ArchDesc
-import RISCV.InstPretty
+import InstrCodec
+import Test.QuickCheck
 import RISCV.RV32_I
-import RISCV.RV32_M
-import RISCV.RV32_Zicsr
 import RISCV.RV32_Zifencei
-import RISCV.RV32_Xcheri
-import RISCV.RV64_I
-import RISCV.RV64_M
+import Template
+import Templates.Utils
+
+gen_rv32_i_memory :: Template
+gen_rv32_i_memory = gen_memory False False
+
+gen_rv32_i_zifencei_memory :: Template
+gen_rv32_i_zifencei_memory = gen_memory True False
+
+gen_rv64_i_memory :: Template
+gen_rv64_i_memory = gen_memory False True
+
+gen_rv64_i_zifencei_memory :: Template
+gen_rv64_i_zifencei_memory = gen_memory True True
+
+gen_memory :: Bool -> Bool -> Template
+gen_memory has_zifencei has_xlen_64 = Random $
+  do imm      <- bits 12
+     src1     <- src
+     src2     <- src
+     dest     <- dest
+     fenceOp1 <- bits 4
+     fenceOp2 <- bits 4
+     offset   <- geomBits 11 0
+     let insts = [ (8,  Single $ encode addi  offset src1 dest)
+                 , (8,  Single $ encode ori   offset src1 dest)
+                 , (16, Single $ encode lui   0x80008 dest)
+                 , (8, uniform $ rv32_i_load  src1 dest offset)
+                 , (8, uniform $ rv32_i_store src1 src2 offset)
+                 , (2, uniform $ rv32_i_fence fenceOp1 fenceOp2)
+                 ]
+                 ++ if has_zifencei then [(2,  Single $ encode fence_i)] else []
+                 ++ if has_xlen_64 then [] else [] -- TODO
+     return $ Distribution insts

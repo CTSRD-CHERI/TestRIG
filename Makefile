@@ -60,7 +60,7 @@ clean-sail-generator:
 riscv-implementations: spike sail
 
 piccolo-rv32xcheri:
-	$(MAKE) -C riscv-implementations/Piccolo/builds -f Resources/Build_all.mk ARCH=RV32IUxCHERI SIM=bluesim RVFI_DII=RVFI_DII build
+	$(MAKE) -C riscv-implementations/Piccolo/builds -f Resources/Build_all.mk ARCH=RV32IMUxCHERI SIM=bluesim RVFI_DII=RVFI_DII build
 
 piccolo-rv64xcheri:
 	$(MAKE) -C riscv-implementations/Piccolo/builds -f Resources/Build_all.mk ARCH=RV64IUxCHERI SIM=bluesim RVFI_DII=RVFI_DII build

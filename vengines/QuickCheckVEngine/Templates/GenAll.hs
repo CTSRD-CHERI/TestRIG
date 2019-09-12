@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -31,36 +32,46 @@
 -- SUCH DAMAGE.
 --
 
-module GenMemory where
+module Templates.GenAll where
 
 import InstrCodec
 import Test.QuickCheck
-import ISA_Helpers
-import RVxxI
+import RISCV.ArchDesc
+import RISCV.RV32_I
+import RISCV.RV32_M
+import RISCV.RV32_Zifencei
+import RISCV.RV32_Xcheri
+import RISCV.RV64_I
+import RISCV.RV64_M
 import Template
+import Templates.Utils
 
-genMemory :: Template
-genMemory = Random $ do {
-  imm      <- bits 12;
-  src1     <- src;
-  src2     <- src;
-  dest     <- dest;
-  longImm  <- bits 20;
-  fenceOp1 <- bits 4;
-  fenceOp2 <- bits 4;
-  offset   <- geomBits 11 0;
-  return $ Distribution [
-    (8,  Single $ encode addi  offset src1 dest)
-  , (8,  Single $ encode ori   offset src1 dest)
-  , (16, Single $ encode lui   0x80008 dest)
-  , (8,  Single $ encode lb    offset src1 dest)
-  , (8,  Single $ encode lbu   offset src1 dest)
-  , (8,  Single $ encode lh    offset src1 dest)
-  , (8,  Single $ encode lhu   offset src1 dest)
-  , (8,  Single $ encode lw    offset src1 dest)
-  , (8,  Single $ encode sb    offset src1 src2)
-  , (8,  Single $ encode sh    offset src1 src2)
-  , (8,  Single $ encode sw    offset src1 src2)
-  , (2,  Single $ encode fence fenceOp1 fenceOp2 )
-  , (2,  Single $ encode fence_i)
-  ]}
+genAll :: ArchDesc -> Template
+genAll desc = Random $
+  do imm     <- bits 12
+     src1    <- src
+     src2    <- src
+     dest    <- dest
+     longImm <- bits 20
+     fOp1    <- bits 4
+     fOp2    <- bits 4
+     mop     <- bits 5
+     offset  <- memOffset
+     srcScr  <- elements [28, 29, 30, 31];
+     let insts = [[ (8, uniform (rv32_i_arith src1 src2 dest imm longImm))
+                  , (8, uniform (rv32_i_ctrl src1 src2 dest imm longImm))
+                  , (8, uniform (rv32_i_mem src1 src2 dest offset fOp1 fOp2))
+                  , (32, Single $ encode lui 0x80008 dest)
+                  ] | has_i desc]
+              ++ [[ (8, uniform (rv64_i_arith src1 src2 dest imm))
+                  , (8, uniform (rv64_i_mem src1 src2 dest offset))
+                  ] | has_i desc && has_xlen_64 desc]
+              ++ [[ (8, uniform (rv32_m src1 src2 imm))
+                  ] | has_m desc]
+              ++ [[ (8, uniform (rv64_m src1 src2 imm))
+                  ] | has_m desc && has_xlen_64 desc]
+              ++ [[ (8, uniform rv32_zifencei)
+                  ] | has_ifencei desc]
+              ++ [[ (8, uniform (rv32_xcheri src1 src2 srcScr imm mop dest))
+                  ] | has_cheri desc]
+     return $ Distribution (concat insts)

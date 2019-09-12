@@ -57,12 +57,19 @@ def auto_pos_int (x):
 def auto_write_fd (fname):
   return open(fname, 'w')
 
+def std_ext (ext_name):
+  return ["", ext_name]
+
+def non_std_ext (ext_name):
+  return ["", "x"+ext_name]
+
 known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'ibex', 'manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set({ 'rv32i', 'rv32ic', 'rv64i', 'rv64ic', 'rv64g', 'rv64gc'
-                          , 'rv32ixcheri', 'rv32icxcheri'
-                          , 'rv64ixcheri', 'rv64icxcheri'
-                          , 'rvxcheri' })
+known_architectures = set([e0+e1+e2+e3 for e0 in ["rv32i", "rv64i"]
+                                       for e1 in std_ext("c")
+                                       for e2 in std_ext("m")
+                                       for e3 in non_std_ext("cheri")]
+                          + ["rv64g", "rv64gc"])
 known_generators = set({'internal', 'sail', 'manual'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
@@ -112,7 +119,7 @@ parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
   help="The PATH to the spike executable")
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IUxCHERI_Piccolo_bluesim/exe_HW_sim"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IMUxCHERI_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
@@ -168,18 +175,19 @@ rvbs_sim = {
 }.get(args.architecture, "rvbs-rv64ICZicsrZifenceiXcheri")+"-rvfi-dii"
 
 # figure out which sail simulator to use
-sail_sim = {
-  'rv32i': "cheri_riscv_rvfi_RV32",
-  'rv32ic': "cheri_riscv_rvfi_RV32",
-  'rv64i': "cheri_riscv_rvfi_RV64",
-  'rv64ic': "cheri_riscv_rvfi_RV64",
-  'rv64g': "cheri_riscv_rvfi_RV64",
-  'rv64gc': "cheri_riscv_rvfi_RV64",
-  'rv32ixcheri': "cheri_riscv_rvfi_RV32",
-  'rv32icxcheri': "cheri_riscv_rvfi_RV32",
-  'rv64ixcheri': "cheri_riscv_rvfi_RV64",
-  'rv64icxcheri': "cheri_riscv_rvfi_RV64"
-}.get(args.architecture, "cheri_riscv_rvfi_RV64")
+#sail_sim = {
+#  'rv32i': "cheri_riscv_rvfi_RV32",
+#  'rv32ic': "cheri_riscv_rvfi_RV32",
+#  'rv64i': "cheri_riscv_rvfi_RV64",
+#  'rv64ic': "cheri_riscv_rvfi_RV64",
+#  'rv64g': "cheri_riscv_rvfi_RV64",
+#  'rv64gc': "cheri_riscv_rvfi_RV64",
+#  'rv32ixcheri': "cheri_riscv_rvfi_RV32",
+#  'rv32icxcheri': "cheri_riscv_rvfi_RV32",
+#  'rv64ixcheri': "cheri_riscv_rvfi_RV64",
+#  'rv64icxcheri': "cheri_riscv_rvfi_RV64"
+#}.get(args.architecture, "cheri_riscv_rvfi_RV64")
+sail_sim = "cheri_riscv_rvfi_RV32" if "rv32" in args.architecture else "cheri_riscv_rvfi_RV64"
 
 #########################
 # spawn rvfi_dii server #

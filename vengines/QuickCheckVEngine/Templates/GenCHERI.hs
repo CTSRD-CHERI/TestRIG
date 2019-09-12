@@ -31,16 +31,14 @@
 -- SUCH DAMAGE.
 --
 
-module GenCHERI where
+module Templates.GenCHERI where
 
 import InstrCodec
 import Test.QuickCheck
-import ISA_Helpers
-import RVxxI
+import RISCV.RV32_I
+import RISCV.RV32_Xcheri
 import Template
-import CHERI
-
-import MemUtils
+import Templates.Utils
 
 randomCHERITest :: Template
 randomCHERITest = Random $ do {
@@ -62,8 +60,8 @@ randomCHERITest = Random $ do {
                               (if remaining > 10 then 5 else 0, legalStore),
                               (if remaining > 10 then 5 else 0, legalCapLoad srcAddr dest),
                               (if remaining > 10 then 5 else 0, legalCapStore srcAddr),
-                              (10, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr),
-                              (10, uniform $ rvCHERIall srcAddr srcData imm mop dest srcScr),
+                              (10, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2), -- TODO add csr
+                              (10, uniform $ rv32_xcheri srcAddr srcData srcScr imm mop dest),
                               (10, Single $ encode cspecialrw srcScr srcAddr dest),
                               (10, switchEncodingMode),
                               (10, cspecialRWChain),
@@ -147,8 +145,8 @@ genCHERIinspection = Random $ do {
     fenceOp2 <- bits 3;
     csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
-      (1, uniform $ rvCHERIinspection srcAddr dest)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
+      (1, uniform $ rv32_xcheri_inspection srcAddr dest)
+    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
 
 genCHERIarithmetic :: Template
 genCHERIarithmetic = Random $ do {
@@ -161,8 +159,8 @@ genCHERIarithmetic = Random $ do {
     fenceOp2 <- bits 3;
     csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
-      (1, uniform $ rvCHERIarithmetic srcAddr srcData imm dest)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
+      (1, uniform $ rv32_xcheri_arithmetic srcAddr srcData imm dest)
+    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
 
 genCHERImisc :: Template
 genCHERImisc = Random $ do {
@@ -176,8 +174,8 @@ genCHERImisc = Random $ do {
     srcScr <- elements [0, 1, 28, 29, 30, 31];
     csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
-      (1, uniform $ rvCHERImisc srcAddr srcData imm dest srcScr)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
+      (1, uniform $ rv32_xcheri_misc srcAddr srcData srcScr imm dest)
+    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
 
 genCHERIcontrol :: Template
 genCHERIcontrol = Random $ do {
@@ -190,5 +188,5 @@ genCHERIcontrol = Random $ do {
     fenceOp2 <- bits 3;
     csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
-      (1, uniform $ rvCHERIcontrol srcAddr srcData imm dest)
-    , (1, uniform $ rvAll srcAddr srcData dest imm longImm fenceOp1 fenceOp2 csrAddr)]}
+      (1, uniform $ rv32_xcheri_control srcAddr srcData imm dest)
+    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr

@@ -1,7 +1,6 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
@@ -36,24 +35,55 @@
 -- SUCH DAMAGE.
 --
 
-module RISCV (
-  module RISCV.ArchDesc
-, module RISCV.InstPretty
-, module RISCV.RV32_I
-, module RISCV.RV32_M
-, module RISCV.RV32_Zicsr
-, module RISCV.RV32_Zifencei
-, module RISCV.RV32_Xcheri
-, module RISCV.RV64_I
-, module RISCV.RV64_M
+module RISCV.RV32_M (
+  rv32_m_disass
+, rv32_m
+, mul
+, mulh
+, mulhsu
+, mulhu
+, div
+, divu
+, rem
+, remu
 ) where
 
-import RISCV.ArchDesc
-import RISCV.InstPretty
-import RISCV.RV32_I
-import RISCV.RV32_M
-import RISCV.RV32_Zicsr
-import RISCV.RV32_Zifencei
-import RISCV.RV32_Xcheri
-import RISCV.RV64_I
-import RISCV.RV64_M
+import Prelude hiding (rem, div)
+
+import RISCV.Helpers (prettyR)
+import InstrCodec (DecodeBranch, (-->), encode)
+
+----------------------
+-- RV32_M instructions
+----------------------
+
+mul    = "0000001 rs2[4:0] rs1[4:0] 000 rd[4:0] 0110011"
+mulh   = "0000001 rs2[4:0] rs1[4:0] 001 rd[4:0] 0110011"
+mulhsu = "0000001 rs2[4:0] rs1[4:0] 010 rd[4:0] 0110011"
+mulhu  = "0000001 rs2[4:0] rs1[4:0] 011 rd[4:0] 0110011"
+div    = "0000001 rs2[4:0] rs1[4:0] 100 rd[4:0] 0110011"
+divu   = "0000001 rs2[4:0] rs1[4:0] 101 rd[4:0] 0110011"
+rem    = "0000001 rs2[4:0] rs1[4:0] 110 rd[4:0] 0110011"
+remu   = "0000001 rs2[4:0] rs1[4:0] 111 rd[4:0] 0110011"
+
+rv32_m_disass :: [DecodeBranch String]
+rv32_m_disass = [ mul    --> prettyR "mul"
+                , mulh   --> prettyR "mulh"
+                , mulhsu --> prettyR "mulhsu"
+                , mulhu  --> prettyR "mulhu"
+                , div    --> prettyR "div"
+                , divu   --> prettyR "divu"
+                , rem    --> prettyR "rem"
+                , remu   --> prettyR "remu"
+                ]
+
+rv32_m :: Integer -> Integer -> Integer -> [Integer]
+rv32_m src1 src2 dest = [ encode mul    src1 src2 dest
+                        , encode mulh   src1 src2 dest
+                        , encode mulhsu src1 src2 dest
+                        , encode mulhu  src1 src2 dest
+                        , encode div    src1 src2 dest
+                        , encode divu   src1 src2 dest
+                        , encode rem    src1 src2 dest
+                        , encode remu   src1 src2 dest
+                        ]

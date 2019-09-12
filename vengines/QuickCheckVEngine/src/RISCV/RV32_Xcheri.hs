@@ -4,6 +4,7 @@
 -- Copyright (c) 2018 Jonathan Woodruff
 -- Copyright (c) 2018 Hesham Almatary
 -- Copyright (c) 2018 Matthew Naylor
+-- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -37,14 +38,55 @@
 -- SUCH DAMAGE.
 --
 
-module CHERI where
+module RISCV.RV32_Xcheri (
+  rv32_xcheri_disass
+, rv32_xcheri
+, rv32_xcheri_inspection
+, rv32_xcheri_arithmetic
+, rv32_xcheri_misc
+, rv32_xcheri_mem
+, rv32_xcheri_control
+, cgetperm
+, cgettype
+, cgetbase
+, cgetlen
+, cgettag
+, cgetsealed
+, cgetoffset
+, cgetflags
+, cgetaddr
+, cseal
+, cunseal
+, candperm
+, csetflags
+, csetoffset
+, csetaddr
+, cincoffset
+, cincoffsetimmediate
+, csetbounds
+, csetboundsexact
+, csetboundsimmediate
+, ccleartag
+, cbuildcap
+, ccopytype
+, ccseal
+, ctoptr
+, cfromptr
+, cmove
+, cspecialrw
+, cjalr
+, ccall
+, ctestsubset
+, clear
+, fpclear
+, cload
+, cstore
+, lq
+, sq
+) where
 
-import InstrCodec
-import Test.QuickCheck
-import Control.Monad
-import ISA_Helpers
-import RVxxI
-import Template
+import RISCV.Helpers (reg, int, prettyR, prettyI, prettyL, prettyS, prettyR_2op)
+import InstrCodec (DecodeBranch, (-->), encode)
 
 ---------------------
 -- CHERI instructions
@@ -116,7 +158,7 @@ prettyCLoad mop rs1 rd =
                               0x04 -> "LBUddc"
                               0x05 -> "LHUddc"
                               0x06 -> "LWUddc"
-                              0x07 -> "LDUddc"
+                              0x07 -> "LDUddc"  -- TODO clarify meaning...
                               0x08 -> "LBcap"
                               0x09 -> "LHcap"
                               0x0a -> "LWcap"
@@ -124,23 +166,23 @@ prettyCLoad mop rs1 rd =
                               0x0c -> "LBUcap"
                               0x0d -> "LHUcap"
                               0x0e -> "LWUcap"
-                              0x0f -> "LDUcap"
+                              0x0f -> "LDUcap"  -- TODO clarify meaning...
                               0x10 -> "LRddc.B"
                               0x11 -> "LRddc.H"
                               0x12 -> "LRddc.W"
                               0x13 -> "LRddc.D"
-                              0x14 -> "LRddc.Q"
+                              0x14 -> "LRddc.Q" -- TODO only valid in rv64
                               0x15 -> "INVALID"
                               0x16 -> "INVALID"
-                              0x17 -> "LQddc"
+                              0x17 -> "LQddc"   -- TODO only valid in rv64
                               0x18 -> "LRcap.B"
                               0x19 -> "LRcap.H"
                               0x1a -> "LRcap.W"
                               0x1b -> "LRcap.D"
-                              0x1c -> "LRcap.Q"
+                              0x1c -> "LRcap.Q" -- TODO only valid in rv64
                               0x1d -> "INVALID"
                               0x1e -> "INVALID"
-                              0x1f -> "LQcap"
+                              0x1f -> "LQcap"   -- TODO only valid in rv64
                               _    -> "INVALID"
 
 prettyCStore :: Integer -> Integer -> Integer -> String
@@ -150,22 +192,22 @@ prettyCStore rs2 rs1 mop =
                               0x01 -> "SHddc"
                               0x02 -> "SWddc"
                               0x03 -> "SDddc"
-                              0x04 -> "SQddc"
+                              0x04 -> "SQddc"   -- TODO only valid in rv64
                               0x08 -> "SBcap"
                               0x09 -> "SHcap"
                               0x0a -> "SWcap"
                               0x0b -> "SDcap"
-                              0x0c -> "SQcap"
+                              0x0c -> "SQcap"   -- TODO only valid in rv64
                               0x10 -> "SCddc.B"
                               0x11 -> "SCddc.H"
                               0x12 -> "SCddc.W"
                               0x13 -> "SCddc.D"
-                              0x14 -> "SCddc.Q"
+                              0x14 -> "SCddc.Q" -- TODO only valid in rv64
                               0x18 -> "SCcap.B"
                               0x19 -> "SCcap.H"
                               0x1a -> "SCcap.W"
                               0x1b -> "SCcap.D"
-                              0x1c -> "SCcap.Q"
+                              0x1c -> "SCcap.Q" -- TODO only valid in rv64
                               _ -> "INVALID"
 
 -- R-type, 2-operand pretty printer
@@ -178,8 +220,8 @@ pretty_ccall instr idc pcc selector =
 pretty_cspecialrw instr idx cs1 cd =
   concat [instr, " ", reg cd, ", ", reg cs1, ", ", int idx]
 
-cheri_instructions_dissasembly_list :: [DecodeBranch String]
-cheri_instructions_dissasembly_list = [
+rv32_xcheri_disass :: [DecodeBranch String]
+rv32_xcheri_disass = [
      cgetperm            --> prettyR_2op "cgetperm"
    , cgettype            --> prettyR_2op "cgettype"
    , cgetbase            --> prettyR_2op "cgetbase"
@@ -219,8 +261,8 @@ cheri_instructions_dissasembly_list = [
    , lq                  --> prettyL "lq"
   ]
 
-rvCHERIinspection :: Integer -> Integer -> [Integer]
-rvCHERIinspection src dest = [
+rv32_xcheri_inspection :: Integer -> Integer -> [Integer]
+rv32_xcheri_inspection src dest = [
     encode cgetperm src dest
  ,  encode cgettype src dest
  ,  encode cgetbase src dest
@@ -232,8 +274,8 @@ rvCHERIinspection src dest = [
  ,  encode cgetflags src dest
   ]
 
-rvCHERIarithmetic :: Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERIarithmetic src1 src2 imm dest = [
+rv32_xcheri_arithmetic :: Integer -> Integer -> Integer -> Integer -> [Integer]
+rv32_xcheri_arithmetic src1 src2 imm dest = [
     encode csetoffset src1 src2 dest
  ,  encode csetaddr   src1 src2 dest
  ,  encode cincoffset src1 src2 dest
@@ -246,8 +288,8 @@ rvCHERIarithmetic src1 src2 imm dest = [
  ,  encode ctestsubset src1 src2 dest
   ]
 
-rvCHERImisc :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERImisc src1 src2 srcScr imm dest = [
+rv32_xcheri_misc :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rv32_xcheri_misc src1 src2 srcScr imm dest = [
     encode cseal      src1 src2 dest
  ,  encode cunseal    src1 src2 dest
  ,  encode candperm   src1 src2 dest
@@ -259,23 +301,26 @@ rvCHERImisc src1 src2 srcScr imm dest = [
  ,  encode cspecialrw srcScr src1 dest
   ]
 
-rvCHERIcontrol :: Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERIcontrol src1 src2 imm dest = [
+rv32_xcheri_control :: Integer -> Integer -> Integer -> Integer -> [Integer]
+rv32_xcheri_control src1 src2 imm dest = [
     encode cjalr src1 dest
  ,  encode ccall src1 src2 dest
   ]
 
-rvCHERImem :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERImem srcAddr srcData imm mop dest = [
+rv32_xcheri_mem :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rv32_xcheri_mem srcAddr srcData imm mop dest = [
     encode cload mop srcAddr dest
  ,  encode cstore srcData srcAddr mop
- ,  encode ld imm srcAddr dest
- ,  encode sd imm srcAddr srcAddr
+-- ,  encode ld imm srcAddr dest
+-- ,  encode sd imm srcAddr srcAddr
 -- ,  encode lq imm srcAddr dest
 -- ,  encode sq imm srcData srcAddr
   ]
 
-rvCHERIall :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
-rvCHERIall src1 src2 srcScr imm mop dest =
-  (rvCHERIinspection src1 dest) ++ (rvCHERIarithmetic src1 src2 imm dest) ++ (rvCHERImisc src1 src2 srcScr imm dest)
-  ++ (rvCHERIcontrol src1 src2 imm dest) ++ (rvCHERImem src1 src2 imm mop dest)
+rv32_xcheri :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
+rv32_xcheri src1 src2 srcScr imm mop dest =
+     rv32_xcheri_inspection src1 dest
+  ++ rv32_xcheri_arithmetic src1 src2 imm dest
+  ++ rv32_xcheri_misc src1 src2 srcScr imm dest
+  ++ rv32_xcheri_control src1 src2 imm dest
+  ++ rv32_xcheri_mem src1 src2 imm mop dest

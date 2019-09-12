@@ -36,24 +36,22 @@
 -- SUCH DAMAGE.
 --
 
-module RISCV (
-  module RISCV.ArchDesc
-, module RISCV.InstPretty
-, module RISCV.RV32_I
-, module RISCV.RV32_M
-, module RISCV.RV32_Zicsr
-, module RISCV.RV32_Zifencei
-, module RISCV.RV32_Xcheri
-, module RISCV.RV64_I
-, module RISCV.RV64_M
+module RISCV.RV32_Zifencei (
+  rv32_zifencei_disass
+, rv32_zifencei
+, fence_i
 ) where
 
-import RISCV.ArchDesc
-import RISCV.InstPretty
-import RISCV.RV32_I
-import RISCV.RV32_M
-import RISCV.RV32_Zicsr
-import RISCV.RV32_Zifencei
-import RISCV.RV32_Xcheri
-import RISCV.RV64_I
-import RISCV.RV64_M
+import InstrCodec (DecodeBranch, (-->), encode)
+
+---------------------------
+-- RV Zifencei instructions
+---------------------------
+
+fence_i = "0000 0000 0000 00000 001 00000 0001111"
+
+rv32_zifencei_disass :: [DecodeBranch String]
+rv32_zifencei_disass = [fence_i --> "fence.i"]
+
+rv32_zifencei :: [Integer]
+rv32_zifencei = [encode fence_i]

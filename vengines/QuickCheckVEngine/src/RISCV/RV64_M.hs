@@ -35,54 +35,22 @@
 -- SUCH DAMAGE.
 --
 
-module RVxxM where
+module RISCV.RV64_M (
+  rv64_m_disass
+, rv64_m
+, mulw
+, divw
+, divuw
+, remw
+, remuw
+) where
 
-import InstrCodec
-import Test.QuickCheck
-import Control.Monad
-import ISA_Helpers
-import Template
-import Prelude hiding (rem, div)
----------------------
--- RV32M instructions
----------------------
+import RISCV.Helpers (prettyR)
+import InstrCodec (DecodeBranch, (-->), encode)
 
-mul    = "0000001 rs2[4:0] rs1[4:0] 000 rd[4:0] 0110011"
-mulh   = "0000001 rs2[4:0] rs1[4:0] 001 rd[4:0] 0110011"
-mulhsu = "0000001 rs2[4:0] rs1[4:0] 010 rd[4:0] 0110011"
-mulhu  = "0000001 rs2[4:0] rs1[4:0] 011 rd[4:0] 0110011"
-div    = "0000001 rs2[4:0] rs1[4:0] 100 rd[4:0] 0110011"
-divu   = "0000001 rs2[4:0] rs1[4:0] 101 rd[4:0] 0110011"
-rem    = "0000001 rs2[4:0] rs1[4:0] 110 rd[4:0] 0110011"
-remu   = "0000001 rs2[4:0] rs1[4:0] 111 rd[4:0] 0110011"
-
-muldiv_instructions_dissasembly_list :: [DecodeBranch String]
-muldiv_instructions_dissasembly_list = [
-    mul    --> prettyR "mul"
-  , mulh   --> prettyR "mulh"
-  , mulhsu --> prettyR "mulhsu"
-  , mulhu  --> prettyR "mulhu"
-  , div    --> prettyR "div"
-  , divu   --> prettyR "divu"
-  , rem    --> prettyR "rem"
-  , remu   --> prettyR "remu"
-  ]
-
-rvMulDiv :: Integer -> Integer -> Integer -> [Integer]
-rvMulDiv src1 src2 dest = [
-    encode mul    src1 src2 dest
-  , encode mulh   src1 src2 dest
-  , encode mulhsu src1 src2 dest
-  , encode mulhu  src1 src2 dest
-  , encode div    src1 src2 dest
-  , encode divu   src1 src2 dest
-  , encode rem    src1 src2 dest
-  , encode remu   src1 src2 dest
-  ]
-
----------------------
--- RV64M instructions
----------------------
+----------------------
+-- RV64_M instructions
+----------------------
 
 mulw  = "0000001 rs2[4:0] rs1[4:0] 000 rd[4:0] 0111011"
 divw  = "0000001 rs2[4:0] rs1[4:0] 100 rd[4:0] 0111011"
@@ -90,20 +58,18 @@ divuw = "0000001 rs2[4:0] rs1[4:0] 101 rd[4:0] 0111011"
 remw  = "0000001 rs2[4:0] rs1[4:0] 110 rd[4:0] 0111011"
 remuw = "0000001 rs2[4:0] rs1[4:0] 111 rd[4:0] 0111011"
 
-muldiv64_instructions_dissasembly_list :: [DecodeBranch String]
-muldiv64_instructions_dissasembly_list = [
-    mulw  --> prettyR "mulw"
-  , divw  --> prettyR "divw"
-  , divuw --> prettyR "divuw"
-  , remw  --> prettyR "remw"
-  , remuw --> prettyR "remuw"
-  ]
+rv64_m_disass :: [DecodeBranch String]
+rv64_m_disass = [ mulw  --> prettyR "mulw"
+                , divw  --> prettyR "divw"
+                , divuw --> prettyR "divuw"
+                , remw  --> prettyR "remw"
+                , remuw --> prettyR "remuw"
+                ]
 
-rvMulDiv64 :: Integer -> Integer -> Integer -> [Integer]
-rvMulDiv64 src1 src2 dest = [
-    encode mulw  src1 src2 dest
-  , encode divw  src1 src2 dest
-  , encode divuw src1 src2 dest
-  , encode remw  src1 src2 dest
-  , encode remuw src1 src2 dest
-  ]
+rv64_m :: Integer -> Integer -> Integer -> [Integer]
+rv64_m src1 src2 dest = [ encode mulw  src1 src2 dest
+                        , encode divw  src1 src2 dest
+                        , encode divuw src1 src2 dest
+                        , encode remw  src1 src2 dest
+                        , encode remuw src1 src2 dest
+                        ]

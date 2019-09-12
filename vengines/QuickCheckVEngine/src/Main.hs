@@ -3,7 +3,7 @@
 --
 -- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2018 Jonathan Woodruff
--- Copyright (c) 2018 Alexandre Joannou
+-- Copyright (c) 2018-2019 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -39,6 +39,7 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+
 module Main (main) where
 
 import qualified Control.Exception as E
@@ -65,19 +66,17 @@ import System.Exit
 import System.IO
 import RVFI_DII
 import RISCV
-import CHERI
-import RVxxI
 import Template
 import System.Timeout
 
-import GenAll
-import GenArithmetic
-import GenMemory
-import RandomTest
-import GenControlFlow
-import MemUtils
-import GenMulDiv
-import GenCHERI
+import Templates.Utils
+import Templates.GenAll
+import Templates.GenArithmetic
+import Templates.GenMemory
+import Templates.RandomTest
+import Templates.GenControlFlow
+import Templates.GenMulDiv
+import Templates.GenCHERI
 
 -- command line arguments
 --------------------------------------------------------------------------------
@@ -90,7 +89,7 @@ data Options = Options
     , impBIP        :: String
     , instTraceFile :: Maybe FilePath
     , instDirectory :: Maybe FilePath
-    , arch          :: String
+    , arch          :: ArchDesc
     , instrPort     :: Maybe String
     , saveDir       :: Maybe FilePath
     , timeoutDelay  :: Int
@@ -105,7 +104,7 @@ defaultOptions = Options
     , impBIP        = "127.0.0.1"
     , instTraceFile = Nothing
     , instDirectory = Nothing
-    , arch          = "32i"
+    , arch          = archDesc_rv32i
     , instrPort     = Nothing
     , saveDir       = Nothing
     , timeoutDelay  = 20000000 -- 20 seconds
@@ -138,7 +137,7 @@ options =
       (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
         "Specify PATH a directory which contains trace files to replay"
   , Option ['r']     ["architecture"]
-      (ReqArg (\ f opts -> opts { arch = map toLower f }) "ARCHITECTURE")
+      (ReqArg (\ f opts -> opts { arch = fromString f }) "ARCHITECTURE")
         "Specify ARCHITECTURE to be verified (e.g. 32i)"
   , Option ['i']     ["instruction generator port"]
       (ReqArg (\ f opts -> opts { instrPort = Just f }) "PORT")
@@ -166,7 +165,7 @@ main = withSocketsDo $ do
   rawArgs <- getArgs
   (flags, leftover) <- commandOpts rawArgs
   when (optVerbose flags) $ print flags
-  let archStrings = splitOn "x" (arch flags)
+  let archDesc = arch flags
   -- initialize model and implementation sockets
   addrA <- resolve (impAIP flags) (impAPort flags)
   addrB <- resolve (impBIP flags) (impBPort flags)
@@ -231,37 +230,50 @@ main = withSocketsDo $ do
         Nothing -> do
           case instrSoc of
             Nothing -> do
-              when (((head archStrings) =~ ("i"::String)) || ((head archStrings) =~ ("g"::String))) (
-                do
-                  putStrLn "rvxxi Arithmetic Verification:"
-                  checkGen (genTest $ repeatTillEnd genArithmetic)  (nTests flags)
-                  putStrLn "rvxxi Memory Verification:"
-                  checkGen (genTest $ repeatTillEnd genMemory) (nTests flags)
-                  putStrLn "rvxxi Control Flow Verification:"
-                  checkGen (genTest $ repeatTillEnd genControlFlow) (nTests flags)
-                  putStrLn "rvxxi All Verification:"
-                  checkGen (genTest $ repeatTillEnd genAll) (nTests flags)
-                  putStrLn "rvxxi Template:"
-                  checkGen (genTest $ repeatTillEnd randomTest) (nTests flags)
-                  )
-              when (((head archStrings) =~ ("m"::String)) || ((head archStrings) =~ ("g"::String))) (
-                do
-                  putStrLn "rvxxm Verification:"
-                  checkGen (genTest $ repeatTillEnd genMulDiv)  (nTests flags)
-                  )
-              when (elem "cheri" archStrings) (
-                do
-                  putStrLn "xCHERI Capability Inspection Verification:"
-                  checkGen (genTest $ repeatTillEnd genCHERIinspection) (nTests flags)
-                  putStrLn "xCHERI Capability Arithmetic Verification:"
-                  checkGen (genTest $ repeatTillEnd genCHERIarithmetic) (nTests flags)
-                  putStrLn "xCHERI Capability Miscellaneous Verification:"
-                  checkGen (genTest $ repeatTillEnd genCHERImisc) (nTests flags)
-                  putStrLn "xCHERI Capability Control Flow Verification:"
-                  checkGen (genTest $ repeatTillEnd genCHERIcontrol) (nTests flags)
-                  putStrLn "xCHERI Template:"
-                  checkGen (genTest $ randomCHERITest) (nTests flags)
-                  )
+              when (has_i archDesc) $
+                do putStrLn "rv32 I Arithmetic Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_i_arithmetic) (nTests flags)
+                   putStrLn "rv32 I Memory Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_i_memory) (nTests flags)
+                   putStrLn "rv32 I Control Flow Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_i_controlflow) (nTests flags)
+              when (has_i archDesc && has_xlen_64 archDesc) $
+                do putStrLn "rv64 I Arithmetic Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv64_i_arithmetic) (nTests flags)
+                   putStrLn "rv64 I Memory Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv64_i_memory) (nTests flags)
+                   -- Note: no rv64 specific control flow instructions
+              when (has_m archDesc) $
+                do putStrLn "rv32 M extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_m) (nTests flags)
+              when (has_m archDesc && has_xlen_64 archDesc) $
+                do putStrLn "rv64 M extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv64_m) (nTests flags)
+              --when (has_icsr archDesc) $
+              --  do putStrLn "Zicsr extension Verification:"
+              --     checkGen (genTest $ repeatTillEnd genZicsr) (nTests flags)
+              when (has_ifencei archDesc) $
+                do putStrLn "rv32 Zifencei extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_i_zifencei_memory) (nTests flags)
+              when (has_ifencei archDesc && has_xlen_64 archDesc) $
+                do putStrLn "rv64 Zifencei extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv64_i_zifencei_memory) (nTests flags)
+              when (has_cheri archDesc) $
+                do putStrLn "Xcheri extension Capability Inspection Verification:"
+                   checkGen (genTest $ repeatTillEnd genCHERIinspection) (nTests flags)
+                   putStrLn "Xcheri extension Capability Arithmetic Verification:"
+                   checkGen (genTest $ repeatTillEnd genCHERIarithmetic) (nTests flags)
+                   putStrLn "Xcheri extension Capability Miscellaneous Verification:"
+                   checkGen (genTest $ repeatTillEnd genCHERImisc) (nTests flags)
+                   putStrLn "Xcheri extension Capability Control Flow Verification:"
+                   checkGen (genTest $ repeatTillEnd genCHERIcontrol) (nTests flags)
+                   putStrLn "Xcheri extension Random Template:"
+                   checkGen (genTest $ randomCHERITest) (nTests flags)
+
+              putStrLn "All Verification:"
+              checkGen (genTest $ repeatTillEnd (genAll archDesc)) (nTests flags)
+              putStrLn "Random Template:"
+              checkGen (genTest $ repeatTillEnd randomTest) (nTests flags)
             Just sock -> do
               checkGen (listOf $ genInstrServer sock) (nTests flags)
   --
@@ -302,7 +314,7 @@ prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrink ( \instTrace ->
   when (isNothing m_impTrace) $ putStrLn("Error: Timeout")
 
   return $ case (m_modTrace, m_impTrace) of
-             (Just modTrace, Just impTrace) -> (and (zipWith (==) modTrace impTrace))
+             (Just modTrace, Just impTrace) -> (Data.List.and (zipWith (==) modTrace impTrace))
              _                              -> False
   )))
 

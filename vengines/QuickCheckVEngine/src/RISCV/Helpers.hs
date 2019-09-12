@@ -3,6 +3,7 @@
 --
 -- Copyright (c) 2018 Jonathan Woodruff
 -- Copyright (c) 2018 Matthew Naylor
+-- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -36,11 +37,18 @@
 -- SUCH DAMAGE.
 --
 
-module ISA_Helpers where
-
-import InstrCodec
-import Test.QuickCheck
-import Control.Monad
+module RISCV.Helpers (
+  reg
+, int
+, prettyR
+, prettyI
+, prettyL
+, prettyS
+, prettyU
+, prettyB
+, prettyF
+, prettyR_2op
+) where
 
 -----------------------------
 -- Instruction pretty printer
@@ -85,42 +93,3 @@ prettyF pred succ =
 -- R-type, 2-operand pretty printer
 prettyR_2op instr cs1 cd =
   concat [instr, " ", reg cd, ", ", reg cs1]
-
--------------------------------
--- Random instruction generator
--------------------------------
-
--- Generate random destination register
--- Use 6 registers with a geometic distribution
-dest :: Gen Integer
-dest = choose (0, 5)
--- dest =
---   frequency [
---     (32, return 1)
---   , (16, return 2)
---   , (8,  return 3)
---   , (4,  return 4)
---   , (2,  return 5)
---   , (1,  return 0)
---   ]
-
--- Generate random source register
--- Use 6 registers with a uniform distribution
-src :: Gen Integer
-src = choose (0, 5)
-
--- Generate random integer with given bit-width
-bits :: Int -> Gen Integer
-bits w = choose (0, 2^w - 1)
-
--- Generate but exclude some patterns
-exclude :: [Integer] -> Gen Integer -> Gen Integer
-exclude excl orig = do attempt <- orig; if elem attempt excl then exclude excl orig else return attempt
-
--- Power of two values clustered around 1.
-geomBits :: Int -> Int -> Gen Integer
-geomBits hi lo = frequency [(2^(32-i), return (2^i))| i <- [lo..(hi-1)]]
-
--- Generate memory offset
-offset :: Gen Integer
-offset = oneof [return 0, return 1, return 64, return 65]

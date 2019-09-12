@@ -1,6 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
+-- Copyright (c) 2019 Peter Rugg
 -- Copyright (c) 2019 Alexandre Joannou
 -- All rights reserved.
 --
@@ -31,38 +32,45 @@
 -- SUCH DAMAGE.
 --
 
-module GenMulDiv where
+module RISCV.RV32_Zicsr (
+  rv32_zicsr_disass
+, rv32_zicsr
+, csrrw
+, csrrs
+, csrrc
+, csrrwi
+, csrrsi
+, csrrci
+) where
 
-import InstrCodec
-import Test.QuickCheck
-import ISA_Helpers
-import RVxxM
-import Template
-import Prelude hiding (rem, div)
+import RISCV.Helpers (prettyI)
+import InstrCodec (DecodeBranch, (-->), encode)
 
-genMulDiv :: Template
-genMulDiv = Random $ do
-  src1     <- src;
-  src2     <- src;
-  dest     <- dest;
-  return $ uniform [ encode mul    src1 src2 dest
-                   , encode mulh   src1 src2 dest
-                   , encode mulhsu src1 src2 dest
-                   , encode mulhu  src1 src2 dest
-                   , encode div    src1 src2 dest
-                   , encode divu   src1 src2 dest
-                   , encode rem    src1 src2 dest
-                   , encode remu   src1 src2 dest
-                   ]
+------------------------
+-- RV Zicsr instructions
+------------------------
 
-genMulDiv64 :: Template
-genMulDiv64 = Random $ do
-  src1     <- src;
-  src2     <- src;
-  dest     <- dest;
-  return $ uniform [ encode mulw  src1 src2 dest
-                   , encode divw  src1 src2 dest
-                   , encode divuw src1 src2 dest
-                   , encode remw  src1 src2 dest
-                   , encode remuw src1 src2 dest
-                   ]
+csrrw  = "imm[11:0] rs1[4:0] 001 rd[4:0] 1110011"
+csrrs  = "imm[11:0] rs1[4:0] 010 rd[4:0] 1110011"
+csrrc  = "imm[11:0] rs1[4:0] 011 rd[4:0] 1110011"
+csrrwi = "imm[11:0] uimm[4:0] 101 rd[4:0] 1110011"
+csrrsi = "imm[11:0] uimm[4:0] 110 rd[4:0] 1110011"
+csrrci = "imm[11:0] uimm[4:0] 111 rd[4:0] 1110011"
+
+rv32_zicsr_disass :: [DecodeBranch String]
+rv32_zicsr_disass = [ csrrw  --> prettyI "csrrw"
+                    , csrrs  --> prettyI "csrrs"
+                    , csrrc  --> prettyI "csrrc"
+                    , csrrwi --> prettyI "csrrwi"
+                    , csrrsi --> prettyI "csrrsi"
+                    , csrrci --> prettyI "csrrci"
+                    ] -- TODO define pretty printer for CSRSs
+
+rv32_zicsr :: Integer -> Integer -> Integer -> [Integer]
+rv32_zicsr src dest imm = [ encode csrrw  imm src dest
+                          , encode csrrs  imm src dest
+                          , encode csrrc  imm src dest
+                          , encode csrrwi imm src dest
+                          , encode csrrsi imm src dest
+                          , encode csrrci imm src dest
+                          ]

@@ -50,11 +50,11 @@ import GHC.Generics (Generic)
 import System.IO
 import Test.QuickCheck
 import RISCV
-import RVxxI
+--import RVxxI
 import Text.Printf
 import Data.List.Split
 import Template
-import GenArithmetic
+import Templates.GenArithmetic
 
 rvfi_cmd_instruction = 1 :: Word8
 rvfi_cmd_end = 0 :: Word8
@@ -74,10 +74,15 @@ instance Num RVFI_DII_Instruction where
       rvfi_time = 1,
       rvfi_ins_insn = fromInteger i
     }
+  (+)    = error "(+) is not defined on RVFI_DII_Instruction"
+  (*)    = error "(*) is not defined on RVFI_DII_Instruction"
+  abs    = error "abs is not defined on RVFI_DII_Instruction"
+  signum = error "signum is not defined on RVFI_DII_Instruction"
+  negate = error "negate is not defined on RVFI_DII_Instruction"
 
 instance Arbitrary RVFI_DII_Instruction where
   arbitrary = do
-    inst <- genTest genArithmetic
+    inst <- genTest gen_rv32_i_arithmetic
     return RVFI_DII_Instruction {
       padding   = 0,
       rvfi_cmd  = rvfi_cmd_instruction,
