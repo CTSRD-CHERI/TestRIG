@@ -76,7 +76,7 @@ You can verify a default configuration by executing:
 - `utils/scripts/runTestRIG.py`
 
 
-## Example Configurations
+## Custom Configurations
 Look at the `Makefile` to see different targets to compare against each other. Also use the following command to figure out the different options for running TestRIG:
 
 ```sh
