@@ -59,7 +59,7 @@ genAll desc = Random $
      mop     <- bits 5
      uimm    <- bits 5
      offset  <- memOffset
-     srcScr  <- elements [28, 29, 30, 31];
+     srcScr  <- elements [28, 29, 30, 31]
      let insts = [[ (8, uniform (rv32_i_arith src1 src2 dest imm longImm))
                   , (8, uniform (rv32_i_ctrl src1 src2 dest imm longImm))
                   , (8, uniform (rv32_i_mem src1 src2 dest offset fOp1 fOp2))

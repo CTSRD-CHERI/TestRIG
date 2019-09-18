@@ -49,9 +49,9 @@ gen_rv64_m = genMulDiv True
 
 genMulDiv :: Bool -> Template
 genMulDiv has_xlen_64 = Random $ do
-  src1     <- src;
-  src2     <- src;
-  dest     <- dest;
+  src1 <- src
+  src2 <- src
+  dest <- dest
   let insts = rv32_m src1 src2 dest
               ++ if has_xlen_64 then rv64_m src1 src2 dest else []
   return $ uniform insts

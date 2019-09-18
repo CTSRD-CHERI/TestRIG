@@ -46,8 +46,8 @@ gen_rv32_i_zicsr = Random $
   do any_csr   <- bits 12
      --valid_csr <- csr
      uimm      <- bits 5
-     src1      <- src;
-     dest      <- dest;
+     src1      <- src
+     dest      <- dest
      -- TODO mix csr instructions with some i instructions
      let insts = rv32_zicsr src1 dest any_csr uimm
      return $ uniform insts
