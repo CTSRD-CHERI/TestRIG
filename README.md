@@ -97,5 +97,5 @@ Executing the following commands will compare Sail and Spike with the 64-bit ver
 $ make
 $ make sail-rv64-cheri
 $ make spike-cheri
-$ utils/scripts/runTestRIG.py -a sail -b spike -r rv64ixcheri
+$ utils/scripts/runTestRIG.py -a sail -b spike -r rv64i_Xcheri
 ```
