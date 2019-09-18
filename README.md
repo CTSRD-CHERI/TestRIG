@@ -67,6 +67,9 @@ The dependencies for the Quick Check Verification Engine are:
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
 
+The dependencies for RVBS are the Bluespec compiler `bsc`. For people on the University of Cambridge, Computer Laboratory's internal network; execute the following command:
+- `source /usr/groups/ecad/setup.bash`
+
 The dependencies for the Sail model can be installed using
 [opam](http://opam.ocaml.org/) by following the instructions from the
 [Sail wiki](https://github.com/rems-project/sail/wiki/OPAMInstall).
