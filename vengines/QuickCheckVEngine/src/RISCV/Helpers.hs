@@ -38,7 +38,10 @@
 --
 
 module RISCV.Helpers (
-  reg
+  csrs_map
+, csrs_indexFromName
+, csrs_nameFromIndex
+, reg
 , int
 , prettyR
 , prettyI
@@ -48,7 +51,103 @@ module RISCV.Helpers (
 , prettyB
 , prettyF
 , prettyR_2op
+, prettyCSR
+, prettyCSR_imm
 ) where
+
+import Data.Maybe (fromMaybe)
+import Numeric (showHex)
+
+---------------
+-- CSRs helpers
+---------------
+
+csrs_indexFromName :: String -> Maybe Integer
+csrs_indexFromName nm = lookup nm [ (b, a) | (a, b) <- csrs_map]
+
+csrs_nameFromIndex :: Integer -> Maybe String
+csrs_nameFromIndex idx = lookup idx csrs_map
+
+csrs_map :: [(Integer, String)]
+csrs_map = -- User Trap Setup
+           [ (0x000, "ustatus")
+           , (0x004, "uie")
+           , (0x005, "utvec") ]
+        ++ -- User Trap Handling
+           [ (0x040, "uscratch")
+           , (0x041, "uepc")
+           , (0x042, "ucause")
+           , (0x043, "utval")
+           , (0x044, "uip") ]
+        ++ -- User Floating-Point CSRs
+           [ (0x001, "fflags")
+           , (0x002, "frm")
+           , (0x003, "fcsr") ]
+        ++ -- User Counters/Timers
+           [ (0xC00, "cycle")
+           , (0xC01, "time")
+           , (0xC02, "instret") ]
+        ++ [ (0xC00 + x, "hpmcounter" ++ show x) | x <- [3..31] ]
+        ++ [ (0xC80, "cycleh")
+           , (0xC81, "timeh")
+           , (0xC82, "instreth") ]
+        ++ [ (0xC80 + x, "hpmcounter" ++ show x ++ "h") | x <- [3..31] ]
+        ++ -- Supervisor Trap Setup
+           [ (0x100, "sstatus")
+           , (0x102, "sedeleg")
+           , (0x103, "sideleg")
+           , (0x104, "sie")
+           , (0x105, "stvec")
+           , (0x106, "scounteren") ]
+        ++ -- Supervisor Trap Handling
+           [ (0x140, "sscratch")
+           , (0x141, "sepc")
+           , (0x142, "scause")
+           , (0x143, "stval")
+           , (0x144, "sip") ]
+        ++ -- Supervisor Protection and Translation
+           [ (0x180, "satp") ]
+        -- TODO Hypervisor CSRs
+        ++ -- Machine Information Registers
+           [ (0xF11, "mvendorid")
+           , (0xF12, "marchid")
+           , (0xF13, "mimpid")
+           , (0xF14, "mhartid") ]
+        ++ -- Machine Trap Setup
+           [ (0x300, "mstatus")
+           , (0x301, "misa")
+           , (0x302, "medeleg")
+           , (0x303, "mideleg")
+           , (0x304, "mie")
+           , (0x305, "mtvec")
+           , (0x306, "mcounteren")
+           , (0x310, "mstatush") ]
+        ++ -- Machine Trap Handling
+           [ (0x340, "mscratch")
+           , (0x341, "mepc")
+           , (0x342, "mcause")
+           , (0x343, "mtval")
+           , (0x344, "mip") ]
+        ++ -- Machine Memory Protection
+           [ (0x3A0 + x, "pmpcfg" ++ show x) | x <- [0..3] ]
+        ++ [ (0x3B0 + x, "pmpaddr" ++ show x) | x <- [0..15] ]
+        ++ -- Machine Counters/Timers
+           [ (0xB00, "mcycle")
+           , (0xB02, "minstret") ]
+        ++ [ (0xB00 + x, "mhpmcounter" ++ show x) | x <- [3..31] ]
+        ++ [ (0xB80, "mcycleh")
+           , (0xB82, "minstreth") ]
+        ++ [ (0xB80 + x, "mhpmcounter" ++ show x ++ "h") | x <- [3..31] ]
+        ++ -- Machine Counter Setup
+           [ (0x320, "mcountinhibit") ]
+        ++ [ (0x320 + x, "mhpmevent" ++ show x) | x <- [3..31] ]
+        -- TODO Debug/Trace Registers (shared with Debug Mode)
+        -- TODO Debug Mode Registers
+        -- List last checked from:
+        -- The RISC-V Instruction Set Manual
+        -- Volume II: Privileged Architecture
+        -- Document Version 1.12-draft
+        -- September 13, 2019
 
 -----------------------------
 -- Instruction pretty printer
@@ -93,3 +192,14 @@ prettyF pred succ =
 -- R-type, 2-operand pretty printer
 prettyR_2op instr cs1 cd =
   concat [instr, " ", reg cd, ", ", reg cs1]
+
+-- CSR instructions pretty printer
+prettyCSR instr csr rs1 rd =
+  concat [instr, " ", reg rd, ", ", csr_nm, ", ", reg rs1]
+  where csr_nm  = (fromMaybe "unknown" (csrs_nameFromIndex csr)) ++ idx_str
+        idx_str = " (0x" ++ showHex csr "" ++ ")"
+
+prettyCSR_imm instr csr imm rd =
+  concat [instr, " ", reg rd, ", ", csr_nm, ", ", int imm]
+  where csr_nm  = (fromMaybe "unknown" (csrs_nameFromIndex csr)) ++ idx_str
+        idx_str = " (0x" ++ showHex csr "" ++ ")"

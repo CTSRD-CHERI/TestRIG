@@ -73,6 +73,7 @@ import Templates.Utils
 import Templates.GenAll
 import Templates.GenArithmetic
 import Templates.GenMemory
+import Templates.GenCSRs
 import Templates.RandomTest
 import Templates.GenControlFlow
 import Templates.GenMulDiv
@@ -249,9 +250,9 @@ main = withSocketsDo $ do
               when (has_m archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 M extension Verification:"
                    checkGen (genTest $ repeatTillEnd gen_rv64_m) (nTests flags)
-              --when (has_icsr archDesc) $
-              --  do putStrLn "Zicsr extension Verification:"
-              --     checkGen (genTest $ repeatTillEnd genZicsr) (nTests flags)
+              when (has_icsr archDesc) $
+                do putStrLn "rv32 Zicsr extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_i_zicsr) (nTests flags)
               when (has_ifencei archDesc) $
                 do putStrLn "rv32 Zifencei extension Verification:"
                    checkGen (genTest $ repeatTillEnd gen_rv32_i_zifencei_memory) (nTests flags)

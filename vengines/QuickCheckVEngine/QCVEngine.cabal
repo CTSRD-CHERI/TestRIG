@@ -15,6 +15,6 @@ executable QCVEngine
                        RVFI_DII, Template,
                        Templates.GenAll, Templates.GenArithmetic, Templates.GenCHERI,
                        Templates.GenControlFlow, Templates.GenMemory, Templates.GenMulDiv,
-                       Templates.RandomTest, Templates.Utils
+                       Templates.GenCSRs, Templates.RandomTest, Templates.Utils
   other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
   default-language:    Haskell98

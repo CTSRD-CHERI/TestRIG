@@ -60,6 +60,8 @@ Currently, the provided modules are:
 - [Sail RISC-V model](https://github.com/rems-project/sail-riscv)
 
 The root makefile can currently build the Quick Check Verification Engine, Spike, and the RVBS implementation.
+
+### Dependencies
 The dependencies for the Quick Check Verification Engine are:
 - cabal `sudo apt-get install cabal-install && cabal update`
 - Haskell Quick Check verification engine dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
@@ -67,14 +69,20 @@ The dependencies for the Quick Check Verification Engine are:
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
 
+The dependencies for RVBS are the Bluespec compiler `bsc`. For people on the University of Cambridge, Computer Laboratory's internal network; execute the following command:
+- `source /usr/groups/ecad/setup.bash`
+
 The dependencies for the Sail model can be installed using
 [opam](http://opam.ocaml.org/) by following the instructions from the
 [Sail wiki](https://github.com/rems-project/sail/wiki/OPAMInstall).
 
-You can verify a default configuration by executing:
-- `make`
-- `utils/scripts/runTestRIG.py`
+### Default Configuration
 
+You can verify a default configuration by executing:
+```sh
+$ make
+$ utils/scripts/runTestRIG.py
+```
 
 ## Custom Configurations
 Look at the `Makefile` to see different targets to compare against each other. Also use the following command to figure out the different options for running TestRIG:
