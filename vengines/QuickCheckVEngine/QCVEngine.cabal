@@ -10,11 +10,13 @@ executable QCVEngine
   build-depends:       base, QuickCheck, bytestring, network, binary, directory, filemanip, bitwise, regex-posix, split
   other-modules:       InstrCodec, RISCV,
                        RISCV.ArchDesc, RISCV.Helpers, RISCV.InstPretty,
-                       RISCV.RV32_I, RISCV.RV32_M, RISCV.RV32_Xcheri, RISCV.RV32_Zicsr, RISCV.RV32_Zifencei,
-                       RISCV.RV64_I, RISCV.RV64_M,
+                       RISCV.RV32_I, RISCV.RV32_M, RISCV.RV32_A,
+                       RISCV.RV32_Zifencei, RISCV.RV32_Zicsr, RISCV.RV32_Xcheri,
+                       RISCV.RV64_I, RISCV.RV64_M, RISCV.RV64_A,
                        RVFI_DII, Template,
                        Templates.GenAll, Templates.GenArithmetic, Templates.GenCHERI,
-                       Templates.GenControlFlow, Templates.GenMemory, Templates.GenMulDiv,
+                       Templates.GenControlFlow, Templates.GenMemory,
+                       Templates.GenMulDiv, Templates.GenAtomics,
                        Templates.GenCSRs, Templates.RandomTest, Templates.Utils
   other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
   default-language:    Haskell98

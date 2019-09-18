@@ -53,6 +53,8 @@ module RISCV.Helpers (
 , prettyR_2op
 , prettyCSR
 , prettyCSR_imm
+, prettyR_A
+, prettyR_A_1op
 ) where
 
 import Data.Maybe (fromMaybe)
@@ -203,3 +205,17 @@ prettyCSR_imm instr csr imm rd =
   concat [instr, " ", reg rd, ", ", csr_nm, ", ", int imm]
   where csr_nm  = (fromMaybe "unknown" (csrs_nameFromIndex csr)) ++ idx_str
         idx_str = " (0x" ++ showHex csr "" ++ ")"
+
+-- R-type Atomic pretty printer
+prettyR_A :: String -> Integer -> Integer -> Integer -> Integer -> Integer
+          -> String
+prettyR_A instr aq rl rs2 rs1 rd =
+  concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2]
+         ++ [if aq == 1 then " (aq)" else ""]
+         ++ [if rl == 1 then " (rl)" else ""]
+
+prettyR_A_1op :: String -> Integer -> Integer -> Integer -> Integer -> String
+prettyR_A_1op instr aq rl rs1 rd =
+  concat $  [instr, " ", reg rd, ", ", reg rs1]
+         ++ [if aq == 1 then " (aq)" else ""]
+         ++ [if rl == 1 then " (rl)" else ""]

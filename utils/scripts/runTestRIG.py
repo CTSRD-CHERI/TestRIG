@@ -69,13 +69,14 @@ def x_ext (ext_name):
 
 known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'ibex', 'manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set([e0+e1+e2+e3+e4+e5
+known_architectures = set([e0+e1+e2+e3+e4+e5+e6
                              for e0 in ["rv32i", "rv64i"]
                              for e1 in std_ext("c")
                              for e2 in std_ext("m")
-                             for e3 in z_ext("ifencei")
-                             for e4 in z_ext("icsr")
-                             for e5 in x_ext("cheri")]
+                             for e3 in std_ext("a")
+                             for e4 in z_ext("ifencei")
+                             for e5 in z_ext("icsr")
+                             for e6 in x_ext("cheri")]
                           + ["rv64g", "rv64gc"])
 known_generators = set({'internal', 'sail', 'manual'})
 

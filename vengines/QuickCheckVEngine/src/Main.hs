@@ -77,6 +77,7 @@ import Templates.GenCSRs
 import Templates.RandomTest
 import Templates.GenControlFlow
 import Templates.GenMulDiv
+import Templates.GenAtomics
 import Templates.GenCHERI
 
 -- command line arguments
@@ -250,6 +251,12 @@ main = withSocketsDo $ do
               when (has_m archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 M extension Verification:"
                    checkGen (genTest $ repeatTillEnd gen_rv64_m) (nTests flags)
+              when (has_a archDesc) $
+                do putStrLn "rv32 A extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv32_a) (nTests flags)
+              when (has_a archDesc && has_xlen_64 archDesc) $
+                do putStrLn "rv64 A extension Verification:"
+                   checkGen (genTest $ repeatTillEnd gen_rv64_a) (nTests flags)
               when (has_icsr archDesc) $
                 do putStrLn "rv32 Zicsr extension Verification:"
                    checkGen (genTest $ repeatTillEnd gen_rv32_i_zicsr) (nTests flags)

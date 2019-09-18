@@ -39,11 +39,13 @@ import Test.QuickCheck
 import RISCV.ArchDesc
 import RISCV.RV32_I
 import RISCV.RV32_M
+import RISCV.RV32_A
 import RISCV.RV32_Zifencei
 import RISCV.RV32_Zicsr
 import RISCV.RV32_Xcheri
 import RISCV.RV64_I
 import RISCV.RV64_M
+import RISCV.RV64_A
 import Template
 import Templates.Utils
 
@@ -56,6 +58,8 @@ genAll desc = Random $
      longImm <- bits 20
      fOp1    <- bits 4
      fOp2    <- bits 4
+     aq      <- bits 1
+     rl      <- bits 1
      mop     <- bits 5
      uimm    <- bits 5
      offset  <- memOffset
@@ -72,6 +76,10 @@ genAll desc = Random $
                   ] | has_m desc]
               ++ [[ (8, uniform (rv64_m src1 src2 imm))
                   ] | has_m desc && has_xlen_64 desc]
+              ++ [[ (8, uniform (rv32_a src1 src2 dest aq rl))
+                  ] | has_a desc]
+              ++ [[ (8, uniform (rv64_a src1 src2 dest aq rl))
+                  ] | has_a desc && has_xlen_64 desc]
               ++ [[ (8, uniform rv32_zifencei)
                   ] | has_ifencei desc]
               ++ [[ (8, uniform (rv32_zicsr src1 dest imm uimm))
