@@ -5,6 +5,7 @@
 #
 # Copyright (c) 2018 Alexandre Joannou
 # Copyright (c) 2019 Peter Rugg
+# Copyright (c) 2019 Marno van der Maas
 # All rights reserved.
 #
 # This software was developed by SRI International and the University of
@@ -215,7 +216,12 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   cmd = []
   ##############################################################################
   if (name == 'spike'):
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa), "-m0x80000000:0x10000"]
+    # This is a bit of a hack, but necessary for now, since the Spike implentation doesn't support underscores in the ISA string parsing.
+    if '_' in isa:
+      newIsa = isa.split('_')[0]
+    else:
+      newIsa = isa
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(newIsa), "-m0x80000000:0x10000"]
     if "LD_LIBRARY_PATH" in env2:
       env2["LD_LIBRARY_PATH"] = "%s:%s" % (env2["LD_LIBRARY_PATH"], op.dirname(args.path_to_spike))
     else:
