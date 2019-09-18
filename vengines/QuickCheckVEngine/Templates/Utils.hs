@@ -40,10 +40,12 @@
 
 module Templates.Utils where
 
-import Test.QuickCheck (Gen, choose, frequency, oneof)
+import Test.QuickCheck (Gen, choose, frequency, oneof, elements)
 import InstrCodec
 import Template
+import RISCV.Helpers
 import RISCV.RV32_I
+import RISCV.RV32_Zicsr
 
 -- Generate random destination register
 -- Use 6 registers with a geometic distribution
@@ -63,6 +65,11 @@ dest = choose (0, 5)
 -- Use 6 registers with a uniform distribution
 src :: Gen Integer
 src = choose (0, 5)
+
+-- Generate random csr register
+-- Use 6 registers with a uniform distribution
+csr :: Gen Integer
+csr = elements $ map fst csrs_map
 
 -- Generate random integer with given bit-width
 bits :: Int -> Gen Integer

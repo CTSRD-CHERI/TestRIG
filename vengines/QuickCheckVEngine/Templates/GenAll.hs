@@ -40,6 +40,7 @@ import RISCV.ArchDesc
 import RISCV.RV32_I
 import RISCV.RV32_M
 import RISCV.RV32_Zifencei
+import RISCV.RV32_Zicsr
 import RISCV.RV32_Xcheri
 import RISCV.RV64_I
 import RISCV.RV64_M
@@ -56,6 +57,7 @@ genAll desc = Random $
      fOp1    <- bits 4
      fOp2    <- bits 4
      mop     <- bits 5
+     uimm    <- bits 5
      offset  <- memOffset
      srcScr  <- elements [28, 29, 30, 31];
      let insts = [[ (8, uniform (rv32_i_arith src1 src2 dest imm longImm))
@@ -72,6 +74,8 @@ genAll desc = Random $
                   ] | has_m desc && has_xlen_64 desc]
               ++ [[ (8, uniform rv32_zifencei)
                   ] | has_ifencei desc]
+              ++ [[ (8, uniform (rv32_zicsr src1 dest imm uimm))
+                  ] | has_icsr desc]
               ++ [[ (8, uniform (rv32_xcheri src1 src2 srcScr imm mop dest))
                   ] | has_cheri desc]
      return $ Distribution (concat insts)

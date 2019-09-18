@@ -32,45 +32,22 @@
 -- SUCH DAMAGE.
 --
 
-module RISCV.RV32_Zicsr (
-  rv32_zicsr_disass
-, rv32_zicsr
-, csrrw
-, csrrs
-, csrrc
-, csrrwi
-, csrrsi
-, csrrci
+module Templates.GenCSRs (
+  gen_rv32_i_zicsr
 ) where
 
-import RISCV.Helpers (prettyCSR, prettyCSR_imm)
-import InstrCodec (DecodeBranch, (-->), encode)
+import RISCV.RV32_I
+import RISCV.RV32_Zicsr
+import Template
+import Templates.Utils
 
-------------------------
--- RV Zicsr instructions
-------------------------
-
-csrrw  = "imm[11:0] rs1[4:0] 001 rd[4:0] 1110011"
-csrrs  = "imm[11:0] rs1[4:0] 010 rd[4:0] 1110011"
-csrrc  = "imm[11:0] rs1[4:0] 011 rd[4:0] 1110011"
-csrrwi = "imm[11:0] uimm[4:0] 101 rd[4:0] 1110011"
-csrrsi = "imm[11:0] uimm[4:0] 110 rd[4:0] 1110011"
-csrrci = "imm[11:0] uimm[4:0] 111 rd[4:0] 1110011"
-
-rv32_zicsr_disass :: [DecodeBranch String]
-rv32_zicsr_disass = [ csrrw  --> prettyCSR "csrrw"
-                    , csrrs  --> prettyCSR "csrrs"
-                    , csrrc  --> prettyCSR "csrrc"
-                    , csrrwi --> prettyCSR_imm "csrrwi"
-                    , csrrsi --> prettyCSR_imm "csrrsi"
-                    , csrrci --> prettyCSR_imm "csrrci"
-                    ]
-
-rv32_zicsr :: Integer -> Integer -> Integer -> Integer -> [Integer]
-rv32_zicsr src dest imm uimm = [ encode csrrw  imm src dest
-                               , encode csrrs  imm src dest
-                               , encode csrrc  imm src dest
-                               , encode csrrwi imm uimm src dest
-                               , encode csrrsi imm uimm src dest
-                               , encode csrrci imm uimm src dest
-                               ]
+gen_rv32_i_zicsr :: Template
+gen_rv32_i_zicsr = Random $
+  do any_csr   <- bits 12
+     --valid_csr <- csr
+     uimm      <- bits 5
+     src1      <- src;
+     dest      <- dest;
+     -- TODO mix csr instructions with some i instructions
+     let insts = rv32_zicsr src1 dest any_csr uimm
+     return $ uniform insts
