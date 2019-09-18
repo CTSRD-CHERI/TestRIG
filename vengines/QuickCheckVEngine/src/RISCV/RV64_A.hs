@@ -38,6 +38,17 @@
 module RISCV.RV64_A (
   rv64_a_disass
 , rv64_a
+, lr_d
+, sc_d
+, amoswap_d
+, amoadd_d
+, amoxor_d
+, amoand_d
+, amoor_d
+, amomin_d
+, amomax_d
+, amominu_d
+, amomaxu_d
 ) where
 
 import RISCV.Helpers (prettyR_A_1op, prettyR_A)
