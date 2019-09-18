@@ -32,9 +32,9 @@ clean: clean-vengines clean-riscv-implementations
 
 # Verification Engines
 ################################################################################
-vengines: QCVengine
+vengines: QCVEngine
 
-QCVengine:
+QCVEngine:
 	cd vengines/QuickCheckVEngine &&\
 	cabal configure &&\
 	cabal build
