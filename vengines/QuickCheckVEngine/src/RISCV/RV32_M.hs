@@ -78,12 +78,12 @@ rv32_m_disass = [ mul    --> prettyR "mul"
                 ]
 
 rv32_m :: Integer -> Integer -> Integer -> [Integer]
-rv32_m src1 src2 dest = [ encode mul    src1 src2 dest
-                        , encode mulh   src1 src2 dest
-                        , encode mulhsu src1 src2 dest
-                        , encode mulhu  src1 src2 dest
-                        , encode div    src1 src2 dest
-                        , encode divu   src1 src2 dest
-                        , encode rem    src1 src2 dest
-                        , encode remu   src1 src2 dest
+rv32_m src1 src2 dest = [ encode mul    src2 src1 dest
+                        , encode mulh   src2 src1 dest
+                        , encode mulhsu src2 src1 dest
+                        , encode mulhu  src2 src1 dest
+                        , encode div    src2 src1 dest
+                        , encode divu   src2 src1 dest
+                        , encode rem    src2 src1 dest
+                        , encode remu   src2 src1 dest
                         ]

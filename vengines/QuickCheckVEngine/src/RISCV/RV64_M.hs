@@ -67,9 +67,9 @@ rv64_m_disass = [ mulw  --> prettyR "mulw"
                 ]
 
 rv64_m :: Integer -> Integer -> Integer -> [Integer]
-rv64_m src1 src2 dest = [ encode mulw  src1 src2 dest
-                        , encode divw  src1 src2 dest
-                        , encode divuw src1 src2 dest
-                        , encode remw  src1 src2 dest
-                        , encode remuw src1 src2 dest
+rv64_m src1 src2 dest = [ encode mulw  src2 src1 dest
+                        , encode divw  src2 src1 dest
+                        , encode divuw src2 src1 dest
+                        , encode remw  src2 src1 dest
+                        , encode remuw src2 src1 dest
                         ]
