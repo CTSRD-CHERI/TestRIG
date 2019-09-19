@@ -68,16 +68,16 @@ amomaxu_d = "11100 aq[0] rl[0] rs2[4:0] rs1[4:0] 011 rd[4:0] 0101111"
 
 rv64_a_disass :: [DecodeBranch String]
 rv64_a_disass = [ lr_d      --> prettyR_A_1op "lr.d"
-                , sc_d      --> prettyR_A "sc.d"
-                , amoswap_d --> prettyR_A "amoswap.d"
-                , amoadd_d  --> prettyR_A "amoadd.d"
-                , amoxor_d  --> prettyR_A "amoxor.d"
-                , amoand_d  --> prettyR_A "amoand.d"
-                , amoor_d   --> prettyR_A "amoor.d"
-                , amomin_d  --> prettyR_A "amomin.d"
-                , amomax_d  --> prettyR_A "amomax.d"
-                , amominu_d --> prettyR_A "amominu.d"
-                , amomaxu_d --> prettyR_A "amomaxu.d"
+                , sc_d      --> prettyR_A     "sc.d"
+                , amoswap_d --> prettyR_A     "amoswap.d"
+                , amoadd_d  --> prettyR_A     "amoadd.d"
+                , amoxor_d  --> prettyR_A     "amoxor.d"
+                , amoand_d  --> prettyR_A     "amoand.d"
+                , amoor_d   --> prettyR_A     "amoor.d"
+                , amomin_d  --> prettyR_A     "amomin.d"
+                , amomax_d  --> prettyR_A     "amomax.d"
+                , amominu_d --> prettyR_A     "amominu.d"
+                , amomaxu_d --> prettyR_A     "amomaxu.d"
                 ]
 
 rv64_a :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]

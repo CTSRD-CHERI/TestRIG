@@ -47,10 +47,10 @@ import InstrCodec (DecodeBranch, (-->), encode)
 -- RV64_F instructions
 ----------------------
 
-fcvt_l_s  = "1100000    00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
-fcvt_lu_s = "1100000    00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
-fcvt_s_l  = "1101000    00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
-fcvt_s_lu = "1101000    00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fcvt_l_s  = "1100000 00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fcvt_lu_s = "1100000 00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fcvt_s_l  = "1101000 00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fcvt_s_lu = "1101000 00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
 
 rv64_f_disass :: [DecodeBranch String]
 rv64_f_disass = [ fcvt_l_s  --> prettyR_1op_rm "fcvt.l.s"
