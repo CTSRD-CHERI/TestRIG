@@ -41,6 +41,7 @@ import signal
 import os.path as op
 import subprocess as sub
 import time
+import sys
 
 ################################
 # Parse command line arguments #
@@ -161,6 +162,92 @@ args = parser.parse_args()
 # helpers #
 ###########
 
+class ISA_Configuration:
+  has_xlen_32 = False
+  has_xlen_64 = False
+  has_i = False
+  has_c = False
+  has_m = False
+  has_icsr = False
+  has_ifencei = False
+  has_cheri = False
+
+  def __init__(self, archstring):
+    parts = archstring.split('_')
+    if parts[0][:4] == 'rv32':
+      self.has_xlen_32 = True
+    elif parts[0][:4] == 'rv64':
+      self.has_xlen_64 = True
+    else:
+      print("ERROR: ISA string must start with rv32 or rv64")
+      sys.exit()
+    for letter in parts[0][4:]:
+      print(letter)
+      if letter == 'i':
+        self.has_i = True
+      elif letter == 'c':
+        self.has_c = True
+      elif letter == 'm':
+        self.has_m = True
+      elif letter == 'g':
+        self.has_i = True
+        self.has_m = True
+      else:
+        print("ERROR: ISA string must not have "+letter+" before the first _.")
+        sys.exit()
+    for extension in parts[1:]:
+      if extension == "Zicsr":
+        self.has_icsr = True
+      elif extension == "Zifencei":
+        self.has_ifencei = True
+      elif extension == "Xcheri":
+        self.has_cheri = True
+      else:
+        print("ERROR: Currently unsupported extension "+extension+" in ISA string.")
+        sys.exit()
+
+  def get_rvbs_name(self):
+    result = "rvbs-"
+    if self.has_xlen_32:
+      result += "rv32"
+    elif self.has_xlen_64:
+      result += "rv64"
+    if self.has_i:
+      result += "I"
+    if self.has_c:
+      result += "C"
+    if self.has_m:
+      print("ERROR: M extenstion is currently not supported by RVBS.")
+      sys.exit()
+    if self.has_icsr:
+      result += "Zicsr"
+    if self.has_ifencei:
+      result += "Zifencei"
+    if self.has_cheri:
+      result += "Xcheri"
+    result += "-rvfi-dii"
+    print(result)
+    return result
+
+  def get_spike_arch(self):
+    result = ""
+    if self.has_xlen_32:
+      result = "rv32"
+    elif self.has_xlen_64:
+      result = "rv64"
+    if self.has_i:
+      result += "i"
+      if !(self.has_icsr and self.has_ifencei):
+        print("WARNING: enabling I in spike also automatically enables icsr and ifencei extenstions.")
+    if self.has_c:
+      result += "c"
+    if self.has_m:
+      result += "m"
+    if self.has_cheri:
+      print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
+    return result
+
+
 def verboseprint(lvl,msg):
   if args.verbose >= lvl:
     print(msg)
@@ -169,33 +256,7 @@ def input_y_n(prompt):
   s = input(prompt)
   return s.lower() in ["", "y", "ye", "yes"]
 
-# figure out which rvbs simulator to use
-rvbs_sim = {
-  'rv32i': "rvbs-rv32IZicsrZifencei",
-  'rv32ic': "rvbs-rv32IZicsrZifenceiC",
-  'rv64i': "rvbs-rv64IZicsrZifencei",
-  'rv64ic': "rvbs-rv64IZicsrZifenceiC",
-  'rv64g': "rvbs-rv64IZicsrZifencei",
-  'rv64gc': "rvbs-rv64IZicsrZifenceiC",
-  'rv32ixcheri': "rvbs-rv32IZicsrZifenceiXcheri",
-  'rv32icxcheri': "rvbs-rv32ICZicsrZifenceiXcheri",
-  'rv64ixcheri': "rvbs-rv64IZicsrZifenceiXcheri",
-  'rv64icxcheri': "rvbs-rv64ICZicsrZifenceiXcheri"
-}.get(args.architecture, "rvbs-rv64ICZicsrZifenceiXcheri")+"-rvfi-dii"
 
-# figure out which sail simulator to use
-#sail_sim = {
-#  'rv32i': "cheri_riscv_rvfi_RV32",
-#  'rv32ic': "cheri_riscv_rvfi_RV32",
-#  'rv64i': "cheri_riscv_rvfi_RV64",
-#  'rv64ic': "cheri_riscv_rvfi_RV64",
-#  'rv64g': "cheri_riscv_rvfi_RV64",
-#  'rv64gc': "cheri_riscv_rvfi_RV64",
-#  'rv32ixcheri': "cheri_riscv_rvfi_RV32",
-#  'rv32icxcheri': "cheri_riscv_rvfi_RV32",
-#  'rv64ixcheri': "cheri_riscv_rvfi_RV64",
-#  'rv64icxcheri': "cheri_riscv_rvfi_RV64"
-#}.get(args.architecture, "cheri_riscv_rvfi_RV64")
 sail_sim = "cheri_riscv_rvfi_RV32" if "rv32" in args.architecture else "cheri_riscv_rvfi_RV64"
 
 #########################
@@ -204,6 +265,7 @@ sail_sim = "cheri_riscv_rvfi_RV32" if "rv32" in args.architecture else "cheri_ri
 
 def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   ## few common variables
+  isa_def = ISA_Configuration(arch)
   use_log = open(os.devnull,"w")
   if log:
     use_log = log
@@ -223,7 +285,7 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
       newIsa = isa.split('_')[0]
     else:
       newIsa = isa
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(newIsa), "-m0x80000000:0x10000"]
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
     if "LD_LIBRARY_PATH" in env2:
       env2["LD_LIBRARY_PATH"] = "%s:%s" % (env2["LD_LIBRARY_PATH"], op.dirname(args.path_to_spike))
     else:
@@ -237,7 +299,8 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
   ##############################################################################
   elif (name == 'rvbs'):
     env2["RVFI_DII_PORT"] = str(port)
-    cmd = [op.join(args.path_to_rvbs_dir, rvbs_sim)]
+    print("starting RVBS server.")
+    cmd = [op.join(args.path_to_rvbs_dir, isa_def.get_rvbs_name())]
     if log:
       cmd += ["+itrace"]
   ##############################################################################
@@ -364,7 +427,9 @@ def main():
     generator = spawn_generator(args.generator, args.architecture, args.generator_log)
 
     e.wait()
-  finally:
+  except:
+    print("Exception happened: " + sys.exc_info()[0])
+  else:
     print('run terminated')
     kill_procs(a,b,generator,e)
     exit(0)
