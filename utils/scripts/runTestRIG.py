@@ -182,7 +182,7 @@ class ISA_Configuration:
       self.has_xlen_64 = True
     else:
       print("ERROR: ISA string must start with rv32 or rv64")
-      sys.exit()
+      exit(-1)
     for letter in parts[0][4:]:
       print(letter)
       if letter == 'i':
@@ -202,7 +202,7 @@ class ISA_Configuration:
         self.has_f = True
       else:
         print("ERROR: ISA string must not have "+letter+" before the first _.")
-        sys.exit()
+        exit(-1)
     for extension in parts[1:]:
       if extension == "Zicsr":
         self.has_icsr = True
@@ -212,7 +212,7 @@ class ISA_Configuration:
         self.has_cheri = True
       else:
         print("ERROR: Currently unsupported extension "+extension+" in ISA string.")
-        sys.exit()
+        exit(-1)
 
   def get_rvbs_name(self):
     result = "rvbs-"
@@ -225,14 +225,13 @@ class ISA_Configuration:
     if self.has_c:
       result += "C"
     if self.has_m:
-      print("ERROR: M extenstion is currently not supported by RVBS.")
-      sys.exit()
+      result += "M"
     if self.has_a:
       print("ERROR: A extenstion is currently not supported by RVBS.")
       sys.exit()
     if self.has_f:
       print("ERROR: F extenstion is currently not supported by RVBS.")
-      sys.exit()
+      exit(-1)
     if self.has_icsr:
       result += "Zicsr"
     if self.has_ifencei:
