@@ -168,6 +168,8 @@ class ISA_Configuration:
   has_i = False
   has_c = False
   has_m = False
+  has_a = False
+  has_f = False
   has_icsr = False
   has_ifencei = False
   has_cheri = False
@@ -189,9 +191,15 @@ class ISA_Configuration:
         self.has_c = True
       elif letter == 'm':
         self.has_m = True
+      elif letter == 'a':
+        self.has_a = True
+      elif letter == 'f':
+        self.has_f = True
       elif letter == 'g':
         self.has_i = True
         self.has_m = True
+        self.has_a = True
+        self.has_f = True
       else:
         print("ERROR: ISA string must not have "+letter+" before the first _.")
         sys.exit()
@@ -219,6 +227,12 @@ class ISA_Configuration:
     if self.has_m:
       print("ERROR: M extenstion is currently not supported by RVBS.")
       sys.exit()
+    if self.has_a:
+      print("ERROR: A extenstion is currently not supported by RVBS.")
+      sys.exit()
+    if self.has_f:
+      print("ERROR: F extenstion is currently not supported by RVBS.")
+      sys.exit()
     if self.has_icsr:
       result += "Zicsr"
     if self.has_ifencei:
@@ -237,12 +251,16 @@ class ISA_Configuration:
       result = "rv64"
     if self.has_i:
       result += "i"
-      if !(self.has_icsr and self.has_ifencei):
+      if not (self.has_icsr and self.has_ifencei):
         print("WARNING: enabling I in spike also automatically enables icsr and ifencei extenstions.")
     if self.has_c:
       result += "c"
     if self.has_m:
       result += "m"
+    if self.has_a:
+      result += "a"
+    if self.has_f:
+      result += "f"
     if self.has_cheri:
       print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
     return result
