@@ -31,42 +31,45 @@
 -- SUCH DAMAGE.
 --
 
-module Templates.GenFP (
-  gen_rv32_f
-, gen_rv64_f
-, gen_rv32_d
-, gen_rv64_d
+module RISCV.RV64_D (
+  rv64_d_disass
+, rv64_d
+, fcvt_l_d
+, fcvt_lu_d
+, fmv_x_d
+, fcvt_d_l
+, fcvt_d_lu
+, fmv_d_x
 ) where
 
-import RISCV.RV32_F
-import RISCV.RV64_F
-import RISCV.RV32_D
-import RISCV.RV64_D
-import Template
-import Templates.Utils
+import RISCV.Helpers (prettyR_1op_rm, prettyR_1op)
+import InstrCodec (DecodeBranch, (-->), encode)
 
-gen_rv32_f :: Template
-gen_rv32_f = genFP False False
+----------------------
+-- RV64_F instructions
+----------------------
 
-gen_rv64_f :: Template
-gen_rv64_f = genFP False True
+fcvt_l_d  = "1100001    00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fcvt_lu_d = "1100001    00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fmv_x_d   = "1110001    00000 rs1[4:0]     000 rd[4:0] 1010011"
+fcvt_d_l  = "1101001    00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fcvt_d_lu = "1101001    00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
+fmv_d_x   = "1111001    00000 rs1[4:0]     000 rd[4:0] 1010011"
 
-gen_rv32_d :: Template
-gen_rv32_d = genFP True False
+rv64_d_disass :: [DecodeBranch String]
+rv64_d_disass = [ fcvt_l_d  --> prettyR_1op_rm "fcvt.l.d"
+                , fcvt_lu_d --> prettyR_1op_rm "fcvt.lu.d"
+                , fmv_x_d   --> prettyR_1op    "fmv.x.d"
+                , fcvt_d_l  --> prettyR_1op_rm "fcvt.d.l"
+                , fcvt_d_lu --> prettyR_1op_rm "fcvt.d.lu"
+                , fmv_d_x   --> prettyR_1op    "fmv.d.x"
+                ]
 
-gen_rv64_d :: Template
-gen_rv64_d = genFP True True
-
-genFP :: Bool -> Bool -> Template
-genFP has_d has_xlen_64 = Random $ do
-  src1 <- src
-  src2 <- src
-  src3 <- src
-  dest <- dest
-  rm   <- bits 3
-  imm  <- bits 12
-  let insts = rv32_f src1 src2 src3 dest rm imm
-              ++ if has_xlen_64 then rv64_f src1 dest rm else []
-              ++ if has_d then rv32_d src1 src2 src3 dest rm imm else []
-              ++ if has_d && has_xlen_64 then rv64_d src1 dest rm else []
-  return $ uniform insts
+rv64_d :: Integer -> Integer -> Integer -> [Integer]
+rv64_d src1 dest rm = [ encode fcvt_l_d  src1 rm dest
+                      , encode fcvt_lu_d src1 rm dest
+                      , encode fmv_x_d   src1    dest
+                      , encode fcvt_d_l  src1 rm dest
+                      , encode fcvt_d_lu src1 rm dest
+                      , encode fmv_d_x   src1    dest
+                      ]

@@ -3,7 +3,7 @@
 #-
 # SPDX-License-Identifier: BSD-2-Clause
 #
-# Copyright (c) 2018 Alexandre Joannou
+# Copyright (c) 2018-2019 Alexandre Joannou
 # Copyright (c) 2019 Peter Rugg
 # Copyright (c) 2019 Marno van der Maas
 # All rights reserved.
@@ -70,15 +70,16 @@ def x_ext (ext_name):
 
 known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'ibex', 'manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set([e0+e1+e2+e3+e4+e5+e6+e7
+known_architectures = set([e0+e1+e2+e3+e4+e5+e6+e7+e8
                              for e0 in ["rv32i", "rv64i"]
                              for e1 in std_ext("c")
                              for e2 in std_ext("m")
                              for e3 in std_ext("a")
                              for e4 in std_ext("f")
-                             for e5 in z_ext("ifencei")
-                             for e6 in z_ext("icsr")
-                             for e7 in x_ext("cheri")]
+                             for e5 in std_ext("d")
+                             for e6 in z_ext("ifencei")
+                             for e7 in z_ext("icsr")
+                             for e8 in x_ext("cheri")]
                           + ["rv64g", "rv64gc"])
 known_generators = set({'internal', 'sail', 'manual'})
 
@@ -170,6 +171,7 @@ class ISA_Configuration:
   has_m = False
   has_a = False
   has_f = False
+  has_d = False
   has_icsr = False
   has_ifencei = False
   has_cheri = False
@@ -184,7 +186,6 @@ class ISA_Configuration:
       print("ERROR: ISA string must start with rv32 or rv64")
       exit(-1)
     for letter in parts[0][4:]:
-      print(letter)
       if letter == 'i':
         self.has_i = True
       elif letter == 'c':
@@ -195,11 +196,16 @@ class ISA_Configuration:
         self.has_a = True
       elif letter == 'f':
         self.has_f = True
+      elif letter == 'd':
+        self.has_d = True
       elif letter == 'g':
         self.has_i = True
         self.has_m = True
         self.has_a = True
         self.has_f = True
+        self.has_d = True
+        self.has_icsr = True
+        self.has_ifencei = True
       else:
         print("ERROR: ISA string must not have "+letter+" before the first _.")
         exit(-1)
@@ -228,9 +234,12 @@ class ISA_Configuration:
       result += "M"
     if self.has_a:
       print("ERROR: A extenstion is currently not supported by RVBS.")
-      sys.exit()
+      exit(-1)
     if self.has_f:
       print("ERROR: F extenstion is currently not supported by RVBS.")
+      exit(-1)
+    if self.has_d:
+      print("ERROR: D extenstion is currently not supported by RVBS.")
       exit(-1)
     if self.has_icsr:
       result += "Zicsr"
@@ -239,7 +248,6 @@ class ISA_Configuration:
     if self.has_cheri:
       result += "Xcheri"
     result += "-rvfi-dii"
-    print(result)
     return result
 
   def get_spike_arch(self):
@@ -260,10 +268,11 @@ class ISA_Configuration:
       result += "a"
     if self.has_f:
       result += "f"
+    if self.has_d:
+      result += "d"
     if self.has_cheri:
       print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
     return result
-
 
 def verboseprint(lvl,msg):
   if args.verbose >= lvl:
@@ -272,7 +281,6 @@ def verboseprint(lvl,msg):
 def input_y_n(prompt):
   s = input(prompt)
   return s.lower() in ["", "y", "ye", "yes"]
-
 
 sail_sim = "cheri_riscv_rvfi_RV32" if "rv32" in args.architecture else "cheri_riscv_rvfi_RV64"
 

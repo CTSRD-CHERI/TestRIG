@@ -41,6 +41,7 @@ import RISCV.RV32_I
 import RISCV.RV32_M
 import RISCV.RV32_A
 import RISCV.RV32_F
+import RISCV.RV32_D
 import RISCV.RV32_Zifencei
 import RISCV.RV32_Zicsr
 import RISCV.RV32_Xcheri
@@ -48,6 +49,7 @@ import RISCV.RV64_I
 import RISCV.RV64_M
 import RISCV.RV64_A
 import RISCV.RV64_F
+import RISCV.RV64_D
 import Template
 import Templates.Utils
 
@@ -88,6 +90,10 @@ genAll desc = Random $
                   ] | has_f desc]
               ++ [[ (8, uniform (rv64_f src1 dest rm))
                   ] | has_f desc && has_xlen_64 desc]
+              ++ [[ (8, uniform (rv32_d src1 src2 src3 dest rm imm))
+                  ] | has_d desc]
+              ++ [[ (8, uniform (rv64_d src1 dest rm))
+                  ] | has_d desc && has_xlen_64 desc]
               ++ [[ (8, uniform rv32_zifencei)
                   ] | has_ifencei desc]
               ++ [[ (8, uniform (rv32_zicsr src1 dest imm uimm))
