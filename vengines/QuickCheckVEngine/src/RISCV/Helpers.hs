@@ -37,6 +37,8 @@
 -- SUCH DAMAGE.
 --
 
+{-# LANGUAGE BinaryLiterals #-}
+
 module RISCV.Helpers (
   csrs_map
 , csrs_indexFromName
@@ -55,6 +57,11 @@ module RISCV.Helpers (
 , prettyCSR_imm
 , prettyR_A
 , prettyR_A_1op
+, fpRoundingMode
+, prettyR_1op
+, prettyR_1op_rm
+, prettyR_rm
+, prettyR4_rm
 ) where
 
 import Data.Maybe (fromMaybe)
@@ -219,3 +226,32 @@ prettyR_A_1op instr aq rl rs1 rd =
   concat $  [instr, " ", reg rd, ", ", reg rs1]
          ++ [if aq == 1 then " (aq)" else ""]
          ++ [if rl == 1 then " (rl)" else ""]
+
+-- Floating Point pretty printer
+-- Floating Point rounding modes
+fpRoundingMode :: Integer -> String
+fpRoundingMode 0b000 = "RNE"
+fpRoundingMode 0b001 = "RTZ"
+fpRoundingMode 0b010 = "RDN"
+fpRoundingMode 0b011 = "RUP"
+fpRoundingMode 0b100 = "RMM"
+fpRoundingMode 0b101 = "Reserved"
+fpRoundingMode 0b110 = "Reserved"
+fpRoundingMode 0b111 = "RDYN"
+fpRoundingMode x =
+  "unsupported floating point rounding mode 0x" ++ (showHex x "")
+
+prettyR_1op instr rs1 rd =
+  concat [instr, " ", reg rd, ", ", reg rs1]
+
+prettyR_1op_rm instr rs1 rm rd =
+  concat $  [instr, " ", reg rd, ", ", reg rs1]
+         ++ [" (" ++ fpRoundingMode rm ++ ")"]
+
+prettyR_rm instr rs2 rs1 rm rd =
+  concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2]
+         ++ [" (" ++ fpRoundingMode rm ++ ")"]
+
+prettyR4_rm instr rs3 rs2 rs1 rm rd =
+  concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2, ", ", reg rs3]
+         ++ [" (" ++ fpRoundingMode rm ++ ")"]

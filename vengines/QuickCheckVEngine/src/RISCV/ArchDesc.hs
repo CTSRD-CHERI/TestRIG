@@ -42,6 +42,7 @@ data ArchDesc = ArchDesc { has_xlen_32 :: Bool
                          , has_i       :: Bool
                          , has_m       :: Bool
                          , has_a       :: Bool
+                         , has_f       :: Bool
                          , has_icsr    :: Bool
                          , has_ifencei :: Bool
                          , has_cheri   :: Bool
@@ -52,6 +53,7 @@ archDesc_rv32i = ArchDesc { has_xlen_32 = True
                           , has_i       = True
                           , has_m       = False
                           , has_a       = False
+                          , has_f       = False
                           , has_icsr    = False
                           , has_ifencei = False
                           , has_cheri   = False
@@ -63,6 +65,7 @@ fromString str = ArchDesc { has_xlen_32 = True
                           , has_i       = i
                           , has_m       = m
                           , has_a       = a
+                          , has_f       = f
                           , has_icsr    = icsr
                           , has_ifencei = ifencei
                           , has_cheri   = cheri
@@ -73,7 +76,7 @@ fromString str = ArchDesc { has_xlen_32 = True
         i = ((head archStrings) =~ "i") || ((head archStrings) =~ "g")
         m = ((head archStrings) =~ "m") || ((head archStrings) =~ "g")
         a = ((head archStrings) =~ "a") || ((head archStrings) =~ "g")
-        --f = ((head archStrings) =~ "f") || ((head archStrings) =~ "g")
+        f = ((head archStrings) =~ "f") || ((head archStrings) =~ "g")
         --d = ((head archStrings) =~ "d") || ((head archStrings) =~ "g")
         icsr = elem "icsr" archStrings || ((head archStrings) =~ "g")
         ifencei = elem "ifencei" archStrings || ((head archStrings) =~ "g")
