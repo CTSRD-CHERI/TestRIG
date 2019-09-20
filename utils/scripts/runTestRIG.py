@@ -42,6 +42,7 @@ import os.path as op
 import subprocess as sub
 import time
 import sys
+import re
 
 ################################
 # Parse command line arguments #
@@ -63,24 +64,26 @@ def std_ext (ext_name):
   return ["", ext_name]
 
 def z_ext (ext_name):
-  return ["", "_Z"+ext_name]
+  return ["", "Z"+ext_name]
 
 def x_ext (ext_name):
-  return ["", "_X"+ext_name]
+  return ["", "X"+ext_name]
 
 known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'ibex', 'manual'})
 known_vengine  = set({'QCVEngine'})
-known_architectures = set([e0+e1+e2+e3+e4+e5+e6+e7+e8
-                             for e0 in ["rv32i", "rv64i"]
-                             for e1 in std_ext("c")
-                             for e2 in std_ext("m")
-                             for e3 in std_ext("a")
-                             for e4 in std_ext("f")
-                             for e5 in std_ext("d")
-                             for e6 in z_ext("ifencei")
-                             for e7 in z_ext("icsr")
-                             for e8 in x_ext("cheri")]
-                          + ["rv64g", "rv64gc"])
+multi_letter_exts = ["_".join(filter(None, [e0,e1,e2])) for e0 in z_ext("icsr")
+                                                        for e1 in z_ext("ifencei")
+                                                        for e2 in x_ext("cheri")]
+known_architectures = sorted(set([e0+e1+e2+e3+e4+e5+e6
+                                   for e0 in ["rv32i", "rv64i"]
+                                   for e1 in std_ext("m")
+                                   for e2 in std_ext("a")
+                                   for e3 in std_ext("f")
+                                   for e4 in std_ext("d")
+                                   for e5 in std_ext("c")
+                                   for e6 in multi_letter_exts]
+                                 + ["rv32g", "rv32gc", "rv64g", "rv64gc"]))
+#print(known_architectures)
 known_generators = set({'internal', 'sail', 'manual'})
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
@@ -143,9 +146,13 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
 parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-cheri-riscv/c_emulator/"),
   help="The PATH to the sail-riscv executable directory")
-parser.add_argument('-r', '--architecture', metavar='ARCH', choices=known_architectures,
+parser.add_argument('-r', '--architecture', type = str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
   default='rv32i',
-  help="The architecture to verify. (one of {:s})".format(str(known_architectures)))
+  help="""The architecture to verify, where ARCH is a non case sensitive string
+  of the form 'rv{32,64}g[c]', or 'rv{32,64}i[m][a][f][d]' optionally followed
+  by an '_'-separated list of one or more of {Zicsr, Zifencei, Xcheri}
+  appearing in that order (e.g. rv64ifcXcheri, rv64imd,
+  rv32imafZicsr_Zifencei_Xcheri ...)""")
 parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
   default='internal',
   help="The instruction generator to use. (one of {:s})".format(str(known_generators)))
@@ -167,17 +174,17 @@ class ISA_Configuration:
   has_xlen_32 = False
   has_xlen_64 = False
   has_i = False
-  has_c = False
   has_m = False
   has_a = False
   has_f = False
   has_d = False
+  has_c = False
   has_icsr = False
   has_ifencei = False
   has_cheri = False
 
   def __init__(self, archstring):
-    parts = archstring.split('_')
+    parts = list(filter(None, re.split("[_zx]", archstring.lower())))
     if parts[0][:4] == 'rv32':
       self.has_xlen_32 = True
     elif parts[0][:4] == 'rv64':
@@ -188,8 +195,6 @@ class ISA_Configuration:
     for letter in parts[0][4:]:
       if letter == 'i':
         self.has_i = True
-      elif letter == 'c':
-        self.has_c = True
       elif letter == 'm':
         self.has_m = True
       elif letter == 'a':
@@ -198,6 +203,8 @@ class ISA_Configuration:
         self.has_f = True
       elif letter == 'd':
         self.has_d = True
+      elif letter == 'c':
+        self.has_c = True
       elif letter == 'g':
         self.has_i = True
         self.has_m = True
@@ -207,17 +214,17 @@ class ISA_Configuration:
         self.has_icsr = True
         self.has_ifencei = True
       else:
-        print("ERROR: ISA string must not have "+letter+" before the first _.")
+        print("ERROR: Unknown standard extension '"+letter+"'")
         exit(-1)
     for extension in parts[1:]:
-      if extension == "Zicsr":
+      if extension == "icsr":
         self.has_icsr = True
-      elif extension == "Zifencei":
+      elif extension == "ifencei":
         self.has_ifencei = True
-      elif extension == "Xcheri":
+      elif extension == "cheri":
         self.has_cheri = True
       else:
-        print("ERROR: Currently unsupported extension "+extension+" in ISA string.")
+        print("ERROR: Extension "+extension+" not currently supported")
         exit(-1)
 
   def get_rvbs_name(self):
