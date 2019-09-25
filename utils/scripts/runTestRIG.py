@@ -82,7 +82,11 @@ known_architectures = sorted(set([e0+e1+e2+e3+e4+e5+e6
                                    for e4 in std_ext("d")
                                    for e5 in std_ext("c")
                                    for e6 in multi_letter_exts]
-                                 + ["rv32g", "rv32gc", "rv64g", "rv64gc"]))
+                                 + [e0+e1+e2
+                                   for e0 in ["rv32g", "rv64g"]
+                                   for e1 in std_ext("c")
+                                   for e2 in x_ext("cheri")]
+                                ))
 #print(known_architectures)
 known_generators = set({'internal', 'sail', 'manual'})
 
