@@ -43,11 +43,17 @@ import InstrCodec (decode)
 
 import RISCV.RV32_I
 import RISCV.RV32_M
+import RISCV.RV32_A
+import RISCV.RV32_F
+import RISCV.RV32_D
 import RISCV.RV32_Zicsr
 import RISCV.RV32_Zifencei
 import RISCV.RV32_Xcheri
 import RISCV.RV64_I
 import RISCV.RV64_M
+import RISCV.RV64_A
+import RISCV.RV64_F
+import RISCV.RV64_D
 --import RISCV.RV64_Xcheri -- TODO
 
 -----------------------------
@@ -101,9 +107,9 @@ pretty instr = case decode 32 instr instList of
   Just i -> i
   where instList =    rv32_i_disass ++ rv64_i_disass
                    ++ rv32_m_disass ++ rv64_m_disass
-                   -- TODO ++ rv32_a_disass ++ rv64_a_disass
-                   -- TODO ++ rv32_f_disass ++ rv64_f_disass
-                   -- TODO ++ rv32_d_disass ++ rv64_d_disass
+                   ++ rv32_a_disass ++ rv64_a_disass
+                   ++ rv32_f_disass ++ rv64_f_disass
+                   ++ rv32_d_disass ++ rv64_d_disass
                    ++ rv32_zicsr_disass
                    ++ rv32_zifencei_disass
                    ++ rv32_xcheri_disass -- TODO ++ rv64_cheri_disass
