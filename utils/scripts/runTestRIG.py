@@ -147,9 +147,10 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
   #default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist-newstyle/build/x86_64-linux/ghc-8.6.3/QCVEngine-0.1.0.0/x/QCVEngine/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
-parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-cheri-riscv/c_emulator/"),
-  help="The PATH to the sail-riscv executable directory")
+#TODO I do not know how to add this argument. The default path needs to change depending on whether cheri is enabled or not.
+# parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
+#   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-riscv/c_emulator/"),
+#   help="The PATH to the sail-riscv executable directory")
 parser.add_argument('-r', '--architecture', type = str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
@@ -285,6 +286,24 @@ class ISA_Configuration:
       print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
     return result
 
+  def get_sail_name(self):
+    directory = "sail-"
+    result = "riscv_rvfi"
+    if self.has_icsr:
+      print("ERROR: Sail currently does not support CSRs.")
+      exit(-1)
+    #TODO check if there are other configurations that Sail does not yet support and throw an error.
+    if self.has_cheri:
+      result = "cheri_" + result
+      directory += "cheri-"
+      if self.has_xlen_32:
+        result += "_RV32"
+      elif self.has_xlen_64:
+        result += "_RV64"
+    directory += "riscv"
+    return "../../riscv-implementations/" + directory + "/c_emulator/" + result
+
+
 def verboseprint(lvl,msg):
   if args.verbose >= lvl:
     print(msg)
@@ -292,8 +311,6 @@ def verboseprint(lvl,msg):
 def input_y_n(prompt):
   s = input(prompt)
   return s.lower() in ["", "y", "ye", "yes"]
-
-sail_sim = "cheri_riscv_rvfi_RV32" if "rv32" in args.architecture else "cheri_riscv_rvfi_RV64"
 
 #########################
 # spawn rvfi_dii server #
@@ -345,8 +362,8 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     cmd = [args.path_to_piccolo]
   ##############################################################################
   elif (name == 'sail'):
-    full_sail_sim = op.join(args.path_to_sail_riscv_dir, sail_sim)
-    if 'c' in isa.split('x')[0]:
+    full_sail_sim = op.join(op.dirname(op.realpath(__file__)), isa_def.get_sail_name())
+    if isa_def.has_c:
       cmd = [full_sail_sim, "-r", str(port)]
     else:
       cmd = [full_sail_sim, "-C", "-r", str(port)]
