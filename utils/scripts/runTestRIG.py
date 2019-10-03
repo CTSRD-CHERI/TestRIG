@@ -147,10 +147,9 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
   #default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist-newstyle/build/x86_64-linux/ghc-8.6.3/QCVEngine-0.1.0.0/x/QCVEngine/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
-#TODO I do not know how to add this argument. The default path needs to change depending on whether cheri is enabled or not.
-# parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
-#   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/sail-riscv/c_emulator/"),
-#   help="The PATH to the sail-riscv executable directory")
+parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
+  default=None, #This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
+  help="The PATH to the sail-riscv executable directory")
 parser.add_argument('-r', '--architecture', type = str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
@@ -287,7 +286,6 @@ class ISA_Configuration:
     return result
 
   def get_sail_name(self):
-    directory = "sail-"
     result = "riscv_rvfi"
     if self.has_icsr:
       print("ERROR: Sail currently does not support CSRs.")
@@ -295,13 +293,11 @@ class ISA_Configuration:
     #TODO check if there are other configurations that Sail does not yet support and throw an error.
     if self.has_cheri:
       result = "cheri_" + result
-      directory += "cheri-"
       if self.has_xlen_32:
         result += "_RV32"
       elif self.has_xlen_64:
         result += "_RV64"
-    directory += "riscv"
-    return "../../riscv-implementations/" + directory + "/c_emulator/" + result
+    return result
 
 
 def verboseprint(lvl,msg):
@@ -362,7 +358,12 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
     cmd = [args.path_to_piccolo]
   ##############################################################################
   elif (name == 'sail'):
-    full_sail_sim = op.join(op.dirname(op.realpath(__file__)), isa_def.get_sail_name())
+    if args.path_to_sail_riscv_dir is None:
+      args.path_to_sail_riscv_dir = "../../riscv-implementations/sail-"
+      if isa_def.has_cheri:
+        args.path_to_sail_riscv_dir += "cheri-"
+      args.path_to_sail_riscv_dir += "riscv/c_emulator/"
+    full_sail_sim = op.join(op.dirname(op.realpath(__file__)), args.path_to_sail_riscv_dir, isa_def.get_sail_name())
     if isa_def.has_c:
       cmd = [full_sail_sim, "-r", str(port)]
     else:
