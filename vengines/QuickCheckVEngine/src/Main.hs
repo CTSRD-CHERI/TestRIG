@@ -195,9 +195,9 @@ main = withSocketsDo $ do
                     then verboseCheckWithResult
                     else quickCheckWithResult
   let checkSingle trace = do
-      quickCheckWith (Args Nothing 1 1 2048 True 1000) (prop (return trace) socA socB True (timeoutDelay flags))
+      quickCheckWith (Args Nothing 1 1 2048 True 1000) (prop (return trace) socA socB True archDesc (timeoutDelay flags))
   let checkGen gen remainingTests = do
-      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) (timeoutDelay flags))
+      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) archDesc (timeoutDelay flags))
       case result of
         Failure {} -> do
           writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
@@ -313,8 +313,8 @@ main = withSocketsDo $ do
         return sock
 
 --------------------------------------------------------------------------------
-prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> Int -> Property
-prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
+prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> ArchDesc -> Int -> Property
+prop gen socA socB doLog arch timeoutDelay =  forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
   let instTraceTerminated = ( instTrace ++ [RVFI_DII_Instruction {
                                             padding   = 0,
                                             rvfi_cmd  = rvfi_cmd_end,
@@ -335,7 +335,7 @@ prop gen socA socB doLog timeoutDelay =  forAllShrink gen shrink ( \instTrace ->
   when (isNothing m_impTrace) $ putStrLn("Error: Timeout")
 
   return $ case (m_modTrace, m_impTrace) of
-             (Just modTrace, Just impTrace) -> (Data.List.and (zipWith (==) modTrace impTrace))
+             (Just modTrace, Just impTrace) -> (Data.List.and (zipWith (checkEq (has_xlen_64 arch)) modTrace impTrace))
              _                              -> False
   )))
 

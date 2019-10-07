@@ -138,23 +138,23 @@ data RVFI_DII_Execution = RVFI_DII_Execution {
 } deriving (Generic)
 instance Binary RVFI_DII_Execution
 
-maskUpper :: Word64 -> Word64
-maskUpper x = (x Data.Bits..&. 0x00000000FFFFFFFF)
+maskUpper :: Bool -> Word64 -> Word64
+maskUpper is64 x = if is64 then x else (x Data.Bits..&. 0x00000000FFFFFFFF)
 
 maskWith :: Word64 -> Word8 -> Word64
 maskWith a b = a Data.Bits..&. mask
                where mask = BW.fromListLE $ concatMap ((take 8).repeat) (BW.toListLE b)
 
-instance Eq RVFI_DII_Execution where
-  x == y
+checkEq :: Bool -> RVFI_DII_Execution -> RVFI_DII_Execution -> Bool
+checkEq is64 x y
     | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
-    | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (rvfi_pc_wdata x) == (rvfi_pc_wdata y)
-    | otherwise = (maskUpper $ rvfi_exe_insn x) == (maskUpper $ rvfi_exe_insn y) &&
+    | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (maskUpper is64 (rvfi_pc_wdata x)) == (maskUpper is64 (rvfi_pc_wdata y))
+    | otherwise = (maskUpper False $ rvfi_exe_insn x) == (maskUpper False $ rvfi_exe_insn y) &&
                   (rvfi_trap x) == (rvfi_trap y) && (rvfi_halt x) == (rvfi_halt y) &&
-                  (rvfi_rd_wdata x) == (rvfi_rd_wdata y) &&
+                  (maskUpper is64 (rvfi_rd_wdata x)) == (maskUpper is64 (rvfi_rd_wdata y)) &&
                   (rvfi_mem_wmask x) == (rvfi_mem_wmask y) &&
-                  ((rvfi_mem_wmask x == 0) || ((rvfi_mem_addr x) == (rvfi_mem_addr y))) &&
-                  (rvfi_pc_wdata x) == (rvfi_pc_wdata y) &&
+                  ((rvfi_mem_wmask x == 0) || ((maskUpper is64 (rvfi_mem_addr x)) == (maskUpper is64 (rvfi_mem_addr y)))) &&
+                  (maskUpper is64 (rvfi_pc_wdata x)) == (maskUpper is64 (rvfi_pc_wdata y)) &&
                   (maskWith (rvfi_mem_wdata x) (rvfi_mem_wmask x)) == (maskWith (rvfi_mem_wdata y) (rvfi_mem_wmask y))
 
 instance Show RVFI_DII_Execution where
