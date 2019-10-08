@@ -111,12 +111,6 @@ spike-cheri-fast:
 	cd riscv-implementations/riscv-isa-sim/build &&\
 	make install
 
-spike-cheri-standalone:
-	cd riscv-implementations/riscv-isa-sim &&\
-	rm -rf standalone-build && mkdir standalone-build && cd standalone-build && ../fesvr/configure --prefix=`pwd` && make install &&\
-	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
-	make install && cp libfesvr.so lib/
-
 sail: sail-rv32
 
 sail-rv32:
