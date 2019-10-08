@@ -117,13 +117,13 @@ spike-cheri-standalone:
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
 	make install && cp libfesvr.so lib/
 
-sail: sail-rv32 sail-rv64
+sail: sail-rv32
 
 sail-rv32:
-	ARCH=RV32 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi_RV32
+	ARCH=RV32 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
 
 sail-rv64:
-	ARCH=RV64 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi_RV64
+	ARCH=RV64 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
 
 sail-rv32-cheri:
 	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/cheri_riscv_rvfi_RV32
