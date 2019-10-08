@@ -1,5 +1,6 @@
 #-
 # Copyright (c) 2018 Alexandre Joannou
+# Copyright (c) 2019 Marno van der Maas
 # All rights reserved.
 #
 # This software was developed by SRI International and the University of
@@ -116,8 +117,13 @@ spike-cheri-standalone:
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-cheri --enable-cheri128 --enable-mergedrf --enable-misaligned &&\
 	make install && cp libfesvr.so lib/
 
-sail:
-	$(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
+sail: sail-rv32 sail-rv64
+
+sail-rv32:
+	ARCH=RV32 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi_RV32
+
+sail-rv64:
+	ARCH=RV64 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi_RV64
 
 sail-rv32-cheri:
 	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/cheri_riscv_rvfi_RV32
