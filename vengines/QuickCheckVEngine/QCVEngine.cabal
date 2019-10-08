@@ -7,7 +7,7 @@ cabal-version:       >=1.10
 executable QCVEngine
   hs-source-dirs:      src .
   main-is:             Main.hs
-  build-depends:       base, QuickCheck, bytestring, network, binary, directory, filemanip, bitwise, regex-posix, split
+  build-depends:       base >=4.9, QuickCheck >=2.12, bytestring >=0.10, network >=2.8, binary >=0.8, regex-posix >=0.95, filemanip >=0.3, split >=0.2, bitwise >=1.0
   other-modules:       InstrCodec, RISCV,
                        RISCV.ArchDesc, RISCV.Helpers, RISCV.InstPretty,
                        RISCV.RV32_I, RISCV.RV32_M, RISCV.RV32_A, RISCV.RV32_F, RISCV.RV32_D,
