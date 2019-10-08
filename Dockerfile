@@ -3,4 +3,7 @@ RUN \
   PACKAGES="ghc cabal-install" && \
   apt-get update && \
   apt-get -y install $PACKAGES && \
-  cabal update
+  useradd -ms /bin/bash jenkins
+USER jenkins
+WORKDIR /home/jenkins
+RUN cabal update

@@ -1,5 +1,9 @@
 pipeline {
-  agent { dockerfile { label 'docker' } }
+  agent { dockerfile {
+            label 'docker'
+            args '-u jenkins'
+          }
+        }
   stages {
     stage ('Install QuickCheckVengine dependencies') {
       steps {
