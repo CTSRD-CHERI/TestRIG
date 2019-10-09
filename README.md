@@ -38,12 +38,16 @@ A capable vengine will also attempt to reduce the failing trace to a minimal exa
 Any implementation that wants to be verified using TestRIG will need to support RVFI-DII itrace format as an instruction source and etrace reporting format.
 The implementation should have a mode where instructions are consumed exlusively from the RVFI-DII instruction port, bypassing any actual instruction memory, ignoring the architectural program counter.
 An implementation should then deliver a trace report at the end of execution detailing implementation behaviour in response to that instruction in the RVFI-DII format.
-The RVFI-DII communication uses a single socket with the itrace consumed and the etrace be delivered over the same socket.
+The RVFI-DII communication uses a single socket with the itrace consumed and the etrace be delivered over the same socket. Please look at [the RVFI-DII](https://github.com/CTSRD-CHERI/TestRIG/blob/master/RVFI-DII.md) specification for more details
 
-Currently, the RVFI-DII interface is known to be implemented by:
+Currently, the provided modules are:
+- [BSV-RVFI-DII](https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git)
 - [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
-- [Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
-- [Sail RISC-V model](https://github.com/rems-project/sail-riscv)
+- [CHERI Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
+- [Sail RISC-V model](https://github.com/rems-project/sail-riscv.git)
+- [CHERI Sail RISC-V model](https://github.com/CTSRD-CHERI/sail-cheri-riscv.git)
+- [Picollo](https://github.com/CTSRD-CHERI/Piccolo.git)
+- [ibex](https://github.com/CTSRD-CHERI/ibex.git)
 
 ## Getting started
 
@@ -53,13 +57,7 @@ In order to get the different submodules provided by **TestRIG**, run the follow
 $ git submodule update --init --recursive
 ```
 
-Currently, the provided modules are:
-- [BSV-RVFI-DII](https://github.com/CTSRD-CHERI/BSV-RVFI-DII.git)
-- [RVBS](https://github.com/CTSRD-CHERI/RVBS.git)
-- [Spike](https://github.com/CTSRD-CHERI/riscv-isa-sim.git)
-- [Sail RISC-V model](https://github.com/rems-project/sail-riscv)
-
-The root makefile can currently build the Quick Check Verification Engine, Spike, and the RVBS implementation.
+The root makefile can currently build the Quick Check Verification Engine, Spike, and the Sail implementation. Both Spike and Sail are built without CHERI support by default and Sail is built as a 32-bit version.
 
 ### Dependencies
 The dependencies for the Quick Check Verification Engine are:
