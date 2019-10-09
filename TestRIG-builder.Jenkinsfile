@@ -4,7 +4,12 @@ node("docker") {
     checkout scm
   }
   stage("Build TestRIG builder docker image") {
-    img = docker.build("ctsrd/testrig-builder", "-f TestRIG-builder.Dockerfile .")
+    CABALFILE = """${sh(
+                returnStdout: true,
+                script: 'cat ${env.WORKSPACE}/vengines/QuickCheckVEngine/QCVEngine.cabal'
+                )}"""
+    img = docker.build("ctsrd/testrig-builder",
+                       "--build-args CABALFILE -f TestRIG-builder.Dockerfile .")
   }
   stage("Push TestRIG builder docker image to docker hub") {
     docker.withRegistry('https://registry.hub.docker.com',
