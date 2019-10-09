@@ -1,5 +1,8 @@
 node("docker") {
   def img
+  stage("Clone TestRIG repository") {
+    checkout scm
+  }
   stage("Build TestRIG builder docker image") {
     img = docker.build("ctsrd/testrig-builder", "-f TestRIG-builder.Dockerfile .")
   }
