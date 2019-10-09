@@ -1,7 +1,7 @@
 node("docker") {
   def img
   stage("Build TestRIG builder docker image") {
-    img = docker.build("ctsrd/testrig-builder", "-f TestRIG-builder.Dockerfile")
+    img = docker.build("ctsrd/testrig-builder", "-f TestRIG-builder.Dockerfile .")
   }
   stage("Push TestRIG builder docker image to docker hub") {
     docker.withRegistry('https://registry.hub.docker.com',
