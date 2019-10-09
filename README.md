@@ -74,6 +74,9 @@ The dependencies for the Sail model can be installed using
 [opam](http://opam.ocaml.org/) by following the instructions from the
 [Sail wiki](https://github.com/rems-project/sail/wiki/OPAMInstall).
 
+The dependencies for ibex are verilator:
+- `sudo apt-get install verilator`
+
 ### Default Configuration
 
 You can verify a default configuration by executing:
@@ -96,4 +99,13 @@ $ make
 $ make sail-rv64-cheri
 $ make spike-cheri
 $ utils/scripts/runTestRIG.py -a sail -b spike -r rv64ixcheri
+```
+
+### CHERI 32-bit: Sail vs ibex
+Executing the following commands will compare Sail and ibex with the 32-bit version of the RISC-V instruction set and CHERI extensions enabled, assuming that you've initialized the sumblodules and have installed all the dependencies described above.
+```sh
+$ make
+$ make sail-rv32-cheri
+$ make ibex-rv32ic-cheri
+$ utils/scripts/runTestRIG.py -a sail -b ibex -r rv32ixcheri
 ```
