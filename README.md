@@ -102,10 +102,10 @@ $ utils/scripts/runTestRIG.py -a sail -b spike -r rv64ixcheri
 ```
 
 ### CHERI 32-bit: Sail vs Ibex
-Executing the following commands will compare Sail and Ibex with the 32-bit version of the RISC-V instruction set and CHERI extensions enabled, assuming that you've initialized the sumblodules and have installed all the dependencies described above.
+Executing the following commands will compare Sail and Ibex with the 32-bit version of the RISC-V instruction set (including compressed) and CHERI extensions enabled, assuming that you've initialized the sumblodules and have installed all the dependencies described above.
 ```sh
 $ make
 $ make sail-rv32-cheri
 $ make ibex-rv32ic-cheri
-$ utils/scripts/runTestRIG.py -a sail -b ibex -r rv32ixcheri
+$ utils/scripts/runTestRIG.py -a sail -b ibex -r rv32icxcheri
 ```
