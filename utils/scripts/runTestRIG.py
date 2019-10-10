@@ -342,9 +342,9 @@ class ISA_Configuration:
 
   def get_sail_name(self):
     result = "riscv_rvfi"
-    if self.has_icsr:
-      print("ERROR: Sail currently does not support CSRs.")
-      exit(-1)
+    #if self.has_icsr:
+    #  print("ERROR: Sail currently does not support CSRs.")
+    #  exit(-1)
     #TODO check if there are other configurations that Sail does not yet support and throw an error.
     if self.has_cheri:
       result = "cheri_" + result
