@@ -128,8 +128,7 @@ cspecialrw                = "0000001 cSP[4:0] cs1[4:0] 000 cd[4:0] 1011011"
 
 -- Control Flow
 cjalr                     = "1111111 01100 cs1[4:0] 000 cd[4:0] 1011011"
-ccall                     = "1111110 sel[4:0] cs1[4:0] 000 cd[4:0] 1011011"
--- creturn is a special case of ccall, which would mess up decoding!
+ccall                     = "1111110 pcc[4:0] idc[4:0] 000 00001 1011011"
 
 -- Assertion
 ctestsubset               = "0100000 cs2[4:0] cs1[4:0] 000 rd[4:0] 1011011"
@@ -214,8 +213,8 @@ prettyCStore rs2 rs1 mop =
 pretty_reg_clear instr imm qt =
   concat [instr, " ", int qt, ", ", int imm]
 
-pretty_ccall instr idc pcc selector =
-  concat [instr, " ", reg pcc, ", ", reg idc, ", ", int selector]
+pretty_2src instr idc pcc =
+  concat [instr, " ", reg pcc, ", ", reg idc]
 
 pretty_cspecialrw instr idx cs1 cd =
   concat [instr, " ", reg cd, ", ", reg cs1, ", ", int idx]
@@ -249,7 +248,7 @@ rv32_xcheri_disass = [
    , cspecialrw          --> pretty_cspecialrw "cspecialrw"
    , cmove               --> prettyR_2op "cmove"
    , cjalr               --> prettyR_2op "cjalr"
-   , ccall               --> pretty_ccall "ccall"
+   , ccall               --> pretty_2src "ccall"
    , ctestsubset         --> prettyR "ctestsubset"
    , clear               --> pretty_reg_clear "clear"
    , fpclear             --> pretty_reg_clear "fpclear"
@@ -301,10 +300,10 @@ rv32_xcheri_misc src1 src2 srcScr imm dest = [
  ,  encode cspecialrw srcScr src1 dest
   ]
 
-rv32_xcheri_control :: Integer -> Integer -> Integer -> Integer -> [Integer]
-rv32_xcheri_control src1 src2 imm dest = [
+rv32_xcheri_control :: Integer -> Integer -> Integer -> [Integer]
+rv32_xcheri_control src1 src2 dest = [
     encode cjalr src1 dest
- ,  encode ccall src1 src2 dest
+ ,  encode ccall src1 src2
   ]
 
 rv32_xcheri_mem :: Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
@@ -322,5 +321,5 @@ rv32_xcheri src1 src2 srcScr imm mop dest =
      rv32_xcheri_inspection src1 dest
   ++ rv32_xcheri_arithmetic src1 src2 imm dest
   ++ rv32_xcheri_misc src1 src2 srcScr imm dest
-  ++ rv32_xcheri_control src1 src2 imm dest
+  ++ rv32_xcheri_control src1 src2 dest
   ++ rv32_xcheri_mem src1 src2 imm mop dest

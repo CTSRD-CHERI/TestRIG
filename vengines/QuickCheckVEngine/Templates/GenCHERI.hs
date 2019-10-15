@@ -188,5 +188,5 @@ genCHERIcontrol = Random $ do {
     fenceOp2 <- bits 3;
     csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
     return $ Distribution[
-      (1, uniform $ rv32_xcheri_control srcAddr srcData imm dest)
+      (1, uniform $ rv32_xcheri_control srcAddr srcData dest)
     , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
