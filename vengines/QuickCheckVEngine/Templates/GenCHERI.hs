@@ -69,18 +69,16 @@ randomCHERITest = Random $ do {
                               (if remaining > 10 then 1 else 0, surroundWithMemAccess randomCHERITest)] in
         if remaining > 10 then return $ Sequence [test, randomCHERITest] else return test}
 
-randomCCall pccReg idcReg typeReg tmpReg = Random $ do {
-    selector <- frequency [(2, return 0), (7, return 1), (1, bits 5)];
-    return $ Sequence [
+randomCCall pccReg idcReg typeReg tmpReg = Sequence [
        Distribution [(1, Sequence [Single $ encode addi 0xffd 0 tmpReg, Single $ encode candperm tmpReg pccReg pccReg]), (9, Empty)] -- clear X perm?
      , Distribution [(9, Sequence [Single $ encode addi 0xffd 0 tmpReg, Single $ encode candperm tmpReg idcReg idcReg]), (1, Empty)]
      , Distribution [(1, Sequence [Single $ encode addi 0xeff 0 tmpReg, Single $ encode candperm tmpReg pccReg pccReg]), (9, Empty)] -- clear CCall perm?
      , Distribution [(1, Sequence [Single $ encode addi 0xeff 0 tmpReg, Single $ encode candperm tmpReg idcReg idcReg]), (9, Empty)]
      , Distribution [(9, Single $ encode cseal typeReg pccReg pccReg), (1, Empty)] -- seal?
      , Distribution [(9, Single $ encode cseal typeReg idcReg idcReg), (1, Empty)]
-     , Single $ encode ccall idcReg pccReg selector
+     , Single $ encode ccall idcReg pccReg
      , Single $ encode cmove 31 1
-]}
+  ]
 
 legalCapLoad addrReg targetReg = Random $ do {
     tmpReg <- src;
