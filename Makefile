@@ -101,20 +101,24 @@ $(SPIKE_DIR)/build-fesvr/Makefile:
 	cd $(SPIKE_DIR) && mkdir -p build-fesvr && cd build-fesvr &&\
   ../fesvr/configure --prefix=`pwd` && make install
 
-$(SPIKE_DIR)/build/Makefile:
+$(SPIKE_DIR)/build/Makefile: $(SPIKE_DIR)/build-fesvr/Makefile
 	cd $(SPIKE_DIR) && mkdir -p build && cd build &&\
   ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii &&\
   mkdir lib && cp ../build-fesvr/libfesvr.so lib/
 
-spike: $(SPIKE_DIR)/build-fesvr/Makefile $(SPIKE_DIR)/build/Makefile
+spike: $(SPIKE_DIR)/build/Makefile
 	cd $(SPIKE_DIR)/build && make install
 
-$(SPIKE_DIR)/build-cheri/Makefile:
-	cd $(SPIKE_DIR) && mkdir -p build-cheri && cd build-cheri &&\
-  ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
-  mkdir lib && cp ../build-fesvr/libfesvr.so lib/
+$(SPIKE_DIR)/build-fesvr-cheri/Makefile:
+	cd $(SPIKE_DIR) && mkdir -p build-fesvr-cheri && cd build-fesvr-cheri &&\
+  ../fesvr/configure --prefix=`pwd` && make install
 
-spike-cheri: $(SPIKE_DIR)/build-fesvr/Makefile $(SPIKE_DIR)/build-cheri/Makefile
+$(SPIKE_DIR)/build-cheri/Makefile: $(SPIKE_DIR)/build-fesvr-cheri/Makefile
+	cd $(SPIKE_DIR) && mkdir -p build-cheri && cd build-cheri &&\
+  ../configure --with-fesvr=`pwd`/../build-fesvr-cheri --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
+  mkdir lib && cp ../build-fesvr-cheri/libfesvr.so lib/
+
+spike-cheri: $(SPIKE_DIR)/build-cheri/Makefile
 	cd $(SPIKE_DIR)/build-cheri && make install
 
 sail: sail-rv32
