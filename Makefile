@@ -101,11 +101,13 @@ spike:
 	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii &&\
 	make install && cp libfesvr.so lib/
 
-spike-cheri:
+riscv-implementations/riscv-isa-sim/build/Makefile:
 	cd riscv-implementations/riscv-isa-sim &&\
 	mkdir -p build-fesvr && cd build-fesvr && ../fesvr/configure --prefix=`pwd` && make install &&\
-	cd .. && mkdir -p build && cd build && ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
-	make install && cp ../build-fesvr/libfesvr.so lib/
+	cd .. && mkdir -p build && cd build && ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf
+
+spike-cheri: riscv-implementations/riscv-isa-sim/build/Makefile
+	cd riscv-implementations/riscv-isa-sim/build && make install && cp ../build-fesvr/libfesvr.so lib/
 
 sail: sail-rv32
 
