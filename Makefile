@@ -103,13 +103,9 @@ spike:
 
 spike-cheri:
 	cd riscv-implementations/riscv-isa-sim &&\
-	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
-	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
-	make install && cp libfesvr.so lib/
-
-spike-cheri-fast:
-	cd riscv-implementations/riscv-isa-sim/build &&\
-	make install
+	mkdir -p build-fesvr && cd build-fesvr && ../fesvr/configure --prefix=`pwd` && make install &&\
+	cd .. && mkdir -p build && cd build && ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
+	make install && cp ../build-fesvr/libfesvr.so lib/
 
 sail: sail-rv32
 
@@ -160,6 +156,7 @@ clean-rvbs-rv64ICZicsrZifenceiXcheri:
 
 clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
+	rm -rf riscv-implementations/riscv-isa-sim/build-fesvr
 
 clean-sail:
 	$(MAKE) -C riscv-implementations/sail-riscv clean
