@@ -134,8 +134,7 @@ parser.add_argument('--path-to-rvbs-dir', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/"),
   help="The PATH to the rvbs executable directory")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/riscv-isa-sim/build/spike"),
-  help="The PATH to the spike executable")
+  default=None, help="The PATH to the spike executable")
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IMUxCHERI_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
@@ -334,7 +333,12 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
       newIsa = isa.split('_')[0]
     else:
       newIsa = isa
-    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),"--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
+    if args.path_to_spike is None:
+      args.path_to_spike = "../../riscv-implementations/riscv-isa-sim/build"
+      if isa_def.has_cheri:
+        args.path_to_spike += "-cheri"
+      args.path_to_spike += "/spike"
+    cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_spike), "--rvfi-dii-port", str(port),"--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
     if "LD_LIBRARY_PATH" in env2:
       env2["LD_LIBRARY_PATH"] = "%s:%s" % (env2["LD_LIBRARY_PATH"], op.dirname(args.path_to_spike))
     else:

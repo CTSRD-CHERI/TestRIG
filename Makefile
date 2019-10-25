@@ -95,19 +95,27 @@ rvbs-rv64IZicsrZifenceiXcheri:
 rvbs-rv64ICZicsrZifenceiXcheri:
 	$(MAKE) -C riscv-implementations/RVBS XLEN=64 RVZICSR=1 RVZIFENCEI=1 RVXCHERI=1 RVC=1 rvfi-dii
 
-spike:
-	cd riscv-implementations/riscv-isa-sim &&\
-	rm -rf build && mkdir build && cd build && ../fesvr/configure --prefix=`pwd` && make install &&\
-	../configure --with-fesvr=`pwd` --prefix=`pwd` --enable-rvfi-dii &&\
-	make install && cp libfesvr.so lib/
+SPIKE_DIR=riscv-implementations/riscv-isa-sim
 
-riscv-implementations/riscv-isa-sim/build/Makefile:
-	cd riscv-implementations/riscv-isa-sim &&\
-	mkdir -p build-fesvr && cd build-fesvr && ../fesvr/configure --prefix=`pwd` && make install &&\
-	cd .. && mkdir -p build && cd build && ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf
+$(SPIKE_DIR)/build-fesvr/Makefile:
+	cd $(SPIKE_DIR) && mkdir -p build-fesvr && cd build-fesvr &&\
+  ../fesvr/configure --prefix=`pwd` && make install
 
-spike-cheri: riscv-implementations/riscv-isa-sim/build/Makefile
-	cd riscv-implementations/riscv-isa-sim/build && make install && cp ../build-fesvr/libfesvr.so lib/
+$(SPIKE_DIR)/build/Makefile:
+	cd $(SPIKE_DIR) && mkdir -p build && cd build &&\
+  ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii &&\
+  mkdir lib && cp ../build-fesvr/libfesvr.so lib/
+
+spike: $(SPIKE_DIR)/build-fesvr/Makefile $(SPIKE_DIR)/build/Makefile
+	cd $(SPIKE_DIR)/build && make install
+
+$(SPIKE_DIR)/build-cheri/Makefile:
+	cd $(SPIKE_DIR) && mkdir -p build-cheri && cd build-cheri &&\
+  ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
+  mkdir lib && cp ../build-fesvr/libfesvr.so lib/
+
+spike-cheri: $(SPIKE_DIR)/build-fesvr/Makefile $(SPIKE_DIR)/build-cheri/Makefile
+	cd $(SPIKE_DIR)/build-cheri && make install
 
 sail: sail-rv32
 
@@ -158,6 +166,7 @@ clean-rvbs-rv64ICZicsrZifenceiXcheri:
 
 clean-spike:
 	rm -rf riscv-implementations/riscv-isa-sim/build
+	rm -rf riscv-implementations/riscv-isa-sim/build-cheri
 	rm -rf riscv-implementations/riscv-isa-sim/build-fesvr
 
 clean-sail:
