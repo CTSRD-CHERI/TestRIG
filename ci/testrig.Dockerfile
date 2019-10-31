@@ -6,6 +6,7 @@ RUN \
   cd TestRIG && \
   git submodule update --init --recursive && \
   make -j 8 QCVEngine \
+  ibex-rv32ic-cheri \
   piccolo-rv32xcheri \
   piccolo-rv64xcheri \
   rvbs \
@@ -24,4 +25,3 @@ RUN \
   sail-rv64-cheri \
   spike \
   spike-cheri
-  #ibex-rv32ic-cheri \
