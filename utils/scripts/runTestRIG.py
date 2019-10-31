@@ -136,7 +136,7 @@ parser.add_argument('--path-to-rvbs-dir', metavar='PATH', type=str,
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=None, help="The PATH to the spike executable")
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IMUxCHERI_Piccolo_bluesim/exe_HW_sim"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IMUxCHERI_RVFI_DII_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
