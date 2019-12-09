@@ -69,7 +69,7 @@ gen_memory has_zifencei has_xlen_64 = Random $
      offset   <- geomBits 11 0
      let insts = [ (8,  Single $ encode addi  offset src1 dest)
                  , (8,  Single $ encode ori   offset src1 dest)
-                 , (16, Single $ encode lui   0x80008 dest)
+                 , (16, Sequence ( [Single ( encode lui   0x40004 dest ), Single ( encode slli 1 dest dest )]) )
                  , (8, uniform $ rv32_i_load  src1 dest offset)
                  , (8, uniform $ rv32_i_store src1 src2 offset)
                  , (2, uniform $ rv32_i_fence fenceOp1 fenceOp2)
