@@ -292,10 +292,10 @@ class ISA_Configuration:
     #TODO check if there are other configurations that Sail does not yet support and throw an error.
     if self.has_cheri:
       result = "cheri_" + result
-      if self.has_xlen_32:
-        result += "_RV32"
-      elif self.has_xlen_64:
-        result += "_RV64"
+    if self.has_xlen_32:
+      result += "_RV32"
+    elif self.has_xlen_64:
+      result += "_RV64"
     return result
 
 
