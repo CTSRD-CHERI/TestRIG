@@ -270,8 +270,6 @@ class ISA_Configuration:
       result += "i"
       if not (self.has_icsr and self.has_ifencei):
         print("WARNING: enabling I in spike also automatically enables icsr and ifencei extenstions.")
-    if self.has_c:
-      result += "c"
     if self.has_m:
       result += "m"
     if self.has_a:
@@ -280,6 +278,8 @@ class ISA_Configuration:
       result += "f"
     if self.has_d:
       result += "d"
+    if self.has_c:
+      result += "c"
     if self.has_cheri:
       print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
     return result
