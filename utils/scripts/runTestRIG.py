@@ -117,7 +117,7 @@ parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known
   default='QCVEngine',
   help="The verification engine to use. (one of {:s})".format(str(known_vengine)))
 # general configuration args
-parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=1, type=auto_int,
+parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=5, type=auto_int,
   help="Specify a number of seconds to wait between server creation and verification engine startup.")
 parser.add_argument('-v', '--verbose', action='count', default=0,
   help="Increase verbosity level by adding more \"v\".")
@@ -156,6 +156,8 @@ parser.add_argument('-r', '--architecture', type = str.lower, metavar='ARCH', ch
   by an '_'-separated list of one or more of {Zicsr, Zifencei, Xcheri}
   appearing in that order (e.g. rv64ifcXcheri, rv64imd,
   rv32imafZicsr_Zifencei_Xcheri ...)""")
+parser.add_argument('--support-misaligned', action='store_true',
+  help="""Enable misaligned memory accesses""")
 parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
   default='internal',
   help="The instruction generator to use. (one of {:s})".format(str(known_generators)))
@@ -185,9 +187,12 @@ class ISA_Configuration:
   has_icsr = False
   has_ifencei = False
   has_cheri = False
+  support_misaligned = False
+  archstring = None
 
   def __init__(self, archstring):
     parts = list(filter(None, re.split("[_zx]", archstring.lower())))
+    self.archstring = archstring
     if parts[0][:4] == 'rv32':
       self.has_xlen_32 = True
     elif parts[0][:4] == 'rv64':
@@ -311,18 +316,17 @@ def input_y_n(prompt):
 # spawn rvfi_dii server #
 #########################
 
-def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
+def spawn_rvfi_dii_server(name, port, log, isa_def):
   ## few common variables
-  isa_def = ISA_Configuration(arch)
   use_log = open(os.devnull,"w")
   if log:
     use_log = log
-  if 'x' in arch:
+  if 'x' in isa_def.archstring:
     # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
-    [isa, extension] = arch.split('x')
+    [isa, extension] = isa_def.archstring.split('x')
   else:
     # No extension specified in the architecture string
-    [isa, extension] = [arch, ""]
+    [isa, extension] = [isa_def.archstring, ""]
 
   env2 = os.environ.copy()
   cmd = []
@@ -368,10 +372,15 @@ def spawn_rvfi_dii_server(name, port, log, arch="rv32i"):
         args.path_to_sail_riscv_dir += "cheri-"
       args.path_to_sail_riscv_dir += "riscv/c_emulator/"
     full_sail_sim = op.join(op.dirname(op.realpath(__file__)), args.path_to_sail_riscv_dir, isa_def.get_sail_name())
-    if isa_def.has_c:
-      cmd = [full_sail_sim, "-r", str(port)]
-    else:
-      cmd = [full_sail_sim, "-C", "-r", str(port)]
+    cmd = [full_sail_sim]
+    if not isa_def.has_c:
+      #cmd += ["--disable-compressed"]
+      cmd += ["-C"]
+    if isa_def.support_misaligned:
+      #cmd += ["--enable-misaligned"]
+      cmd += ["-m"]
+    #cmd += ["--rvfi-dii", str(port)]
+    cmd += ["-r", str(port)]
   ##############################################################################
   elif (name == 'ibex'):
     cmd = [args.path_to_ibex, 'localhost', str(port)]
@@ -475,9 +484,11 @@ def main():
   b = None
   e = None
   generator = None
+  isa_def = ISA_Configuration(args.architecture)
+  isa_def.support_misaligned = args.support_misaligned
   try:
-    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, args.architecture)
-    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, args.architecture)
+    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, isa_def)
+    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, isa_def)
 
     time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
 
