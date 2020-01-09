@@ -50,6 +50,7 @@ import Network.Socket.ByteString.Lazy --(recv, sendAll)
 import Data.Int
 import Data.Binary
 import Data.Char
+import Data.IORef
 import Text.Printf
 import Text.Regex.Posix
 import Control.Monad
@@ -68,6 +69,7 @@ import RVFI_DII
 import RISCV
 import Template
 import System.Timeout
+import System.Exit
 
 import Templates.Utils
 import Templates.GenAll
@@ -212,16 +214,19 @@ main = withSocketsDo $ do
                 comment <- getLine
                 writeFile (fileName ++ ".S") ("# " ++ comment
                                               ++ "\n" ++ (unlines (failingTestCase result)))
-              return ()
+              return 1
             Just dir -> do
               writeFile (dir ++ "/failure" ++ (show (remainingTests - (numTests result))) ++ ".S") ("# Automatically generated failing test case" ++ "\n" ++ (unlines (failingTestCase result)))
               checkGen gen (remainingTests - (numTests result))
-        other -> return ()
+        other -> return 0
   let checkFile (fileName :: FilePath) = do
       putStrLn $ "Reading trace from " ++ fileName ++ ":"
       trace <- read_rvfi_inst_trace_file fileName
       checkSingle trace
   --
+  success <- newIORef 0
+  let doCheck a b = do result <- checkGen a b
+                       modifyIORef success ((+) result)
   case (instTraceFile flags) of
     Just fileName -> do
       checkFile fileName
@@ -235,71 +240,74 @@ main = withSocketsDo $ do
             Nothing -> do
               when (has_i archDesc) $
                 do putStrLn "rv32 I Arithmetic Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_i_arithmetic) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_i_arithmetic) (nTests flags)
                    putStrLn "rv32 I Memory Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_i_memory) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_i_memory) (nTests flags)
                    putStrLn "rv32 I Control Flow Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_i_controlflow) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_i_controlflow) (nTests flags)
               when (has_i archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 I Arithmetic Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_i_arithmetic) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_i_arithmetic) (nTests flags)
                    putStrLn "rv64 I Memory Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_i_memory) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_i_memory) (nTests flags)
                    -- Note: no rv64 specific control flow instructions
               when (has_m archDesc) $
                 do putStrLn "rv32 M extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_m) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_m) (nTests flags)
               when (has_m archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 M extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_m) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_m) (nTests flags)
               when (has_a archDesc) $
                 do putStrLn "rv32 A extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_a) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_a) (nTests flags)
               when (has_a archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 A extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_a) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_a) (nTests flags)
               when (has_f archDesc) $
                 do putStrLn "rv32 F extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_f) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_f) (nTests flags)
               when (has_f archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 F extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_f) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_f) (nTests flags)
               when (has_d archDesc) $
                 do putStrLn "rv32 D extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_d) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_d) (nTests flags)
               when (has_d archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 D extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_d) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_d) (nTests flags)
               when (has_icsr archDesc) $
                 do putStrLn "rv32 Zicsr extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_i_zicsr) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_i_zicsr) (nTests flags)
               when (has_ifencei archDesc) $
                 do putStrLn "rv32 Zifencei extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv32_i_zifencei_memory) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv32_i_zifencei_memory) (nTests flags)
               when (has_ifencei archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 Zifencei extension Verification:"
-                   checkGen (genTest $ repeatTillEnd gen_rv64_i_zifencei_memory) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd gen_rv64_i_zifencei_memory) (nTests flags)
               when (has_cheri archDesc) $
                 do putStrLn "Xcheri extension Capability Inspection Verification:"
-                   checkGen (genTest $ repeatTillEnd genCHERIinspection) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd genCHERIinspection) (nTests flags)
                    putStrLn "Xcheri extension Capability Arithmetic Verification:"
-                   checkGen (genTest $ repeatTillEnd genCHERIarithmetic) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd genCHERIarithmetic) (nTests flags)
                    putStrLn "Xcheri extension Capability Miscellaneous Verification:"
-                   checkGen (genTest $ repeatTillEnd genCHERImisc) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd genCHERImisc) (nTests flags)
                    putStrLn "Xcheri extension Capability Control Flow Verification:"
-                   checkGen (genTest $ repeatTillEnd genCHERIcontrol) (nTests flags)
+                   doCheck (genTest $ repeatTillEnd genCHERIcontrol) (nTests flags)
                    putStrLn "Xcheri extension Random Template:"
-                   checkGen (genTest $ randomCHERITest) (nTests flags)
+                   doCheck (genTest $ randomCHERITest) (nTests flags)
 
               putStrLn "All Verification:"
-              checkGen (genTest $ repeatTillEnd (genAll archDesc)) (nTests flags)
+              doCheck (genTest $ repeatTillEnd (genAll archDesc)) (nTests flags)
               putStrLn "Random Template:"
-              checkGen (genTest $ repeatTillEnd randomTest) (nTests flags)
+              doCheck (genTest $ repeatTillEnd randomTest) (nTests flags)
             Just sock -> do
-              checkGen (listOf $ genInstrServer sock) (nTests flags)
+              doCheck (listOf $ genInstrServer sock) (nTests flags)
   --
   close socA
   close socB
+  --
+  exitCode <- readIORef success
+  if exitCode == 0 then exitSuccess else exitWith $ ExitFailure exitCode
   --
   where
     resolve host port = do

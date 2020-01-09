@@ -501,7 +501,7 @@ def main():
   else:
     print('run terminated')
     kill_procs(a,b,generator,e)
-    exit(0)
+    exit(e.returncode)
 
 if __name__ == "__main__":
   main()
