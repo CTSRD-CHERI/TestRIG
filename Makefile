@@ -69,6 +69,15 @@ piccolo-rv64xcheri:
 piccolo-rv32: piccolo-rv32xcheri #for now, just testing CHERI implementation.
 piccolo-rv64: piccolo-rv64xcheri #for now, just testing CHERI implementation.
 
+flute-rv32xcheri:
+	$(MAKE) -C riscv-implementations/Flute/builds -f Resources/Build_all.mk ARCH=RV32IMUxCHERI_RVFI_DII SIM=bluesim build
+
+flute-rv64xcheri:
+	$(MAKE) -C riscv-implementations/Flute/builds -f Resources/Build_all.mk ARCH=RV64IUxCHERI_RVFI_DII SIM=bluesim build
+
+flute-rv32: flute-rv32xcheri #for now, just testing CHERI implementation.
+flute-rv64: flute-rv64xcheri #for now, just testing CHERI implementation.
+
 rvbs: rvbs-rv32IZicsrZifencei
 
 rvbs-rv32IZicsrZifencei:
@@ -140,7 +149,7 @@ ibex-rv32ic-cheri:
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute
 
 clean-rvbs: clean-rvbs-rv32IZicsrZifencei
 
@@ -184,6 +193,9 @@ clean-sail-rv64-cheri:
 
 clean-piccolo:
 	rm -rf riscv-implementations/Piccolo/builds/RV*
+
+clean-flute:
+	rm -rf riscv-implementations/Flute/builds/RV*
 
 clean-ibex:
 	$(MAKE) -C riscv-implementations/ibex/verilator clean

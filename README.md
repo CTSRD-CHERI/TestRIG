@@ -47,6 +47,7 @@ Currently, the provided modules are:
 - [Sail RISC-V model](https://github.com/rems-project/sail-riscv.git)
 - [CHERI Sail RISC-V model](https://github.com/CTSRD-CHERI/sail-cheri-riscv.git)
 - [Piccolo](https://github.com/CTSRD-CHERI/Piccolo.git)
+- [Flute](https://github.com/CTSRD-CHERI/Flute.git)
 - [Ibex](https://github.com/CTSRD-CHERI/ibex.git)
 
 ## Getting started

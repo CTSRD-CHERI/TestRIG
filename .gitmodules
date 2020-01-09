@@ -22,3 +22,6 @@
 [submodule "ibex"]
 	path = riscv-implementations/ibex
 	url = https://github.com/CTSRD-CHERI/ibex.git
+[submodule "riscv-implementations/Flute"]
+	path = riscv-implementations/Flute
+	url = https://github.com/CTSRD-CHERI/Flute.git
