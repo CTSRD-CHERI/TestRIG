@@ -1,4 +1,5 @@
 def configs = [ ["sail", "piccolo", "rv32izicsr_zifencei_xcheri", ""]
+                ["sail", "flute", "rv32izicsr_zifencei_xcheri", ""]
               , ["sail", "rvbs", "rv32izicsr_zifencei_xcheri", "--support-misaligned"]
               , ["sail", "ibex", "rv32izicsr_zifencei_xcheri", ""]
               , ["sail", "spike", "rv32izicsr_zifencei_xcheri", ""]
