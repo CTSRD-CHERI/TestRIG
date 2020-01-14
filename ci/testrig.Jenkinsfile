@@ -5,7 +5,7 @@ ansiColor('xterm') {
       checkout scm
     }
     stage("Build TestRIG builder docker image") {
-      img = docker.build("ctsrd/testrig", "-f ci/testrig.Dockerfile --pull .")
+      img = docker.build("ctsrd/testrig", "-f ci/testrig.Dockerfile --no-cache --pull .")
     }
     stage("Push TestRIG docker image to docker hub") {
       docker.withRegistry('https://registry.hub.docker.com',
