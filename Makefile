@@ -106,11 +106,11 @@ rvbs-rv64ICZicsrZifenceiXcheri:
 
 SPIKE_DIR=riscv-implementations/riscv-isa-sim
 
-$(SPIKE_DIR)/build-fesvr/Makefile:
+$(SPIKE_DIR)/build-fesvr/libfesvr.so:
 	cd $(SPIKE_DIR) && mkdir -p build-fesvr && cd build-fesvr &&\
   ../fesvr/configure --prefix=`pwd` && $(MAKE) install
 
-$(SPIKE_DIR)/build/Makefile: $(SPIKE_DIR)/build-fesvr/Makefile
+$(SPIKE_DIR)/build/Makefile: $(SPIKE_DIR)/build-fesvr/libfesvr.so
 	cd $(SPIKE_DIR) && mkdir -p build && cd build &&\
   ../configure --with-fesvr=`pwd`/../build-fesvr --prefix=`pwd` --enable-rvfi-dii &&\
   mkdir lib && cp ../build-fesvr/libfesvr.so lib/
@@ -118,11 +118,11 @@ $(SPIKE_DIR)/build/Makefile: $(SPIKE_DIR)/build-fesvr/Makefile
 spike: $(SPIKE_DIR)/build/Makefile
 	cd $(SPIKE_DIR)/build && $(MAKE) install
 
-$(SPIKE_DIR)/build-fesvr-cheri/Makefile:
+$(SPIKE_DIR)/build-fesvr-cheri/libfesvr.so:
 	cd $(SPIKE_DIR) && mkdir -p build-fesvr-cheri && cd build-fesvr-cheri &&\
   ../fesvr/configure --prefix=`pwd` && $(MAKE) install
 
-$(SPIKE_DIR)/build-cheri/Makefile: $(SPIKE_DIR)/build-fesvr-cheri/Makefile
+$(SPIKE_DIR)/build-cheri/Makefile: $(SPIKE_DIR)/build-fesvr-cheri/libfesvr.so
 	cd $(SPIKE_DIR) && mkdir -p build-cheri && cd build-cheri &&\
   ../configure --with-fesvr=`pwd`/../build-fesvr-cheri --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-cheri128 --enable-mergedrf &&\
   mkdir lib && cp ../build-fesvr-cheri/libfesvr.so lib/
