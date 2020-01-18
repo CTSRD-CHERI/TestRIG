@@ -42,7 +42,7 @@ QCVEngine:
 
 sail-generator:
 	cd vengines/sail-riscv-test-generation &&\
-	make
+	$(MAKE)
 
 .PHONY: clean-vengines clean-QCVEngine
 
@@ -54,7 +54,7 @@ clean-QCVEngine:
 
 clean-sail-generator:
 	cd vengines/sail-riscv-test-generation &&\
-	make clean
+	$(MAKE) clean
 
 # RISCV implementations
 ################################################################################
@@ -108,7 +108,7 @@ SPIKE_DIR=riscv-implementations/riscv-isa-sim
 
 $(SPIKE_DIR)/build-fesvr/Makefile:
 	cd $(SPIKE_DIR) && mkdir -p build-fesvr && cd build-fesvr &&\
-  ../fesvr/configure --prefix=`pwd` && make install
+  ../fesvr/configure --prefix=`pwd` && $(MAKE) install
 
 $(SPIKE_DIR)/build/Makefile: $(SPIKE_DIR)/build-fesvr/Makefile
 	cd $(SPIKE_DIR) && mkdir -p build && cd build &&\
@@ -116,11 +116,11 @@ $(SPIKE_DIR)/build/Makefile: $(SPIKE_DIR)/build-fesvr/Makefile
   mkdir lib && cp ../build-fesvr/libfesvr.so lib/
 
 spike: $(SPIKE_DIR)/build/Makefile
-	cd $(SPIKE_DIR)/build && make install
+	cd $(SPIKE_DIR)/build && $(MAKE) install
 
 $(SPIKE_DIR)/build-fesvr-cheri/Makefile:
 	cd $(SPIKE_DIR) && mkdir -p build-fesvr-cheri && cd build-fesvr-cheri &&\
-  ../fesvr/configure --prefix=`pwd` && make install
+  ../fesvr/configure --prefix=`pwd` && $(MAKE) install
 
 $(SPIKE_DIR)/build-cheri/Makefile: $(SPIKE_DIR)/build-fesvr-cheri/Makefile
 	cd $(SPIKE_DIR) && mkdir -p build-cheri && cd build-cheri &&\
@@ -128,7 +128,7 @@ $(SPIKE_DIR)/build-cheri/Makefile: $(SPIKE_DIR)/build-fesvr-cheri/Makefile
   mkdir lib && cp ../build-fesvr-cheri/libfesvr.so lib/
 
 spike-cheri: $(SPIKE_DIR)/build-cheri/Makefile
-	cd $(SPIKE_DIR)/build-cheri && make install
+	cd $(SPIKE_DIR)/build-cheri && $(MAKE) install
 
 sail: sail-rv32
 
