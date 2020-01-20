@@ -133,10 +133,10 @@ spike-cheri: $(SPIKE_DIR)/build-cheri/Makefile
 sail: sail-rv32
 
 sail-rv32:
-	ARCH=RV32 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
+	ARCH=RV32 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi_RV32
 
 sail-rv64:
-	ARCH=RV64 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi
+	ARCH=RV64 $(MAKE) -C riscv-implementations/sail-riscv c_emulator/riscv_rvfi_RV64
 
 sail-rv32-cheri:
 	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/cheri_riscv_rvfi_RV32
