@@ -260,9 +260,13 @@ main = withSocketsDo $ do
               when (has_a archDesc) $
                 do putStrLn "rv32 A extension Verification:"
                    doCheck (genTest $ repeatTillEnd gen_rv32_a) (nTests flags)
+                   putStrLn "rv32 A Memory Verification:"
+                   doCheck (genTest $ repeatTillEnd gen_rv32_i_a_memory) (nTests flags)
               when (has_a archDesc && has_xlen_64 archDesc) $
                 do putStrLn "rv64 A extension Verification:"
                    doCheck (genTest $ repeatTillEnd gen_rv64_a) (nTests flags)
+                   putStrLn "rv64 A Memory Verification:"
+                   doCheck (genTest $ repeatTillEnd gen_rv64_i_a_memory) (nTests flags)
               when (has_f archDesc) $
                 do putStrLn "rv32 F extension Verification:"
                    doCheck (genTest $ repeatTillEnd gen_rv32_f) (nTests flags)

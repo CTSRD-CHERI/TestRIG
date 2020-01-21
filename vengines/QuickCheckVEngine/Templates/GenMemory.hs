@@ -34,38 +34,62 @@
 
 module Templates.GenMemory (
   gen_rv32_i_memory
+, gen_rv32_i_a_memory
 , gen_rv32_i_zifencei_memory
+, gen_rv32_i_a_zifencei_memory
 , gen_rv64_i_memory
+, gen_rv64_i_a_memory
 , gen_rv64_i_zifencei_memory
+, gen_rv64_i_a_zifencei_memory
 ) where
 
 import InstrCodec
 import Test.QuickCheck
 import RISCV.RV32_I
+import RISCV.RV32_A
 import RISCV.RV32_Zifencei
 import Template
 import Templates.Utils
 
+data GenConf = GenConf { has_a        :: Bool
+                       , has_zifencei :: Bool
+                       , has_xlen_64  :: Bool
+                       }
+
 gen_rv32_i_memory :: Template
-gen_rv32_i_memory = gen_memory False False
+gen_rv32_i_memory = gen_memory False False False
+
+gen_rv32_i_a_memory :: Template
+gen_rv32_i_a_memory = gen_memory True False False
 
 gen_rv32_i_zifencei_memory :: Template
-gen_rv32_i_zifencei_memory = gen_memory True False
+gen_rv32_i_zifencei_memory = gen_memory False True False
+
+gen_rv32_i_a_zifencei_memory :: Template
+gen_rv32_i_a_zifencei_memory = gen_memory True True False
 
 gen_rv64_i_memory :: Template
-gen_rv64_i_memory = gen_memory False True
+gen_rv64_i_memory = gen_memory False False True
+
+gen_rv64_i_a_memory :: Template
+gen_rv64_i_a_memory = gen_memory True False True
 
 gen_rv64_i_zifencei_memory :: Template
-gen_rv64_i_zifencei_memory = gen_memory True True
+gen_rv64_i_zifencei_memory = gen_memory False True True
 
-gen_memory :: Bool -> Bool -> Template
-gen_memory has_zifencei has_xlen_64 = Random $
+gen_rv64_i_a_zifencei_memory :: Template
+gen_rv64_i_a_zifencei_memory = gen_memory True True True
+
+gen_memory :: Bool -> Bool -> Bool -> Template
+gen_memory has_a has_zifencei has_xlen_64 = Random $
   do imm      <- bits 12
      src1     <- src
      src2     <- src
      dest     <- dest
      fenceOp1 <- bits 4
      fenceOp2 <- bits 4
+     aq       <- bits 1
+     rl       <- bits 1
      offset   <- geomBits 11 0
      let insts = [ (8,  Single $ encode addi  offset src1 dest)
                  , (8,  Single $ encode ori   offset src1 dest)
@@ -74,6 +98,7 @@ gen_memory has_zifencei has_xlen_64 = Random $
                  , (8, uniform $ rv32_i_store src1 src2 offset)
                  , (2, uniform $ rv32_i_fence fenceOp1 fenceOp2)
                  ]
+                 ++ if has_a then [(2,  uniform $ rv32_a src1 src2 dest aq rl)] else []
                  ++ if has_zifencei then [(2,  Single $ encode fence_i)] else []
                  ++ if has_xlen_64 then [] else [] -- TODO
      return $ Distribution insts
