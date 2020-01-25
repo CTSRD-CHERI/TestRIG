@@ -1,7 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -56,4 +56,4 @@ genAtomics has_xlen_64 = Random $ do
   dest <- dest
   let insts = rv32_a src1 src2 dest aq rl
               ++ if has_xlen_64 then rv64_a src1 src2 dest aq rl else []
-  return $ uniform insts
+  return $ uniformTemplate insts

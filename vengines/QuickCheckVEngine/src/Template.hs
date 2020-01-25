@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -31,43 +32,86 @@
 -- SUCH DAMAGE.
 --
 
-module Template where
+module Template (
+  Template(..)
+, instSeq
+, instDist
+, uniformTemplate
+, replicateTemplate
+, repeatTemplate
+, repeatTemplateTillEnd
+, genTemplate
+, genTemplateSized
+) where
 
 import Test.QuickCheck
 
-data Template = Empty | Single Integer | Distribution [(Int, Template)] | Sequence [Template] | Random (Gen Template)
-
+-- | 'Template' type to describe sequences of instructions (represented as
+--   'Integer's) to be used as tests
+data Template = Empty
+              | Single Integer
+              | Distribution [(Int, Template)]
+              | Sequence [Template]
+              | Random (Gen Template)
 instance Show Template where
   show Empty = "Empty"
   show (Single x) = "Single (" ++ (show x) ++ ")"
   show (Distribution x) = "Distribution " ++ (show x)
   show (Sequence x) = "Sequence " ++ (show x)
   show (Random x) = "Random (?)"
+instance Semigroup Template where
+  x <> y = Sequence [x, y]
+instance Monoid Template where
+  mempty = Empty
 
---Turn a test template into a single instance of a test
-genTest :: Template -> Gen [Integer]
-genTest x = do {y <- genTestUnsized x; size <- getSize; return $ take size y} --TODO make this an argument
+-- | Turn a list of 'Integer' instructions into a 'Sequence [Template]'
+instSeq :: [Integer] -> Template
+instSeq insts = Sequence (map Single insts)
 
-genTestUnsized :: Template -> Gen [Integer]
-genTestUnsized (Empty) = return []
-genTestUnsized (Single x) = return [x]
-genTestUnsized (Distribution xs) = do {y <- frequency (map (\(a,b) -> (a, return b)) xs); genTest y}
-genTestUnsized (Sequence x) = genSeq x
-genTestUnsized (Random x) = do {y <- x; genTest y}
+-- | Turn a list of '(Int, Integer)' weigthed instructions into a
+--   'Distribution [(Int, Template)]'
+instDist :: [(Int, Integer)] -> Template
+instDist winsts = Distribution $ map (\(w, x) -> (w, Single x)) winsts
 
-genSeq :: [Template] -> Gen [Integer]
-genSeq [] = return []
-genSeq (x:xs) = do {y <- genTest x; ys <- genSeq xs; return $ y ++ ys}
+-- | Turn a list of possibilities into a uniform distribution
+class UniformTemplate t where
+  uniformTemplate :: [t] -> Template
+instance UniformTemplate Template where
+  uniformTemplate options = Distribution $ map (\x -> (1, x)) options
+instance UniformTemplate Integer where
+  uniformTemplate options = Distribution $ map (\x -> (1, Single x)) options
 
---Turn a list of possibilities into a uniform distribution
-uniform :: [Integer] -> Template
-uniform options = Distribution $ map (\x -> (1, Single x)) options
+-- | Replicate a 'Template' a given number of times
+replicateTemplate :: Int -> Template -> Template
+replicateTemplate n template = Sequence $ replicate n template
 
-repeatTest :: Int -> Template -> Template
-repeatTest n temp = Sequence $ replicate n temp
+-- | Repeat a 'Template' an infinite number of times
+repeatTemplate :: Template -> Template
+repeatTemplate template = Sequence $ repeat template
 
--- Note that this requires the argument to always return a list of length 1
-repeatTillEnd :: Template -> Template
-repeatTillEnd temp = Random $ do {
-  size <- getSize;
-  return $ repeatTest size temp}
+-- | Note that this requires the argument to always return a list of length 1
+repeatTemplateTillEnd :: Template -> Template
+repeatTemplateTillEnd template = Random $ do
+  size <- getSize
+  return $ replicateTemplate size template
+
+-- | Turn a 'Template' into a single QuickCheck 'Gen [Integer]' generator
+--   of list of instructions
+genTemplate :: Template -> Gen [Integer]
+genTemplate template = getSize >>= genTemplateSized template
+
+-- | Same as 'genTemplate' but specify the desired size
+genTemplateSized :: Template -> Int -> Gen [Integer]
+genTemplateSized template size = take size <$> genHelper template
+
+-- | Inner helper to implement the 'genTemplate' functions
+genHelper :: Template -> Gen [Integer]
+genHelper Empty = return []
+genHelper (Single x) = return [x]
+genHelper (Distribution xs) = do let xs' = map (\(a, b) -> (a, return b)) xs
+                                 frequency xs' >>= genHelper
+genHelper (Sequence []) = return []
+genHelper (Sequence (x:xs)) = do x'  <- genHelper x
+                                 xs' <- genHelper $ Sequence xs
+                                 return $ x' ++ xs'
+genHelper (Random x) = x >>= genHelper

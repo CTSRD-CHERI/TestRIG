@@ -1,7 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -54,4 +54,4 @@ genMulDiv has_xlen_64 = Random $ do
   dest <- dest
   let insts = rv32_m src1 src2 dest
               ++ if has_xlen_64 then rv64_m src1 src2 dest else []
-  return $ uniform insts
+  return $ uniformTemplate insts

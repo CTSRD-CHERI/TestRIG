@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -93,12 +93,18 @@ gen_memory has_a has_zifencei has_xlen_64 = Random $
      offset   <- geomBits 11 0
      let insts = [ (8,  Single $ encode addi  offset src1 dest)
                  , (8,  Single $ encode ori   offset src1 dest)
-                 , (16, Sequence ( [Single ( encode lui   0x40004 dest ), Single ( encode slli 1 dest dest )]) )
-                 , (8, uniform $ rv32_i_load  src1 dest offset)
-                 , (8, uniform $ rv32_i_store src1 src2 offset)
-                 , (2, uniform $ rv32_i_fence fenceOp1 fenceOp2)
+                 , (16, instSeq [ encode lui   0x40004 dest
+                                , encode slli 1 dest dest ])
+                 , (8, uniformTemplate $ rv32_i_load  src1 dest offset)
+                 , (8, uniformTemplate $ rv32_i_store src1 src2 offset)
+                 , (2, uniformTemplate $ rv32_i_fence fenceOp1 fenceOp2)
                  ]
-                 ++ if has_a then [(2,  uniform $ rv32_a src1 src2 dest aq rl)] else []
-                 ++ if has_zifencei then [(2,  Single $ encode fence_i)] else []
-                 ++ if has_xlen_64 then [] else [] -- TODO
+                 ++ if has_a
+                      then [(2, uniformTemplate $ rv32_a src1 src2 dest aq rl)]
+                      else []
+                 ++ if has_zifencei
+                      then [(2,  Single $ encode fence_i)]
+                      else []
+                 ++ if has_xlen_64
+                      then [] else [] -- TODO
      return $ Distribution insts

@@ -1,7 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -69,4 +69,4 @@ genFP has_d has_xlen_64 = Random $ do
               ++ if has_xlen_64 then rv64_f src1 dest rm else []
               ++ if has_d then rv32_d src1 src2 src3 dest rm imm else []
               ++ if has_d && has_xlen_64 then rv64_d src1 dest rm else []
-  return $ uniform insts
+  return $ uniformTemplate insts

@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -40,19 +41,21 @@ import RISCV.RV32_I
 import Templates.Utils
 
 randomTest :: Template
-randomTest = Random $ do {
-    remaining <- getSize;
-    repeats <- bits 7;
-    srcAddr <- src;
-    srcData <- src;
-    dest <- dest;
-    imm <- (bits 12);
-    longImm <- (bits 20);
-    fenceOp1 <- (bits 4);
-    fenceOp2 <- (bits 4);
-    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
-    let test =  Distribution [(if remaining > 10 then 1 else 0, legalLoad),
-                              (if remaining > 10 then 1 else 0, legalStore),
-                              (10, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2), --TODO re-add csrs
-                              (if remaining > 10 then 1 else 0, surroundWithMemAccess randomTest)] in
-        if remaining > 10 then return $ Sequence [test, randomTest] else return test}
+randomTest = Random $ do
+  remaining <- getSize
+  repeats   <- bits 7
+  srcAddr   <- src
+  srcData   <- src
+  dest      <- dest
+  imm       <- (bits 12)
+  longImm   <- (bits 20)
+  fenceOp1  <- (bits 4)
+  fenceOp2  <- (bits 4)
+  csrAddr   <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
+  let test = Distribution [ (if remaining > 10 then 1 else 0, legalLoad)
+                          , (if remaining > 10 then 1 else 0, legalStore)
+                          , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) --TODO re-add csrs
+                          , (if remaining > 10 then 1 else 0, surroundWithMemAccess randomTest) ]
+  if remaining > 10
+    then return $ test <> randomTest
+    else return test

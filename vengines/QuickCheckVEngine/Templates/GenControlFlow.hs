@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -46,21 +46,19 @@ gen_rv32_i_controlflow :: Template
 gen_rv32_i_controlflow = genControlFlow
 
 genControlFlow :: Template
-genControlFlow = Random $
-  do imm     <- bits 12
-     src1    <- src
-     src2    <- src
-     dest    <- dest
-     longImm <- bits 20
-     offset  <- geomBits 11 2
-     let insts = [ (8, Single $ encode addi  offset src1 dest)
-                 , (8, Single $ encode ori   offset src1 dest)
-                 , (8, Single $ encode auipc longImm dest)
-                 , (8, Single $ encode jal   longImm dest)
-                 , (8, Single $ encode jalr  imm src1 dest)
-                 , (8, Single $ encode beq   imm src1 src2)
-                 , (8, Single $ encode bne   imm src1 src2)
-                 , (8, Single $ encode bge   imm src1 src2)
-                 , (8, Single $ encode bgeu  imm src1 src2)
-                 ]
-     return $ Distribution insts
+genControlFlow = Random $ do
+  imm     <- bits 12
+  src1    <- src
+  src2    <- src
+  dest    <- dest
+  longImm <- bits 20
+  offset  <- geomBits 11 2
+  return $ instDist [ (8, encode addi  offset src1 dest)
+                    , (8, encode ori   offset src1 dest)
+                    , (8, encode auipc longImm dest)
+                    , (8, encode jal   longImm dest)
+                    , (8, encode jalr  imm src1 dest)
+                    , (8, encode beq   imm src1 src2)
+                    , (8, encode bne   imm src1 src2)
+                    , (8, encode bge   imm src1 src2)
+                    , (8, encode bgeu  imm src1 src2) ]

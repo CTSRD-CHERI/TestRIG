@@ -2,6 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -41,150 +42,152 @@ import Template
 import Templates.Utils
 
 randomCHERITest :: Template
-randomCHERITest = Random $ do {
-    remaining <- getSize;
-    repeats <- bits 7;
-    srcAddr <- src;
-    srcData <- src;
-    tmpReg <- src;
-    tmpReg2 <- src;
-    dest <- dest;
-    imm <- bits 12;
-    mop <- bits 5;
-    longImm <- (bits 20);
-    fenceOp1 <- (bits 4);
-    fenceOp2 <- (bits 4);
-    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
-    srcScr <- elements [28, 29, 30, 31];
-    let test =  Distribution [(if remaining > 10 then 5 else 0, legalLoad),
-                              (if remaining > 10 then 5 else 0, legalStore),
-                              (if remaining > 10 then 5 else 0, legalCapLoad srcAddr dest),
-                              (if remaining > 10 then 5 else 0, legalCapStore srcAddr),
-                              (10, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2), -- TODO add csr
-                              (10, uniform $ rv32_xcheri srcAddr srcData srcScr imm mop dest),
-                              (10, Single $ encode cspecialrw srcScr srcAddr dest),
-                              (10, switchEncodingMode),
-                              (10, cspecialRWChain),
-                              (20, randomCCall srcAddr srcData tmpReg tmpReg2),
-                              (if remaining > 10 then 1 else 0, surroundWithMemAccess randomCHERITest)] in
-        if remaining > 10 then return $ Sequence [test, randomCHERITest] else return test}
+randomCHERITest = Random $ do
+    remaining <- getSize
+    repeats   <- bits 7
+    srcAddr   <- src
+    srcData   <- src
+    tmpReg    <- src
+    tmpReg2   <- src
+    dest      <- dest
+    imm       <- bits 12
+    mop       <- bits 5
+    longImm   <- (bits 20)
+    fenceOp1  <- (bits 4)
+    fenceOp2  <- (bits 4)
+    csrAddr   <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)]
+    srcScr    <- elements [28, 29, 30, 31]
+    let test =  Distribution [ (if remaining > 10 then 5 else 0, legalLoad)
+                             , (if remaining > 10 then 5 else 0, legalStore)
+                             , (if remaining > 10 then 5 else 0, legalCapLoad srcAddr dest)
+                             , (if remaining > 10 then 5 else 0, legalCapStore srcAddr)
+                             , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) -- TODO add csr
+                             , (10, uniformTemplate $ rv32_xcheri srcAddr srcData srcScr imm mop dest)
+                             , (10, Single $ encode cspecialrw srcScr srcAddr dest)
+                             , (10, switchEncodingMode)
+                             , (10, cspecialRWChain)
+                             , (20, randomCCall srcAddr srcData tmpReg tmpReg2)
+                             , (if remaining > 10 then 1 else 0, surroundWithMemAccess randomCHERITest) ]
+    if remaining > 10
+      then return $ test <> randomCHERITest
+      else return test
 
-randomCCall pccReg idcReg typeReg tmpReg = Sequence [
-       Distribution [(1, Sequence [Single $ encode addi 0xffd 0 tmpReg, Single $ encode candperm tmpReg pccReg pccReg]), (9, Empty)] -- clear X perm?
-     , Distribution [(9, Sequence [Single $ encode addi 0xffd 0 tmpReg, Single $ encode candperm tmpReg idcReg idcReg]), (1, Empty)]
-     , Distribution [(1, Sequence [Single $ encode addi 0xeff 0 tmpReg, Single $ encode candperm tmpReg pccReg pccReg]), (9, Empty)] -- clear CCall perm?
-     , Distribution [(1, Sequence [Single $ encode addi 0xeff 0 tmpReg, Single $ encode candperm tmpReg idcReg idcReg]), (9, Empty)]
-     , Distribution [(9, Single $ encode cseal typeReg pccReg pccReg), (1, Empty)] -- seal?
-     , Distribution [(9, Single $ encode cseal typeReg idcReg idcReg), (1, Empty)]
-     , Single $ encode ccall idcReg pccReg
-     , Single $ encode cmove 31 1
-  ]
+randomCCall pccReg idcReg typeReg tmpReg =
+     Distribution [ (1, instSeq [ encode addi 0xffd 0 tmpReg
+                                , encode candperm tmpReg pccReg pccReg ])
+                  , (9, Empty) ] -- clear X perm?
+  <> Distribution [ (9, instSeq [ encode addi 0xffd 0 tmpReg
+                                , encode candperm tmpReg idcReg idcReg ])
+                  , (1, Empty) ]
+  <> Distribution [ (1, instSeq [ encode addi 0xeff 0 tmpReg
+                                , encode candperm tmpReg pccReg pccReg ])
+                  , (9, Empty) ] -- clear CCall perm?
+  <> Distribution [ (1, instSeq [ encode addi 0xeff 0 tmpReg
+                                , encode candperm tmpReg idcReg idcReg ])
+                  , (9, Empty) ]
+  <> Distribution [ (9, Single $ encode cseal typeReg pccReg pccReg)
+                  , (1, Empty) ] -- seal?
+  <> Distribution [ (9, Single $ encode cseal typeReg idcReg idcReg)
+                  , (1, Empty) ]
+  <> instSeq [ encode ccall idcReg pccReg
+             , encode cmove 31 1 ]
 
-legalCapLoad addrReg targetReg = Random $ do {
-    tmpReg <- src;
-    return $ Sequence [
-       Single $ encode andi 0xff addrReg addrReg
-     , Single $ encode lui 0x40004 tmpReg
-     , Single $ encode slli 1 tmpReg tmpReg
-     , Single $ encode add addrReg tmpReg addrReg
-     , Single $ encode cload 0x17 addrReg targetReg
-]}
+legalCapLoad addrReg targetReg = Random $ do
+  tmpReg <- src
+  return $ instSeq [ encode andi 0xff addrReg addrReg
+                   , encode lui 0x40004 tmpReg
+                   , encode slli 1 tmpReg tmpReg
+                   , encode add addrReg tmpReg addrReg
+                   , encode cload 0x17 addrReg targetReg ]
 
-legalCapStore addrReg = Random $ do {
-    tmpReg <- src;
-    dataReg <- dest;
-    return $ Sequence [
-       Single $ encode andi 0xff addrReg addrReg
-     , Single $ encode lui 0x40004 tmpReg
-     , Single $ encode slli 1 tmpReg tmpReg
-     , Single $ encode add addrReg tmpReg addrReg
-     , Single $ encode cstore dataReg addrReg 0x4
-  ]}
+legalCapStore addrReg = Random $ do
+  tmpReg  <- src
+  dataReg <- dest
+  return $ instSeq [ encode andi 0xff addrReg addrReg
+                   , encode lui 0x40004 tmpReg
+                   , encode slli 1 tmpReg tmpReg
+                   , encode add addrReg tmpReg addrReg
+                   , encode cstore dataReg addrReg 0x4 ]
 
-switchEncodingMode = Random $ do {
-     tmpReg1 <- src;
-     tmpReg2 <- src;
-     mode <- elements [0, 1];
-     return $ Sequence [
-     Single $ encode cspecialrw 0 0 tmpReg1,
-     Single $ encode addi mode 0 tmpReg2,
-     Single $ encode csetflags tmpReg2 tmpReg1 tmpReg1,
-     Single $ encode cspecialrw 28 tmpReg1 0, --Also write trap vector so we stay in cap mode
-     Single $ encode cjalr tmpReg1 0
-     ]}
+switchEncodingMode = Random $ do
+  tmpReg1 <- src
+  tmpReg2 <- src
+  mode    <- elements [0, 1]
+  return $ instSeq [ encode cspecialrw 0 0 tmpReg1
+                   , encode addi mode 0 tmpReg2
+                   , encode csetflags tmpReg2 tmpReg1 tmpReg1
+                   , encode cspecialrw 28 tmpReg1 0 --Also write trap vector so we stay in cap mode
+                   , encode cjalr tmpReg1 0 ]
 
-cspecialRWChain = Random $ do {
-     tmpReg1 <- src;
-     tmpReg2 <- src;
-     tmpReg3 <- src;
-     tmpReg4 <- src;
-     tmpReg5 <- src;
-     tmpReg6 <- src;
-     return $ Sequence [
-     Single $ encode cspecialrw 30 tmpReg1 tmpReg2,
-     Single $ encode cjalr      tmpReg2 0,
-     Single $ encode cspecialrw 30 tmpReg3 tmpReg4,
-     Single $ encode cspecialrw 30 tmpReg5 tmpReg6]}
+cspecialRWChain = Random $ do
+  tmpReg1 <- src
+  tmpReg2 <- src
+  tmpReg3 <- src
+  tmpReg4 <- src
+  tmpReg5 <- src
+  tmpReg6 <- src
+  return $ instSeq [ encode cspecialrw 30 tmpReg1 tmpReg2
+                   , encode cjalr      tmpReg2 0
+                   , encode cspecialrw 30 tmpReg3 tmpReg4
+                   , encode cspecialrw 30 tmpReg5 tmpReg6 ]
 
 tagCacheTest :: Template
-tagCacheTest = Random $ do {
-    addrReg <- src;
-    targetReg <- dest;
-    return $ Sequence [legalCapStore addrReg, legalCapLoad addrReg targetReg, Single $ encode cgettag targetReg targetReg]}
+tagCacheTest = Random $ do
+  addrReg   <- src
+  targetReg <- dest
+  return $     legalCapStore addrReg
+            <> legalCapLoad addrReg targetReg
+            <> Single (encode cgettag targetReg targetReg)
 
 genCHERIinspection :: Template
-genCHERIinspection = Random $ do {
-    srcAddr <- src;
-    srcData <- src;
-    dest <- dest;
-    imm <- bits 12;
-    longImm <- bits 20;
-    fenceOp1 <- bits 3;
-    fenceOp2 <- bits 3;
-    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
-    return $ Distribution[
-      (1, uniform $ rv32_xcheri_inspection srcAddr dest)
-    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
+genCHERIinspection = Random $ do
+  srcAddr  <- src
+  srcData  <- src
+  dest     <- dest
+  imm      <- bits 12
+  longImm  <- bits 20
+  fenceOp1 <- bits 3
+  fenceOp2 <- bits 3
+  csrAddr  <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
+  return $ Distribution [ (1, uniformTemplate $ rv32_xcheri_inspection srcAddr dest)
+                        , (1, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) ] -- TODO add csr
 
 genCHERIarithmetic :: Template
-genCHERIarithmetic = Random $ do {
-    srcAddr <- src;
-    srcData <- src;
-    dest <- dest;
-    imm <- bits 12;
-    longImm <- bits 20;
-    fenceOp1 <- bits 3;
-    fenceOp2 <- bits 3;
-    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
-    return $ Distribution[
-      (1, uniform $ rv32_xcheri_arithmetic srcAddr srcData imm dest)
-    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
+genCHERIarithmetic = Random $ do
+  srcAddr  <- src
+  srcData  <- src
+  dest     <- dest
+  imm      <- bits 12
+  longImm  <- bits 20
+  fenceOp1 <- bits 3
+  fenceOp2 <- bits 3
+  csrAddr  <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
+  return $ Distribution [ (1, uniformTemplate $ rv32_xcheri_arithmetic srcAddr srcData imm dest)
+                        , (1, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) ] -- TODO add csr
 
 genCHERImisc :: Template
-genCHERImisc = Random $ do {
-    srcAddr <- src;
-    srcData <- src;
-    dest <- dest;
-    imm <- bits 12;
-    longImm <- bits 20;
-    fenceOp1 <- bits 3;
-    fenceOp2 <- bits 3;
-    srcScr <- elements [0, 1, 28, 29, 30, 31];
-    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
-    return $ Distribution[
-      (1, uniform $ rv32_xcheri_misc srcAddr srcData srcScr imm dest)
-    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
+genCHERImisc = Random $ do
+  srcAddr  <- src
+  srcData  <- src
+  dest     <- dest
+  imm      <- bits 12
+  longImm  <- bits 20
+  fenceOp1 <- bits 3
+  fenceOp2 <- bits 3
+  srcScr   <- elements [0, 1, 28, 29, 30, 31]
+  csrAddr  <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
+  return $ Distribution [ (1, uniformTemplate $ rv32_xcheri_misc srcAddr srcData srcScr imm dest)
+                        , (1, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) ] -- TODO add csr
 
 genCHERIcontrol :: Template
-genCHERIcontrol = Random $ do {
-    srcAddr <- src;
-    srcData <- src;
-    dest <- dest;
-    imm <- bits 12;
-    longImm <- bits 20;
-    fenceOp1 <- bits 3;
-    fenceOp2 <- bits 3;
-    csrAddr <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)];
-    return $ Distribution[
-      (1, uniform $ rv32_xcheri_control srcAddr srcData dest)
-    , (1, uniform $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2)]} -- TODO add csr
+genCHERIcontrol = Random $ do
+  srcAddr  <- src
+  srcData  <- src
+  dest     <- dest
+  imm      <- bits 12
+  longImm  <- bits 20
+  fenceOp1 <- bits 3
+  fenceOp2 <- bits 3
+  csrAddr  <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
+  return $ Distribution [ (1, uniformTemplate $ rv32_xcheri_control srcAddr srcData dest)
+                        , (1, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) ] -- TODO add csr

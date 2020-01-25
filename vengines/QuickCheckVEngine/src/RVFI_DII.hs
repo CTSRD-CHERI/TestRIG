@@ -3,7 +3,7 @@
 --
 -- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2018 Jonathan Woodruff
--- Copyright (c) 2018 Alexandre Joannou
+-- Copyright (c) 2018, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -85,7 +85,7 @@ instance Num RVFI_DII_Instruction where
 
 instance Arbitrary RVFI_DII_Instruction where
   arbitrary = do
-    inst <- genTest gen_rv32_i_arithmetic
+    inst <- genTemplate gen_rv32_i_arithmetic
     return RVFI_DII_Instruction {
       padding   = 0,
       rvfi_cmd  = rvfi_cmd_instruction,

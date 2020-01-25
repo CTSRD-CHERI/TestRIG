@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -45,23 +45,22 @@ import Template
 import Templates.Utils
 
 gen_rv32_i_arithmetic :: Template
-gen_rv32_i_arithmetic = Random $
-  do imm  <- bits 12
-     src1 <- src
-     src2 <- src
-     dest <- dest
-     lImm <- bits 20
-     return $ Distribution [ (4, prepReg32 dest)
-                           , (8, uniform $ rv32_i_arith src1 src2 dest imm lImm)
-                           ]
+gen_rv32_i_arithmetic = Random $ do
+  imm  <- bits 12
+  src1 <- src
+  src2 <- src
+  dest <- dest
+  lImm <- bits 20
+  return $ Distribution [ (4, prepReg32 dest)
+                        , (8, uniformTemplate $ rv32_i_arith src1 src2 dest imm lImm) ]
 
 gen_rv64_i_arithmetic :: Template
-gen_rv64_i_arithmetic = Random $
-  do imm  <- bits 12
-     src1 <- src
-     src2 <- src
-     dest <- dest
-     return $ Distribution [ (4, prepReg64 dest)
-                           , (8, gen_rv32_i_arithmetic)
-                           , (8, uniform $ rv64_i_arith src1 src2 dest imm)
-                           ]
+gen_rv64_i_arithmetic = Random $ do
+  imm  <- bits 12
+  src1 <- src
+  src2 <- src
+  dest <- dest
+  return $ Distribution [ (4, prepReg64 dest)
+                        , (8, gen_rv32_i_arithmetic)
+                        , (8, uniformTemplate $ rv64_i_arith src1 src2 dest imm)
+                        ]

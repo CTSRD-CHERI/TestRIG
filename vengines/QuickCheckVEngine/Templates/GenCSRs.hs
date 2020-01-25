@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2019 Peter Rugg
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -50,4 +50,4 @@ gen_rv32_i_zicsr = Random $
      dest      <- dest
      -- TODO mix csr instructions with some i instructions
      let insts = rv32_zicsr src1 dest any_csr uimm
-     return $ uniform insts
+     return $ uniformTemplate insts

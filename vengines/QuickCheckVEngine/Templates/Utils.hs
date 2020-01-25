@@ -4,7 +4,7 @@
 -- Copyright (c) 2018 Jonathan Woodruff
 -- Copyright (c) 2018 Matthew Naylor
 -- Copyright (c) 2019 Peter Rugg
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -90,62 +90,60 @@ memOffset = oneof [return 0, return 1, return 64, return 65]
 
 -- Memory load Template
 loadOp :: Integer -> Integer -> Template
-loadOp reg dest = uniform $ rv32_i_load reg dest 0
+loadOp reg dest = uniformTemplate $ rv32_i_load reg dest 0
 
 -- Memory store Template
 storeOp :: Integer -> Integer -> Template
-storeOp regAddr regData = uniform $ rv32_i_store regAddr regData 0
+storeOp regAddr regData = uniformTemplate $ rv32_i_store regAddr regData 0
 
 storeToAddress :: Integer -> Integer -> Integer -> Integer -> Integer -> Template
-storeToAddress regAddr regData offset value shift = Sequence [
-    Single $ encode addi value 0 regData
-  , Single $ encode slli shift regData regData
-  , Single $ encode lui 0x40004 regAddr
-  , Single $ encode slli 1 regAddr regAddr
-  , Single $ encode addi offset regAddr regAddr
-  , storeOp regAddr regData]
+storeToAddress regAddr regData offset value shift =
+  instSeq [ encode addi value 0 regData
+          , encode slli shift regData regData
+          , encode lui 0x40004 regAddr
+          , encode slli 1 regAddr regAddr
+          , encode addi offset regAddr regAddr ]
+  <> storeOp regAddr regData
 
 loadFromAddress :: Integer -> Integer -> Integer -> Template
-loadFromAddress reg offset dest = Sequence [
-    Single $ encode lui 0x40004 reg
-  , Single $ encode slli 1 reg reg
-  , Single (encode addi offset reg reg)
-  , loadOp reg dest]
+loadFromAddress reg offset dest =
+  instSeq [ encode lui 0x40004 reg
+          , encode slli 1 reg reg
+          , encode addi offset reg reg ]
+  <> loadOp reg dest
 
 surroundWithMemAccess :: Template -> Template
-surroundWithMemAccess x = Random $ do {
-                                   regAddr <- dest;
-                                   regData <- dest;
-                                   offset <- bits 8;
-                                   value <- bits 12;
-                                   shift <- bits 6;
-                                   return $ Sequence [storeToAddress regAddr regData offset value shift, x, loadFromAddress regAddr offset regData]}
+surroundWithMemAccess x = Random $ do
+  regAddr <- dest
+  regData <- dest
+  offset  <- bits 8
+  value   <- bits 12
+  shift   <- bits 6
+  return $    storeToAddress regAddr regData offset value shift
+           <> x
+           <> loadFromAddress regAddr offset regData
 
 legalLoad :: Template
-legalLoad = Random $ do {
-    tmpReg <- src;
-    addrReg <- src;
-    targetReg <- dest;
-    return $ Sequence [
-       Single $ encode andi 0xff addrReg addrReg
-     , Single $ encode lui 0x40004 tmpReg
-     , Single $ encode slli 1 tmpReg tmpReg
-     , Single $ encode add addrReg tmpReg addrReg
-     , loadOp addrReg targetReg
-]}
+legalLoad = Random $ do
+  tmpReg    <- src
+  addrReg   <- src
+  targetReg <- dest
+  return $ instSeq [ encode andi 0xff addrReg addrReg
+                   , encode lui 0x40004 tmpReg
+                   , encode slli 1 tmpReg tmpReg
+                   , encode add addrReg tmpReg addrReg ]
+           <> loadOp addrReg targetReg
 
 legalStore :: Template
-legalStore = Random $ do {
-    tmpReg <- src;
-    addrReg <- src;
-    dataReg <- dest;
-    return $ Sequence [
-       Single $ encode andi 0xff addrReg addrReg
-     , Single $ encode lui 0x40004 tmpReg
-     , Single $ encode slli 1 tmpReg tmpReg
-     , Single $ encode add addrReg tmpReg addrReg
-     , storeOp dataReg addrReg
-]}
+legalStore = Random $ do
+  tmpReg  <- src
+  addrReg <- src
+  dataReg <- dest
+  return $ instSeq [ encode andi 0xff addrReg addrReg
+                   , encode lui 0x40004 tmpReg
+                   , encode slli 1 tmpReg tmpReg
+                   , encode add addrReg tmpReg addrReg ]
+           <> storeOp dataReg addrReg
 
 loadImm32 dst imm = Sequence [ Single $ encode addi ((shift imm (-21)) Data.Bits..&. 0x7FF) 0 dst
                              , Single $ encode slli 11 dst dst
@@ -154,11 +152,11 @@ loadImm32 dst imm = Sequence [ Single $ encode addi ((shift imm (-21)) Data.Bits
                              , Single $ encode addi (imm Data.Bits..&. 0x3FF) dst dst]
 
 prepReg32 :: Integer -> Template
-prepReg32 dst = Random $ do imm       <- bits 32
+prepReg32 dst = Random $ do imm <- bits 32
                             return (loadImm32 dst imm)
 
 prepReg64 :: Integer -> Template
-prepReg64 dst = repeatTest 6 $ Random $ do val <- bits 12
-                                           return $ Sequence [ Single $ encode slli  12 dst dst
-                                                             , Single $ encode xori val dst dst
-                                                             ]
+prepReg64 dst = replicateTemplate 6 $ Random $ do
+  val <- bits 12
+  return $ instSeq [ encode slli  12 dst dst
+                   , encode xori val dst dst ]
