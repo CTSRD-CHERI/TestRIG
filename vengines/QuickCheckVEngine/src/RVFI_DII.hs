@@ -83,16 +83,6 @@ instance Num RVFI_DII_Instruction where
   signum = error "signum is not defined on RVFI_DII_Instruction"
   negate = error "negate is not defined on RVFI_DII_Instruction"
 
-instance Arbitrary RVFI_DII_Instruction where
-  arbitrary = do
-    inst <- genTemplate gen_rv32_i_arithmetic
-    return RVFI_DII_Instruction {
-      padding   = 0,
-      rvfi_cmd  = rvfi_cmd_instruction,
-      rvfi_time = 1,
-      rvfi_ins_insn = fromInteger $ head inst
-    }
-
 inst_to_rvfi_dii :: Integer -> RVFI_DII_Instruction
 inst_to_rvfi_dii inst = RVFI_DII_Instruction {
     padding   = 0,
@@ -106,14 +96,14 @@ instance Show RVFI_DII_Instruction where
                ++ " # " ++ pretty (toInteger (rvfi_ins_insn inst_tok))
   showList inst_toks = showString (unlines (map show inst_toks))
 
-read_rvfi_inst_trace :: [String] -> [RVFI_DII_Instruction]
+read_rvfi_inst_trace :: [String] -> TestCase
 read_rvfi_inst_trace inStr =
   let lns = map (head . (splitOn "#")) inStr in           -- Remove comments
   let trimmed = filter (not . null) lns in                -- Remove empty lines
   let insts = map ((drop 2) .(!! 1) . words) trimmed in   -- Take only encoded instruction
-  map (fromInteger . fst . head . readHex) insts
+  toTestCase $ map (fst . head . readHex) insts
 
-read_rvfi_inst_trace_file :: FilePath -> IO [RVFI_DII_Instruction]
+read_rvfi_inst_trace_file :: FilePath -> IO TestCase
 read_rvfi_inst_trace_file inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
@@ -126,23 +116,22 @@ data_array_to_template :: [Integer] -> Template
 data_array_to_template words = Sequence [ loadImm32 1 (head words)
                                         , Sequence $ map (\word -> Sequence [loadImm32 2 (byte_swap_integer word), Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
 
-read_rvfi_data :: [String] -> Gen [RVFI_DII_Instruction]
+read_rvfi_data :: [String] -> Gen TestCase
 read_rvfi_data inStr = do
   let lns = map words inStr
-  seq <- genTestUnsized $ Sequence ((map (data_array_to_template . (map (fst . head . readHex))) lns)
+  genTemplateUnsized $ Sequence ((map (data_array_to_template . (map (fst . head . readHex))) lns)
                                     ++ [ loadImm32 1 2147483648
                                        , Single $ InstrCodec.encode jalr 0 1 0 ])
-  return $ map fromInteger seq
 
-read_rvfi_data_file :: FilePath -> IO [RVFI_DII_Instruction]
+read_rvfi_data_file :: FilePath -> IO TestCase
 read_rvfi_data_file inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
   let lns = length $ map (data_array_to_template . (map (fst . head . readHex))) (map words (lines contents))
   putStrLn $ "Inst list for loading file \n" ++ (show lns)
-  list <- generate $ read_rvfi_data (lines contents)
-  putStrLn $ show (length list)
-  return list
+  testCase <- generate $ read_rvfi_data (lines contents)
+  putStrLn $ show (testCaseInstCount testCase)
+  return testCase
 
 data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_intr :: Word8,

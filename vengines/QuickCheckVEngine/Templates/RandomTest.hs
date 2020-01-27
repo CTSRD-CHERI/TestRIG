@@ -40,8 +40,8 @@ import Test.QuickCheck
 import RISCV.RV32_I
 import Templates.Utils
 
-randomTest :: Template
-randomTest = Random $ do
+genRandomTest :: Gen Template
+genRandomTest = do
   remaining <- getSize
   repeats   <- bits 7
   srcAddr   <- src
@@ -52,10 +52,15 @@ randomTest = Random $ do
   fenceOp1  <- (bits 4)
   fenceOp2  <- (bits 4)
   csrAddr   <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
+  thisNested <- resize (remaining - 1) genRandomTest
   let test = Distribution [ (if remaining > 10 then 1 else 0, legalLoad)
                           , (if remaining > 10 then 1 else 0, legalStore)
                           , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) --TODO re-add csrs
-                          , (if remaining > 10 then 1 else 0, surroundWithMemAccess randomTest) ]
+                          , (if remaining > 10 then 1 else 0, surroundWithMemAccess thisNested) ]
   if remaining > 10
-    then return $ test <> randomTest
+    then do nextNested <- resize (remaining `div` 2) genRandomTest
+            return $ test <> nextNested
     else return test
+
+randomTest :: Template
+randomTest = Random genRandomTest

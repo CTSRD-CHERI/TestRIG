@@ -316,7 +316,7 @@ main = withSocketsDo $ do
               putStrLn "Random Template:"
               doCheck (genTemplate $ repeatTemplateTillEnd randomTest) (nTests flags)
             Just sock -> do
-              doCheck (listOf $ genInstrServer sock) (nTests flags)
+              doCheck (listOf $ liftM (\x -> TS False x) $ listOf $ genInstrServer sock) (nTests flags)
   --
   close socA
   close socB
@@ -396,7 +396,7 @@ sendInstruction sock inst = do
 -- Receive a fixed number of bytes
 receiveBlocking :: Int64 -> Socket -> IO(BS.ByteString)
 receiveBlocking n sock = if toInteger(n) == 0 then return empty else do
-  received <- recv sock n;
+  received  <- recv sock n
   remainder <- receiveBlocking (n - BS.length(received)) sock
   return $ BS.append received remainder
 
