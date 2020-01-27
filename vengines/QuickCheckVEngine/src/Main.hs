@@ -86,33 +86,35 @@ import Templates.GenCHERI
 -- command line arguments
 --------------------------------------------------------------------------------
 data Options = Options
-    { optVerbose    :: Bool
-    , nTests        :: Int
-    , impAPort      :: String
-    , impAIP        :: String
-    , impBPort      :: String
-    , impBIP        :: String
-    , instTraceFile :: Maybe FilePath
-    , instDirectory :: Maybe FilePath
-    , arch          :: ArchDesc
-    , instrPort     :: Maybe String
-    , saveDir       :: Maybe FilePath
-    , timeoutDelay  :: Int
+    { optVerbose     :: Bool
+    , nTests         :: Int
+    , impAPort       :: String
+    , impAIP         :: String
+    , impBPort       :: String
+    , impBIP         :: String
+    , instTraceFile  :: Maybe FilePath
+    , instDirectory  :: Maybe FilePath
+    , memoryInitFile :: Maybe FilePath
+    , arch           :: ArchDesc
+    , instrPort      :: Maybe String
+    , saveDir        :: Maybe FilePath
+    , timeoutDelay   :: Int
     } deriving Show
 
 defaultOptions = Options
-    { optVerbose    = False
-    , nTests        = 100
-    , impAPort      = "5000"
-    , impAIP        = "127.0.0.1"
-    , impBPort      = "5001"
-    , impBIP        = "127.0.0.1"
-    , instTraceFile = Nothing
-    , instDirectory = Nothing
-    , arch          = archDesc_rv32i
-    , instrPort     = Nothing
-    , saveDir       = Nothing
-    , timeoutDelay  = 20000000 -- 20 seconds
+    { optVerbose     = False
+    , nTests         = 100
+    , impAPort       = "5000"
+    , impAIP         = "127.0.0.1"
+    , impBPort       = "5001"
+    , impBIP         = "127.0.0.1"
+    , instTraceFile  = Nothing
+    , instDirectory  = Nothing
+    , memoryInitFile = Nothing
+    , arch           = archDesc_rv32i
+    , instrPort      = Nothing
+    , saveDir        = Nothing
+    , timeoutDelay   = 6000000000 -- 60 seconds
     }
 
 options :: [OptDescr (Options -> Options)]
@@ -141,6 +143,9 @@ options =
   , Option ['d']     ["trace-directory"]
       (ReqArg (\ f opts -> opts { instDirectory = Just f }) "PATH")
         "Specify PATH a directory which contains trace files to replay"
+  , Option ['m']     ["memory-init-file"]
+      (ReqArg (\ f opts -> opts { memoryInitFile = Just f }) "PATH")
+        "Specify PATH a processed objdump file (e.g. 8000f420 2ed632d8 36da3adc 3edec2c0 c6c2cac4) to use as the initial contents of memory"
   , Option ['r']     ["architecture"]
       (ReqArg (\ f opts -> opts { arch = fromString f }) "ARCHITECTURE")
         "Specify ARCHITECTURE to be verified (e.g. 32i)"
@@ -219,22 +224,26 @@ main = withSocketsDo $ do
               writeFile (dir ++ "/failure" ++ (show (remainingTests - (numTests result))) ++ ".S") ("# Automatically generated failing test case" ++ "\n" ++ (unlines (failingTestCase result)))
               checkGen gen (remainingTests - (numTests result))
         other -> return 0
-  let checkFile (fileName :: FilePath) = do
-      putStrLn $ "Reading trace from " ++ fileName ++ ":"
+  let checkFile (memoryInitFile :: Maybe FilePath) (fileName :: FilePath) = do
+      putStrLn $ "Reading trace from " ++ fileName
       trace <- read_rvfi_inst_trace_file fileName
-      checkSingle trace
+      initTrace <- case (memoryInitFile) of
+        Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
+                           read_rvfi_data_file memInit
+        Nothing -> return []
+      checkSingle $ initTrace ++ trace
   --
   success <- newIORef 0
   let doCheck a b = do result <- checkGen a b
                        modifyIORef success ((+) result)
   case (instTraceFile flags) of
     Just fileName -> do
-      checkFile fileName
+      checkFile (memoryInitFile flags) fileName
     Nothing -> do
       case (instDirectory flags) of
         Just directory -> do
           fileNames <- System.FilePath.Find.find always (extension ==? ".S") directory
-          mapM_ checkFile fileNames
+          mapM_ (checkFile Nothing) fileNames
         Nothing -> do
           case instrSoc of
             Nothing -> do

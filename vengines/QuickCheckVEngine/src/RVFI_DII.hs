@@ -55,6 +55,9 @@ import Text.Printf
 import Data.List.Split
 import Template
 import Templates.GenArithmetic
+import Templates.Utils
+import InstrCodec
+import System.IO.Unsafe
 
 rvfi_cmd_instruction = 1 :: Word8
 rvfi_cmd_end = 0 :: Word8
@@ -115,6 +118,28 @@ read_rvfi_inst_trace_file inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
   return $ read_rvfi_inst_trace (lines contents)
+
+data_array_to_template :: [Integer] -> Template
+data_array_to_template words = Sequence [ loadImm32 1 (head words)
+                                        , Sequence $ map (\word -> Sequence [loadImm32 2 word, Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
+
+read_rvfi_data :: [String] -> Gen [RVFI_DII_Instruction]
+read_rvfi_data inStr = do
+  let lns = map words inStr
+  seq <- genTestUnsized $ Sequence ((map (data_array_to_template . (map (fst . head .readHex))) lns)
+                                    ++ [ loadImm32 1 2147483648
+                                       , Single $ InstrCodec.encode jalr 0 1 0 ])
+  return $ map fromInteger seq
+
+read_rvfi_data_file :: FilePath -> IO [RVFI_DII_Instruction]
+read_rvfi_data_file inFile = do
+  handle <- openFile inFile ReadMode
+  contents <- hGetContents handle
+  let lns = length $ map (data_array_to_template . (map (fst . head .readHex))) (map words (lines contents))
+  putStrLn $ "Inst list for loading file \n" ++ (show lns)
+  list <- generate $ read_rvfi_data (lines contents)
+  putStrLn $ show (length list)
+  return list
 
 data RVFI_DII_Execution = RVFI_DII_Execution {
   rvfi_intr :: Word8,

@@ -46,6 +46,7 @@ import Template
 import RISCV.Helpers
 import RISCV.RV32_I
 import RISCV.RV32_Zicsr
+import Data.Bits
 
 -- Generate random destination register
 -- Use 6 registers with a geometic distribution
@@ -146,12 +147,15 @@ legalStore = Random $ do {
      , storeOp dataReg addrReg
 ]}
 
+loadImm32 dst imm = Sequence [ Single $ encode addi ((shift imm (-21)) Data.Bits..&. 0x7FF) 0 dst
+                             , Single $ encode slli 11 dst dst
+                             , Single $ encode addi ((shift imm (-10)) Data.Bits..&. 0x7FF) dst dst
+                             , Single $ encode slli 10 dst dst
+                             , Single $ encode addi (imm Data.Bits..&. 0x3FF) dst dst]
+
 prepReg32 :: Integer -> Template
-prepReg32 dst = Random $ do imm       <- bits 12
-                            longImm   <- bits 20
-                            return $ Sequence [ Single $ encode lui  longImm dst
-                                              , Single $ encode xori imm dst dst
-                                              ]
+prepReg32 dst = Random $ do imm       <- bits 32
+                            return (loadImm32 dst imm)
 
 prepReg64 :: Integer -> Template
 prepReg64 dst = repeatTest 6 $ Random $ do val <- bits 12
