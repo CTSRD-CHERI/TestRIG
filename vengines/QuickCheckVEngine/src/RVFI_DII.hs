@@ -111,7 +111,7 @@ read_rvfi_inst_trace inStr =
   let lns = map (head . (splitOn "#")) inStr in           -- Remove comments
   let trimmed = filter (not . null) lns in                -- Remove empty lines
   let insts = map ((drop 2) .(!! 1) . words) trimmed in   -- Take only encoded instruction
-  map (fromInteger .fst . head . readHex) insts
+  map (fromInteger . fst . head . readHex) insts
 
 read_rvfi_inst_trace_file :: FilePath -> IO [RVFI_DII_Instruction]
 read_rvfi_inst_trace_file inFile = do
@@ -119,14 +119,17 @@ read_rvfi_inst_trace_file inFile = do
   contents <- hGetContents handle
   return $ read_rvfi_inst_trace (lines contents)
 
+byte_swap_integer :: Integer -> Integer
+byte_swap_integer word = BW.fromListLE (concat (reverse (chunksOf 8 (BW.toListLE ((fromInteger word) :: Word32)))))
+  
 data_array_to_template :: [Integer] -> Template
 data_array_to_template words = Sequence [ loadImm32 1 (head words)
-                                        , Sequence $ map (\word -> Sequence [loadImm32 2 word, Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
+                                        , Sequence $ map (\word -> Sequence [loadImm32 2 (byte_swap_integer word), Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
 
 read_rvfi_data :: [String] -> Gen [RVFI_DII_Instruction]
 read_rvfi_data inStr = do
   let lns = map words inStr
-  seq <- genTestUnsized $ Sequence ((map (data_array_to_template . (map (fst . head .readHex))) lns)
+  seq <- genTestUnsized $ Sequence ((map (data_array_to_template . (map (fst . head . readHex))) lns)
                                     ++ [ loadImm32 1 2147483648
                                        , Single $ InstrCodec.encode jalr 0 1 0 ])
   return $ map fromInteger seq
@@ -135,7 +138,7 @@ read_rvfi_data_file :: FilePath -> IO [RVFI_DII_Instruction]
 read_rvfi_data_file inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
-  let lns = length $ map (data_array_to_template . (map (fst . head .readHex))) (map words (lines contents))
+  let lns = length $ map (data_array_to_template . (map (fst . head . readHex))) (map words (lines contents))
   putStrLn $ "Inst list for loading file \n" ++ (show lns)
   list <- generate $ read_rvfi_data (lines contents)
   putStrLn $ show (length list)
