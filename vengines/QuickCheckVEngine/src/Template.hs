@@ -116,9 +116,13 @@ instance Semigroup TestCase where
 instance Monoid TestCase where
   mempty = TC []
 instance Arbitrary TestCase where
-  arbitrary = do tmp :: [TestStrand] <- arbitrary
-                 return $ TC tmp
-  shrink (TC ss) = map TC $ shrink ss
+  arbitrary = TC <$> arbitrary
+  shrink (TC ss) = map TC $ topAux ss []
+    where topAux     []   _ = []
+          topAux (x:xs) acc =    nestAux acc x xs
+                              ++ topAux xs (acc ++ [x])
+          nestAux pre elem post = map (\x0 -> pre ++ [x0] ++ post)
+                                      (shrink elem)
 -- | 'TestStrand' type representing a shrinkable part of a 'TestCase'
 data TestStrand = TS { testStrandShrink :: Bool
                      , testStrandInsts  :: [Integer] }
@@ -127,7 +131,7 @@ instance Arbitrary TestStrand where
   arbitrary = do TC strands <- genTemplate Empty
                  return $ head strands
   shrink (TS False x) = []
-  shrink (TS True  x) = map (\x' -> TS True x') (shrinkList (const []) x)
+  shrink (TS True  x) = map (TS True) (shrinkList (const []) x)
 
 -- | Create a simple 'TestCase' ...
 class ToTestCase x where
