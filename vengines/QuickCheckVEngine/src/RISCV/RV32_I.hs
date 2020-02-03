@@ -138,6 +138,8 @@ sw     = "imm[11:5] rs2[4:0] rs1[4:0] 010 imm[4:0] 0100011"
 fence  = "0000 pred[3:0] succ[3:0] 00000 000 00000 0001111"
 resrvd = "0000 0000 0000 00000 000 00000 0000000"
 mret   = "0011 0000 0010 00000 000 00000 1110011"
+sret   = "0001 0000 0010 00000 000 00000 1110011"
+uret   = "0000 0000 0010 00000 000 00000 1110011"
 ecall  = "000000000000 00000 000 00000 1110011"
 ebreak = "000000000001 00000 000 00000 1110011"
 
@@ -182,6 +184,8 @@ rv32_i_disass = [ add    --> prettyR "add"
                 , fence  --> prettyF
                 , resrvd --> "reserved"
                 , mret   --> "mret"
+                , sret   --> "sret"
+                , uret   --> "uret"
                 , ecall  --> "ecall"
                 , ebreak --> "ebreak"
                 ]
@@ -219,6 +223,14 @@ rv32_i_ctrl src1 src2 dest imm longImm = [ encode auipc longImm dest
                                          , encode bgeu  imm src1 src2
                                          ]
 
+rv32_i_exc :: [Integer]
+rv32_i_exc = [encode ecall,
+              encode mret,
+              encode sret,
+              encode uret,
+              encode ebreak,
+              encode resrvd]
+
 rv32_i_load :: Integer -> Integer -> Integer -> [Integer]
 rv32_i_load src dest imm = [ encode lb  imm src dest
                            , encode lbu imm src dest
@@ -245,5 +257,6 @@ rv32_i_mem srcAddr srcData dest imm fenceOp1 fenceOp2 =
 rv32_i :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> Integer -> [Integer]
 rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2 =
      (rv32_i_arith srcAddr srcData dest imm longImm)
+  ++ rv32_i_exc
   ++ (rv32_i_mem srcAddr srcData dest imm fenceOp1 fenceOp2)
   ++ (rv32_i_ctrl srcAddr srcData dest imm longImm)
