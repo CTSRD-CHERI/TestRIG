@@ -203,15 +203,15 @@ main = withSocketsDo $ do
   let checkResult = if (optVerbose flags)
                     then verboseCheckWithResult
                     else quickCheckWithResult
-  let checkSingle trace = do
-        quickCheckWith (Args Nothing 1 1 2048 True 1000) (prop (return trace) socA socB True archDesc (timeoutDelay flags) alive)
+  let checkSingle trace verbose doShrink = do
+        quickCheckWith (Args Nothing 1 1 2048 True (if doShrink then 1000 else 0)) (prop (return trace) socA socB verbose archDesc (timeoutDelay flags) alive)
   let checkGen gen remainingTests = do
         result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) archDesc (timeoutDelay flags) alive)
         case result of
           Failure {} -> do
             writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
             putStrLn "Replaying shrunk failed test case:"
-            checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result))))
+            checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result)))) True False
             case (saveDir flags) of
               Nothing -> do
                 putStrLn "Save this trace (give file name or leave empty to ignore)?"
@@ -233,7 +233,7 @@ main = withSocketsDo $ do
           Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
                              read_rvfi_data_file memInit
           Nothing -> return []
-        checkSingle $ initTrace ++ trace
+        checkSingle (initTrace ++ trace) (optVerbose flags) True
   --
   success <- newIORef 0
   let doCheck a b = do result <- checkGen a b

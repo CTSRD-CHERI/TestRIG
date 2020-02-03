@@ -504,7 +504,7 @@ def main():
 
     e.wait()
   except:
-    print("Exception happened: " + sys.exc_info()[0])
+    print("Exception happened: " + str(sys.exc_info()[0]))
   else:
     print('run terminated')
     kill_procs(a,b,generator,e)
