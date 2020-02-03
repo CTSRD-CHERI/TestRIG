@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
@@ -92,16 +94,21 @@ inst_to_rvfi_dii inst = RVFI_DII_Instruction {
   }
 
 instance Show RVFI_DII_Instruction where
-  show inst_tok = ".4byte 0x" ++ (showHex (rvfi_ins_insn inst_tok) "")
-               ++ " # " ++ pretty (toInteger (rvfi_ins_insn inst_tok))
+  show inst_tok = printf ".4byte 0x%08x # %s"
+                         (rvfi_ins_insn inst_tok)
+                         (pretty $ toInteger $ rvfi_ins_insn inst_tok)
   showList inst_toks = showString (unlines (map show inst_toks))
+
+instance Show TestCase where
+  show testCase = show $ map inst_to_rvfi_dii (fromTestCase testCase)
 
 read_rvfi_inst_trace :: [String] -> TestCase
 read_rvfi_inst_trace inStr =
-  let lns = map (head . (splitOn "#")) inStr in           -- Remove comments
-  let trimmed = filter (not . null) lns in                -- Remove empty lines
-  let insts = map ((drop 2) .(!! 1) . words) trimmed in   -- Take only encoded instruction
-  toTestCase $ map (fst . head . readHex) insts
+  let lns = map (head . (splitOn "#")) inStr              -- Remove comments
+      trimmed = filter (not . null) lns                   -- Remove empty lines
+      encInsts = map ((drop 2) .(!! 1) . words) trimmed   -- Take only encoded instruction
+      insts :: [Integer] = map (fst . head . readHex) encInsts
+  in toTestCase insts
 
 read_rvfi_inst_trace_file :: FilePath -> IO TestCase
 read_rvfi_inst_trace_file inFile = do

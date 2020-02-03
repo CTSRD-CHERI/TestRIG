@@ -1,3 +1,6 @@
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
@@ -107,25 +110,39 @@ repeatTemplateTillEnd template = Random $ do
   return $ replicateTemplate size template
 
 -- | 'TestCase' type for generated 'Template'
-type TestCase = [TestStrand]
+newtype TestCase = TC [TestStrand]
+instance Semigroup TestCase where
+  TC x <> TC y = TC (x ++ y)
+instance Monoid TestCase where
+  mempty = TC []
+instance Arbitrary TestCase where
+  arbitrary = do tmp :: [TestStrand] <- arbitrary
+                 return $ TC tmp
+  shrink (TC ss) = map TC $ shrink ss
 -- | 'TestStrand' type representing a shrinkable part of a 'TestCase'
 data TestStrand = TS { testStrandShrink :: Bool
                      , testStrandInsts  :: [Integer] }
                   deriving Show
 instance Arbitrary TestStrand where
-  arbitrary = head <$> genTemplate Empty
+  arbitrary = do TC strands <- genTemplate Empty
+                 return $ head strands
   shrink (TS False x) = []
   shrink (TS True  x) = map (\x' -> TS True x') (shrinkList (const []) x)
 
--- | Create a simple 'TestCase' from a list of instructions represented as a
---   list of 'Integer'
-toTestCase :: [Integer] -> TestCase
-toTestCase insts = [TS True insts]
+-- | Create a simple 'TestCase' ...
+class ToTestCase x where
+  toTestCase :: x -> TestCase
+-- | ... from a list of 'TestStrand's
+instance ToTestCase [TestStrand] where
+  toTestCase ss = TC ss
+-- | ... from a list of instructions represented as a list of 'Integer'
+instance ToTestCase [Integer] where
+  toTestCase insts = TC [TS True insts]
 
 -- | Create a list of instructions represented as a list of 'Integer' from the
 --   given 'TestCase'
 fromTestCase :: TestCase -> [Integer]
-fromTestCase = concatMap testStrandInsts
+fromTestCase (TC ss) = concatMap testStrandInsts ss
 
 -- | Count the number of instructions in a 'TestCase'
 testCaseInstCount :: TestCase -> Int
@@ -139,7 +156,7 @@ genTemplate template = getSize >>= genTemplateSized template
 -- | Same as 'genTemplate' but specify the desired size
 genTemplateSized :: Template -> Int -> Gen TestCase
 genTemplateSized template size = do
-  xs <- genHelper template
+  TC xs <- genHelper template
   let (_, test) = mapAccumL (\acc (TS shrink insts) ->
                      let remaining = max 0 (size - acc)
                          nbInsts = length insts
@@ -148,7 +165,7 @@ genTemplateSized template size = do
                                    then TS shrink insts
                                    else TS shrink (take remaining insts))
                   ) 0 xs
-  return test
+  return $ TC test
 
 -- | Turn a 'Template' into a single QuickCheck 'Gen [Integer]' generator
 --   of list of instructions, in an explicitly unsized manner
@@ -157,25 +174,27 @@ genTemplateUnsized = genHelper
 
 -- | Inner helper to implement the 'genTemplate' functions
 genHelper :: Template -> Gen TestCase
-genHelper Empty = return []
-genHelper (Single x) = return [TS True [x]]
+genHelper Empty = return mempty
+genHelper (Single x) = return $ TC [TS True [x]]
 genHelper (Distribution xs) = do let xs' = map (\(a, b) -> (a, return b)) xs
                                  frequency xs' >>= genHelper
-genHelper (Sequence []) = return []
+genHelper (Sequence []) = return mempty
 genHelper (Sequence (x:xs)) = do
-  start <- genHelper x
-  end   <- genHelper $ Sequence xs
+  TC start <- genHelper x
+  TC end   <- genHelper $ Sequence xs
   case (start, end) of
-    ([], []) -> return []
-    ([], _)  -> return end
-    (_, [])  -> return start
+    ([], []) -> return mempty
+    ([], _)  -> return $ TC end
+    (_, [])  -> return $ TC start
     (_, _)   -> do
       let (TS shrink0 insts0) = last start
       let (TS shrink1 insts1) = head end
       if shrink0 == shrink1
-        then return $ init start ++ [TS shrink0 (insts0 ++ insts1)] ++ tail end
-        else return $ start ++ end
+        then return $ TC (  init start
+                         ++ [TS shrink0 (insts0 ++ insts1)]
+                         ++ tail end )
+        else return $ TC (start ++ end)
 genHelper (Random x) = x >>= genHelper
 genHelper (NoShrink x) = do
   x' <- genHelper x
-  return [TS False (fromTestCase x')]
+  return $ TC [TS False (fromTestCase x')]

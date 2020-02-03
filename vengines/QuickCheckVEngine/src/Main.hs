@@ -232,8 +232,8 @@ main = withSocketsDo $ do
         initTrace <- case (memoryInitFile) of
           Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
                              read_rvfi_data_file memInit
-          Nothing -> return []
-        checkSingle (initTrace ++ trace) (optVerbose flags) True
+          Nothing -> return mempty
+        checkSingle (initTrace <> trace) (optVerbose flags) True
   --
   success <- newIORef 0
   let doCheck a b = do result <- checkGen a b
@@ -316,7 +316,7 @@ main = withSocketsDo $ do
               putStrLn "Random Template:"
               doCheck (genTemplate $ repeatTemplateTillEnd randomTest) (nTests flags)
             Just sock -> do
-              doCheck (listOf $ liftM (\x -> TS False x) $ listOf $ genInstrServer sock) (nTests flags)
+              doCheck (liftM toTestCase $ listOf $ liftM (\x -> TS False x) $ listOf $ genInstrServer sock) (nTests flags)
   --
   close socA
   close socB
@@ -337,9 +337,9 @@ main = withSocketsDo $ do
 
 --------------------------------------------------------------------------------
 prop :: Gen TestCase -> Socket -> Socket -> Bool -> ArchDesc -> Int -> IORef Bool -> Property
-prop gen socA socB doLog arch timeoutDelay alive =  forAllShrink gen shrink mkProp
+prop gen socA socB doLog arch timeoutDelay alive = forAllShrink gen shrink mkProp
   where mkProp testCase = monadicIO $ run $ do
-          let instTrace = map inst_to_rvfi_dii $ concatMap testStrandInsts testCase
+          let instTrace = map inst_to_rvfi_dii $ fromTestCase testCase
           let instTraceTerminated = instTrace ++ [RVFI_DII_Instruction {
                                                   padding   = 0,
                                                   rvfi_cmd  = rvfi_cmd_end,
