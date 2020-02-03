@@ -121,7 +121,7 @@ read_rvfi_inst_trace_file inFile = do
 
 byte_swap_integer :: Integer -> Integer
 byte_swap_integer word = BW.fromListLE (concat (reverse (chunksOf 8 (BW.toListLE ((fromInteger word) :: Word32)))))
-  
+
 data_array_to_template :: [Integer] -> Template
 data_array_to_template words = Sequence [ loadImm32 1 (head words)
                                         , Sequence $ map (\word -> Sequence [loadImm32 2 (byte_swap_integer word), Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
@@ -169,9 +169,11 @@ instance Binary RVFI_DII_Execution
 maskUpper :: Bool -> Word64 -> Word64
 maskUpper is64 x = if is64 then x else (x Data.Bits..&. 0x00000000FFFFFFFF)
 
+byteMask2bitMask :: Word8 -> Word64
+byteMask2bitMask mask = BW.fromListLE $ concatMap ((take 8).repeat) (BW.toListLE mask)
+
 maskWith :: Word64 -> Word8 -> Word64
-maskWith a b = a Data.Bits..&. mask
-               where mask = BW.fromListLE $ concatMap ((take 8).repeat) (BW.toListLE b)
+maskWith a b = a Data.Bits..&. byteMask2bitMask b
 
 checkEq :: Bool -> RVFI_DII_Execution -> RVFI_DII_Execution -> Bool
 checkEq is64 x y
@@ -179,7 +181,8 @@ checkEq is64 x y
     | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (maskUpper is64 (rvfi_pc_wdata x)) == (maskUpper is64 (rvfi_pc_wdata y))
     | otherwise = (maskUpper False $ rvfi_exe_insn x) == (maskUpper False $ rvfi_exe_insn y) &&
                   (rvfi_trap x) == (rvfi_trap y) && (rvfi_halt x) == (rvfi_halt y) &&
-                  (maskUpper is64 (rvfi_rd_wdata x)) == (maskUpper is64 (rvfi_rd_wdata y)) &&
+                  (rvfi_rd_addr x == rvfi_rd_addr y) &&
+                  ((rvfi_rd_addr x == 0) || (maskUpper is64 (rvfi_rd_wdata x) == maskUpper is64 (rvfi_rd_wdata y))) &&
                   (rvfi_mem_wmask x) == (rvfi_mem_wmask y) &&
                   ((rvfi_mem_wmask x == 0) || ((maskUpper is64 (rvfi_mem_addr x)) == (maskUpper is64 (rvfi_mem_addr y)))) &&
                   (maskUpper is64 (rvfi_pc_wdata x)) == (maskUpper is64 (rvfi_pc_wdata y)) &&
@@ -188,9 +191,10 @@ checkEq is64 x y
 instance Show RVFI_DII_Execution where
   show tok
     | rvfi_halt tok /= 0 = "halt token"
-    | otherwise = printf "Trap: %5s, PCWD: 0x%016x, RWD: 0x%016x, MA: 0x%016x, MWD: 0x%016x, MWM: 0b%08b, I: 0x%016x (%s)"
+    | otherwise = printf "Trap: %5s, PCWD: 0x%016x, RD: %02d, RWD: 0x%016x, MA: 0x%016x, MWD: 0x%016x, MWM: 0b%08b, I: 0x%016x (%s)"
                   (show ((rvfi_trap tok) /= 0)) -- Trap
                   (rvfi_pc_wdata tok)           -- PCWD
+                  (rvfi_rd_addr tok)            -- RD
                   (rvfi_rd_wdata tok)           -- RWD
                   (rvfi_mem_addr tok)           -- MA
                   (rvfi_mem_wdata tok)          -- MWD
