@@ -42,9 +42,13 @@ module Template (
 , repeatTemplateTillEnd
 , genTemplate
 , genTemplateSized
+, genTemplateUnsized
+, (<>)
 ) where
 
 import Test.QuickCheck
+import Data.List
+import Data.Semigroup
 
 -- | 'Template' type to describe sequences of instructions (represented as
 --   'Integer's) to be used as tests
