@@ -1,7 +1,7 @@
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
--- Copyright (c) 2019 Peter Rugg
+-- Copyright (c) 2019-2020 Peter Rugg
 -- Copyright (c) 2020 Alexandre Joannou
 -- All rights reserved.
 --
@@ -52,7 +52,7 @@ genRandomTest = do
   fenceOp1  <- (bits 4)
   fenceOp2  <- (bits 4)
   csrAddr   <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
-  thisNested <- resize (remaining - 1) genRandomTest
+  thisNested <- resize (remaining `div` 2) genRandomTest
   let test = Distribution [ (if remaining > 10 then 1 else 0, legalLoad)
                           , (if remaining > 10 then 1 else 0, legalStore)
                           , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) --TODO re-add csrs

@@ -41,36 +41,41 @@ import RISCV.RV32_Xcheri
 import Template
 import Templates.Utils
 
+genRandomCHERITest :: Gen Template
+genRandomCHERITest = do
+  remaining <- getSize
+  repeats   <- bits 7
+  srcAddr   <- src
+  srcData   <- src
+  tmpReg    <- src
+  tmpReg2   <- src
+  dest      <- dest
+  imm       <- bits 12
+  mop       <- bits 5
+  longImm   <- (bits 20)
+  fenceOp1  <- (bits 4)
+  fenceOp2  <- (bits 4)
+  csrAddr   <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)]
+  srcScr    <- elements [28, 29, 30, 31]
+  thisNested <- resize (remaining `div` 2) genRandomCHERITest
+  let test =  Distribution [ (if remaining > 10 then 5 else 0, legalLoad)
+                           , (if remaining > 10 then 5 else 0, legalStore)
+                           , (if remaining > 10 then 5 else 0, legalCapLoad srcAddr dest)
+                           , (if remaining > 10 then 5 else 0, legalCapStore srcAddr)
+                           , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) -- TODO add csr
+                           , (10, uniformTemplate $ rv32_xcheri srcAddr srcData srcScr imm mop dest)
+                           , (10, Single $ encode cspecialrw srcScr srcAddr dest)
+                           , (10, switchEncodingMode)
+                           , (10, cspecialRWChain)
+                           , (20, randomCCall srcAddr srcData tmpReg tmpReg2)
+                           , (if remaining > 10 then 1 else 0, surroundWithMemAccess thisNested) ]
+  if remaining > 10
+    then do nextNested <- resize (remaining `div` 2) genRandomCHERITest
+            return $ test <> nextNested
+    else return test
+
 randomCHERITest :: Template
-randomCHERITest = Random $ do
-    remaining <- getSize
-    repeats   <- bits 7
-    srcAddr   <- src
-    srcData   <- src
-    tmpReg    <- src
-    tmpReg2   <- src
-    dest      <- dest
-    imm       <- bits 12
-    mop       <- bits 5
-    longImm   <- (bits 20)
-    fenceOp1  <- (bits 4)
-    fenceOp2  <- (bits 4)
-    csrAddr   <- frequency [(1, return 0xbc0), (1, return 0x342), (1, bits 12)]
-    srcScr    <- elements [28, 29, 30, 31]
-    let test =  Distribution [ (if remaining > 10 then 5 else 0, legalLoad)
-                             , (if remaining > 10 then 5 else 0, legalStore)
-                             , (if remaining > 10 then 5 else 0, legalCapLoad srcAddr dest)
-                             , (if remaining > 10 then 5 else 0, legalCapStore srcAddr)
-                             , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) -- TODO add csr
-                             , (10, uniformTemplate $ rv32_xcheri srcAddr srcData srcScr imm mop dest)
-                             , (10, Single $ encode cspecialrw srcScr srcAddr dest)
-                             , (10, switchEncodingMode)
-                             , (10, cspecialRWChain)
-                             , (20, randomCCall srcAddr srcData tmpReg tmpReg2)
-                             , (if remaining > 10 then 1 else 0, surroundWithMemAccess randomCHERITest) ]
-    if remaining > 10
-      then return $ test <> randomCHERITest
-      else return test
+randomCHERITest = Random genRandomCHERITest
 
 randomCCall pccReg idcReg typeReg tmpReg =
      Distribution [ (1, instSeq [ encode addi 0xffd 0 tmpReg
