@@ -70,6 +70,7 @@ import RISCV
 import Template
 import System.Timeout
 import System.Exit
+import Control.Exception
 
 import Templates.Utils
 import Templates.GenAll
@@ -198,40 +199,41 @@ main = withSocketsDo $ do
   addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
   instrSoc <- mapM (open "instruction-generator-port") addrInstr
   --
+  alive <- newIORef True -- Cleared when either implementation times out, since they will may not be able to respond to future queries
   let checkResult = if (optVerbose flags)
                     then verboseCheckWithResult
                     else quickCheckWithResult
   let checkSingle trace = do
-      quickCheckWith (Args Nothing 1 1 2048 True 1000) (prop (return trace) socA socB True archDesc (timeoutDelay flags))
+        quickCheckWith (Args Nothing 1 1 2048 True 1000) (prop (return trace) socA socB True archDesc (timeoutDelay flags) alive)
   let checkGen gen remainingTests = do
-      result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) archDesc (timeoutDelay flags))
-      case result of
-        Failure {} -> do
-          writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
-          putStrLn "Replaying shrunk failed test case:"
-          checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result))))
-          case (saveDir flags) of
-            Nothing -> do
-              putStrLn "Save this trace (give file name or leave empty to ignore)?"
-              fileName <- getLine
-              when (not $ null fileName) $ do
-                putStrLn "One-line description?"
-                comment <- getLine
-                writeFile (fileName ++ ".S") ("# " ++ comment
-                                              ++ "\n" ++ (unlines (failingTestCase result)))
-              return 1
-            Just dir -> do
-              writeFile (dir ++ "/failure" ++ (show (remainingTests - (numTests result))) ++ ".S") ("# Automatically generated failing test case" ++ "\n" ++ (unlines (failingTestCase result)))
-              checkGen gen (remainingTests - (numTests result))
-        other -> return 0
+        result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop (liftM (map inst_to_rvfi_dii) gen) socA socB (optVerbose flags) archDesc (timeoutDelay flags) alive)
+        case result of
+          Failure {} -> do
+            writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
+            putStrLn "Replaying shrunk failed test case:"
+            checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result))))
+            case (saveDir flags) of
+              Nothing -> do
+                putStrLn "Save this trace (give file name or leave empty to ignore)?"
+                fileName <- getLine
+                when (not $ null fileName) $ do
+                  putStrLn "One-line description?"
+                  comment <- getLine
+                  writeFile (fileName ++ ".S") ("# " ++ comment
+                                                ++ "\n" ++ (unlines (failingTestCase result)))
+                return 1
+              Just dir -> do
+                writeFile (dir ++ "/failure" ++ (show (remainingTests - (numTests result))) ++ ".S") ("# Automatically generated failing test case" ++ "\n" ++ (unlines (failingTestCase result)))
+                checkGen gen (remainingTests - (numTests result))
+          other -> return 0
   let checkFile (memoryInitFile :: Maybe FilePath) (fileName :: FilePath) = do
-      putStrLn $ "Reading trace from " ++ fileName
-      trace <- read_rvfi_inst_trace_file fileName
-      initTrace <- case (memoryInitFile) of
-        Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
-                           read_rvfi_data_file memInit
-        Nothing -> return []
-      checkSingle $ initTrace ++ trace
+        putStrLn $ "Reading trace from " ++ fileName
+        trace <- read_rvfi_inst_trace_file fileName
+        initTrace <- case (memoryInitFile) of
+          Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
+                             read_rvfi_data_file memInit
+          Nothing -> return []
+        checkSingle $ initTrace ++ trace
   --
   success <- newIORef 0
   let doCheck a b = do result <- checkGen a b
@@ -334,31 +336,48 @@ main = withSocketsDo $ do
         return sock
 
 --------------------------------------------------------------------------------
-prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> ArchDesc -> Int -> Property
-prop gen socA socB doLog arch timeoutDelay =  forAllShrink gen shrink ( \instTrace -> monadicIO ( run ( do
-  let instTraceTerminated = ( instTrace ++ [RVFI_DII_Instruction {
-                                            padding   = 0,
-                                            rvfi_cmd  = rvfi_cmd_end,
-                                            rvfi_time = 1,
-                                            rvfi_ins_insn = 0
-                                          }])
-  sendInstructionTrace socA instTraceTerminated
-  sendInstructionTrace socB instTraceTerminated
-
-  when doLog $ putStrLn "----------------------------------------------------------------------"
-  when doLog $ putStrLn "Socket A Trace (model)"
-  when doLog $ putStrLn "----------------------"
-  m_modTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socA
-  when (isNothing m_modTrace) $ putStrLn("Error: Timeout")
-  when doLog $ putStrLn "Socket B Trace (implementation)"
-  when doLog $ putStrLn "-------------------------------"
-  m_impTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socB
-  when (isNothing m_impTrace) $ putStrLn("Error: Timeout")
-
-  return $ case (m_modTrace, m_impTrace) of
-             (Just modTrace, Just impTrace) -> (Data.List.and (zipWith (checkEq (has_xlen_64 arch)) modTrace impTrace))
-             _                              -> False
-  )))
+prop :: Gen [RVFI_DII_Instruction] -> Socket -> Socket -> Bool -> ArchDesc -> Int -> IORef Bool -> Property
+prop gen socA socB doLog arch timeoutDelay alive =  forAllShrink gen shrink mkProp
+  where mkProp instTrace = monadicIO $ run $ do
+          let instTraceTerminated = instTrace ++ [RVFI_DII_Instruction {
+                                                  padding   = 0,
+                                                  rvfi_cmd  = rvfi_cmd_end,
+                                                  rvfi_time = 1,
+                                                  rvfi_ins_insn = 0
+                                                }]
+          currentlyAlive <- readIORef alive
+          if currentlyAlive then do
+            result <- try $ do
+              -- Send to implementations
+              sendInstructionTrace socA instTraceTerminated
+              when doLog $ putStrLn "Done sending instructions to implementation A"
+              sendInstructionTrace socB instTraceTerminated
+              when doLog $ putStrLn "Done sending instructions to implementation B"
+              -- Receive from implementations
+              when doLog $ putStrLn "----------------------------------------------------------------------"
+              when doLog $ putStrLn "Socket A Trace (model)"
+              when doLog $ putStrLn "----------------------"
+              m_modTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socA
+              when doLog $ putStrLn "Socket B Trace (implementation)"
+              when doLog $ putStrLn "-------------------------------"
+              m_impTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socB
+              --
+              return (m_modTrace, m_impTrace)
+            case result of
+              Right (Just modTrace, Just impTrace) ->
+                return $ property $ Data.List.and (zipWith (checkEq (has_xlen_64 arch)) modTrace impTrace)
+              Right (a, b) -> do
+                writeIORef alive False
+                when (isNothing a) $ putStrLn "Error: implementation A timeout. Forcing all future tests to report 'SUCCESS'"
+                when (isNothing b) $ putStrLn "Error: implementation B timeout. Forcing all future tests to report 'SUCCESS'"
+                return $ property False
+              Left (SomeException e) -> do
+                writeIORef alive False
+                putStrLn "Error: exception on IO with implementations. Forcing all future tests to report 'SUCCESS'"
+                return $ property False
+          else do
+            when doLog $ putStrLn "Warning: reporting success since implementations not running"
+            return $ property True -- We don't want to shrink once one of the implementations has died, so always return that the property is true
 
 --------------------------------------------------------------------------------
 

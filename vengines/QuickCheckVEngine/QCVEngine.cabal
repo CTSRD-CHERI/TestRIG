@@ -19,4 +19,4 @@ executable QCVEngine
                        Templates.GenMulDiv, Templates.GenAtomics, Templates.GenFP,
                        Templates.GenCSRs, Templates.RandomTest, Templates.Utils
   other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
-  default-language:    Haskell98
+  default-language:    Haskell2010
