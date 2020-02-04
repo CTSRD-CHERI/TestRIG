@@ -51,7 +51,7 @@ import Data.Bits
 -- Generate random destination register
 -- Use 6 registers with a geometic distribution
 dest :: Gen Integer
-dest = choose (0, 5)
+dest = oneof [choose (0, 4), choose (16, 20)]
 -- dest =
 --   frequency [
 --     (32, return 1)
@@ -65,7 +65,7 @@ dest = choose (0, 5)
 -- Generate random source register
 -- Use 6 registers with a uniform distribution
 src :: Gen Integer
-src = choose (0, 5)
+src = oneof [choose (0, 4), choose (16, 20)]
 
 -- Generate random csr register
 -- Use 6 registers with a uniform distribution
@@ -82,7 +82,7 @@ exclude excl orig = do attempt <- orig; if elem attempt excl then exclude excl o
 
 -- Power of two values clustered around 1.
 geomBits :: Int -> Int -> Gen Integer
-geomBits hi lo = frequency [(2^(32-i), return (2^i))| i <- [lo..(hi-1)]]
+geomBits hi lo = frequency [(2^(32-i), return (2^i)) | i <- [lo..(hi-1)]]
 
 -- Generate memory offset
 memOffset :: Gen Integer

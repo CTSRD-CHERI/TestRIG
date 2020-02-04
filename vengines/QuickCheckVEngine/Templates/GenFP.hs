@@ -36,37 +36,93 @@ module Templates.GenFP (
 , gen_rv64_f
 , gen_rv32_d
 , gen_rv64_d
+, gen_rv32_fd
+, gen_rv64_fd
 ) where
 
+import InstrCodec
+import RISCV.RV32_I
 import RISCV.RV32_F
 import RISCV.RV64_F
 import RISCV.RV32_D
 import RISCV.RV64_D
+import RISCV.RV32_Zicsr
 import Template
 import Templates.Utils
+import Test.QuickCheck
 
 gen_rv32_f :: Template
-gen_rv32_f = genFP False False
+gen_rv32_f = genFP True False False
 
 gen_rv64_f :: Template
-gen_rv64_f = genFP False True
+gen_rv64_f = genFP True False True
 
 gen_rv32_d :: Template
-gen_rv32_d = genFP True False
+gen_rv32_d = genFP False True False
 
 gen_rv64_d :: Template
-gen_rv64_d = genFP True True
+gen_rv64_d = genFP False True True
 
-genFP :: Bool -> Bool -> Template
-genFP has_d has_xlen_64 = Random $ do
+gen_rv32_fd :: Template
+gen_rv32_fd = genFP True True False
+
+gen_rv64_fd :: Template
+gen_rv64_fd = genFP True True True
+
+genFP :: Bool -> Bool -> Bool -> Template
+genFP has_f has_d has_xlen_64 = Random $ do
+  size <- getSize
   src1 <- src
   src2 <- src
   src3 <- src
   dest <- dest
   rm   <- bits 3
   imm  <- bits 12
-  let insts = rv32_f src1 src2 src3 dest rm imm
-              ++ if has_xlen_64 then rv64_f src1 dest rm else []
-              ++ if has_d then rv32_d src1 src2 src3 dest rm imm else []
-              ++ if has_d && has_xlen_64 then rv64_d src1 dest rm else []
-  return $ uniformTemplate insts
+  let insts =    [ rv32_f src1 src2 src3 dest rm imm | has_f ]
+              ++ [ rv32_d src1 src2 src3 dest rm imm | has_d ]
+              ++ [ rv64_f src1 dest rm | has_f && has_xlen_64 ]
+              ++ [ rv64_d src1 dest rm | has_d && has_xlen_64 ]
+  let prologue_list = [ encode lui 2 1
+                      , encode csrrs 0x300 1 0 -- mstatus
+                      , encode csrrs 0x003 0 0 -- fcsr
+                      , encode fmv_w_x 0 0
+                      , encode fmv_w_x 0 1
+                      , encode fmv_w_x 0 2
+                      , encode fmv_w_x 0 3
+                      , encode fmv_w_x 0 4
+                      --, encode fmv_w_x 0 5
+                      --, encode fmv_w_x 0 6
+                      --, encode fmv_w_x 0 7
+                      --, encode fmv_w_x 0 8
+                      --, encode fmv_w_x 0 9
+                      --, encode fmv_w_x 0 10
+                      --, encode fmv_w_x 0 11
+                      --, encode fmv_w_x 0 12
+                      --, encode fmv_w_x 0 13
+                      --, encode fmv_w_x 0 14
+                      --, encode fmv_w_x 0 15
+                      --
+                      , encode fmv_d_x 0 16
+                      , encode fmv_d_x 0 17
+                      , encode fmv_d_x 0 18
+                      , encode fmv_d_x 0 19
+                      , encode fmv_d_x 0 20
+                      --, encode fmv_d_x 0 21
+                      --, encode fmv_d_x 0 22
+                      --, encode fmv_d_x 0 23
+                      --, encode fmv_d_x 0 24
+                      --, encode fmv_d_x 0 25
+                      --, encode fmv_d_x 0 26
+                      --, encode fmv_d_x 0 27
+                      --, encode fmv_d_x 0 28
+                      --, encode fmv_d_x 0 29
+                      --, encode fmv_d_x 0 30
+                      --, encode fmv_d_x 0 31
+                      --, encode fmv_d_x 0 32
+                      ]
+  let prologue = instSeq prologue_list
+  let epilogue = Single $ encode csrrs 0x003 0 dest
+  return $    NoShrink prologue
+           <> replicateTemplate (size - length prologue_list - 1)
+                                (uniformTemplate $ concat insts)
+           <> NoShrink epilogue
