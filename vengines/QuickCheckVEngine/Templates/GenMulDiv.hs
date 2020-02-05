@@ -54,4 +54,4 @@ genMulDiv has_xlen_64 = Random $ do
   dest <- dest
   let insts = rv32_m src1 src2 dest
               ++ if has_xlen_64 then rv64_m src1 src2 dest else []
-  return $ uniformTemplate insts
+  return $ Distribution [ (9, uniformTemplate insts), (1, prepReg32 dest) ]
