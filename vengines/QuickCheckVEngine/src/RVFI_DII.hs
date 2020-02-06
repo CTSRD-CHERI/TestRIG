@@ -196,3 +196,8 @@ instance Show RVFI_DII_Execution where
                   (rvfi_mem_wdata tok)          -- MWD
                   (rvfi_mem_wmask tok)          -- MWM
                   (rvfi_exe_insn tok) (pretty (toInteger (rvfi_exe_insn tok))) -- Inst
+
+printExecutionDiff :: Bool -> RVFI_DII_Execution -> RVFI_DII_Execution -> String
+printExecutionDiff is64 x y =
+    if (checkEq is64 x y) then ("     " ++ show x)
+                          else (" A < " ++ (show x) ++ "\n B > " ++ (show y))
