@@ -24,7 +24,7 @@ In-memory test suites require a significant amount of boiler plate in order to c
 As TestRIG relies on direct instruction injection, bypassing fetch through PC, a sequence of instructions can easily be shortened by simply eliminating instructions from the trace to see if we still find divergence.
 As a result we can expect automatically reduced counterexamples on the order of a handful of instructions.
 
-We hope that TestRIG will prove fertile ground to inspire innovation in instruction trace generation, counterexample reduction, and model construction such that trace-based verification can approach formal verification for all practical purposes with a much friendlier user experience than either test-suite verification or formal verification currently enable.
+We hope that TestRIG will prove fertile ground to inspire innovation in instruction trace generation, counterexample reduction, and model construction such that trace-based verification can approach formal verification for many practical purposes with a much friendlier user experience than either test-suite verification or formal verification currently enable.
 
 ## Vengines
 A vengine typically includes instruction trace (itrace) generators targetting various classes of behaviour.
