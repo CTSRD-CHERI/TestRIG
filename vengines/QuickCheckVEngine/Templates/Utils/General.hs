@@ -48,6 +48,7 @@ module Templates.Utils.General (
 , src
 , dest
 , csr
+, roundingMode
 , bits
 , exclude
 , geomBits
@@ -130,6 +131,11 @@ dest = inUseReg
 -- | 'csr' generates an arbitrary csr register index
 csr :: Gen Integer
 csr = elements $ map fst csrs_map
+
+-- | 'roundingMode' generates a random floating point rounding mode
+-- Modes 5 and 6 are reserved for future use in the RISV ISA.
+roundingMode :: Gen Integer
+roundingMode = oneof $ map return [0, 1, 2, 3, 4, 7]
 
 -- | 'bits' generates an arbitrary integer value of the given bit width
 bits :: Int -> Gen Integer

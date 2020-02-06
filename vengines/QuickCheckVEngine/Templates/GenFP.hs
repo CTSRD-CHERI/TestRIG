@@ -76,7 +76,7 @@ genFP has_f has_d has_xlen_64 = Random $ do
   src2 <- src
   src3 <- src
   dest <- dest
-  rm   <- bits 3
+  rm   <- roundingMode
   imm  <- bits 12
   let insts =    [ rv32_f src1 src2 src3 dest rm imm | has_f ]
               ++ [ rv32_d src1 src2 src3 dest rm imm | has_d ]

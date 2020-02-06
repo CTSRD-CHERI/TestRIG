@@ -230,14 +230,14 @@ prettyR_A_1op instr aq rl rs1 rd =
 -- Floating Point pretty printer
 -- Floating Point rounding modes
 fpRoundingMode :: Integer -> String
-fpRoundingMode 0b000 = "RNE"
-fpRoundingMode 0b001 = "RTZ"
-fpRoundingMode 0b010 = "RDN"
-fpRoundingMode 0b011 = "RUP"
-fpRoundingMode 0b100 = "RMM"
-fpRoundingMode 0b101 = "Reserved"
-fpRoundingMode 0b110 = "Reserved"
-fpRoundingMode 0b111 = "RDYN"
+fpRoundingMode 0b000 = "rne"
+fpRoundingMode 0b001 = "rtz"
+fpRoundingMode 0b010 = "rdn"
+fpRoundingMode 0b011 = "rup"
+fpRoundingMode 0b100 = "rmm"
+fpRoundingMode 0b101 = "Reserved5"
+fpRoundingMode 0b110 = "Reserved6"
+fpRoundingMode 0b111 = "rdyn"
 fpRoundingMode x =
   "unsupported floating point rounding mode 0x" ++ (showHex x "")
 
@@ -246,12 +246,12 @@ prettyR_1op instr rs1 rd =
 
 prettyR_1op_rm instr rs1 rm rd =
   concat $  [instr, " ", reg rd, ", ", reg rs1]
-         ++ [" (" ++ fpRoundingMode rm ++ ")"]
+         ++ [", " ++ fpRoundingMode rm ]
 
 prettyR_rm instr rs2 rs1 rm rd =
   concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2]
-         ++ [" (" ++ fpRoundingMode rm ++ ")"]
+         ++ [", " ++ fpRoundingMode rm ]
 
 prettyR4_rm instr rs3 rs2 rs1 rm rd =
   concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2, ", ", reg rs3]
-         ++ [" (" ++ fpRoundingMode rm ++ ")"]
+         ++ [", " ++ fpRoundingMode rm ]
