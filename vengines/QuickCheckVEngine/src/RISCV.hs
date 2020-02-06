@@ -2,7 +2,7 @@
 -- SPDX-License-Identifier: BSD-2-Clause
 --
 -- Copyright (c) 2018 Matthew Naylor
--- Copyright (c) 2019 Alexandre Joannou
+-- Copyright (c) 2019, 2020 Alexandre Joannou
 -- All rights reserved.
 --
 -- This software was developed by SRI International and the University of
@@ -38,6 +38,7 @@
 
 module RISCV (
   module RISCV.ArchDesc
+, module RISCV.Helpers
 , module RISCV.InstPretty
 , module RISCV.RV32_I
 , module RISCV.RV32_M
@@ -53,6 +54,7 @@ module RISCV (
 ) where
 
 import RISCV.ArchDesc
+import RISCV.Helpers
 import RISCV.InstPretty
 import RISCV.RV32_I
 import RISCV.RV32_M

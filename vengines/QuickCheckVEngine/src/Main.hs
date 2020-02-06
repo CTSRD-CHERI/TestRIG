@@ -309,12 +309,12 @@ main = withSocketsDo $ do
                    putStrLn "Xcheri extension Capability Control Flow Verification:"
                    doCheck (genTemplate $ repeatTemplateTillEnd genCHERIcontrol) (nTests flags)
                    putStrLn "Xcheri extension Random Template:"
-                   doCheck (genTemplate $ randomCHERITest) (nTests flags)
+                   doCheck (genTemplate $ randomCHERITest archDesc) (nTests flags)
 
               putStrLn "All Verification:"
               doCheck (genTemplate $ repeatTemplateTillEnd (genAll archDesc)) (nTests flags)
               putStrLn "Random Template:"
-              doCheck (genTemplate $ repeatTemplateTillEnd randomTest) (nTests flags)
+              doCheck (genTemplate $ repeatTemplateTillEnd (randomTest archDesc)) (nTests flags)
             Just sock -> do
               doCheck (liftM toTestCase $ listOf $ liftM (\x -> TS False x) $ listOf $ genInstrServer sock) (nTests flags)
   --

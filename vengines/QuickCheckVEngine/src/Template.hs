@@ -117,12 +117,10 @@ instance Monoid TestCase where
   mempty = TC []
 instance Arbitrary TestCase where
   arbitrary = TC <$> arbitrary
-  shrink (TC ss) = map TC $ topAux ss []
-    where topAux     []   _ = []
-          topAux (x:xs) acc =    nestAux acc x xs
-                              ++ topAux xs (acc ++ [x])
-          nestAux pre elem post = map (\x0 -> pre ++ [x0] ++ post)
-                                      (shrink elem)
+  shrink (TC ss) = [ TC $ ys ++ [z'] ++ zs | (ys, z:zs) <- splits ss
+                                           , z' <- shrink z ]
+    where splits [] = []
+          splits (x:xs) = ([], x:xs) : [(x:ys, zs) | (ys, zs) <- splits xs]
 -- | 'TestStrand' type representing a shrinkable part of a 'TestCase'
 data TestStrand = TS { testStrandShrink :: Bool
                      , testStrandInsts  :: [Integer] }

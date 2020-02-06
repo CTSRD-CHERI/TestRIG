@@ -32,16 +32,22 @@
 -- SUCH DAMAGE.
 --
 
-module Templates.RandomTest where
+module Templates.RandomTest (
+  randomTest
+) where
 
+import Test.QuickCheck
+import RISCV
 import Template
 import Templates.Utils
-import Test.QuickCheck
-import RISCV.RV32_I
-import Templates.Utils
 
-genRandomTest :: Gen Template
-genRandomTest = do
+-- | 'randomTest' provides a 'Template' for a random test
+randomTest :: ArchDesc -> Template
+randomTest arch = Random $ genRandomTest arch
+
+-- 'genRandomTest' is the recursive helper to implement 'randomTest'
+genRandomTest :: ArchDesc -> Gen Template
+genRandomTest arch = do
   remaining <- getSize
   repeats   <- bits 7
   srcAddr   <- src
@@ -52,15 +58,12 @@ genRandomTest = do
   fenceOp1  <- (bits 4)
   fenceOp2  <- (bits 4)
   csrAddr   <- frequency [ (1, return 0xbc0), (1, return 0x342), (1, bits 12) ]
-  thisNested <- resize (remaining `div` 2) genRandomTest
-  let test = Distribution [ (if remaining > 10 then 1 else 0, legalLoad)
-                          , (if remaining > 10 then 1 else 0, legalStore)
+  thisNested <- resize (remaining `Prelude.div` 2) (genRandomTest arch)
+  let test = Distribution [ (if remaining > 10 then 1 else 0, legalLoad arch)
+                          , (if remaining > 10 then 1 else 0, legalStore arch )
                           , (10, uniformTemplate $ rv32_i srcAddr srcData dest imm longImm fenceOp1 fenceOp2) --TODO re-add csrs
-                          , (if remaining > 10 then 1 else 0, surroundWithMemAccess thisNested) ]
+                          , (if remaining > 10 then 1 else 0, surroundWithMemAccess arch thisNested) ]
   if remaining > 10
-    then do nextNested <- resize (remaining `div` 2) genRandomTest
+    then do nextNested <- resize (remaining `Prelude.div` 2) (genRandomTest arch)
             return $ test <> nextNested
     else return test
-
-randomTest :: Template
-randomTest = Random genRandomTest

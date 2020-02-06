@@ -17,6 +17,7 @@ executable QCVEngine
                        Templates.GenAll, Templates.GenArithmetic, Templates.GenCHERI,
                        Templates.GenControlFlow, Templates.GenMemory,
                        Templates.GenMulDiv, Templates.GenAtomics, Templates.GenFP,
-                       Templates.GenCSRs, Templates.RandomTest, Templates.Utils
+                       Templates.GenCSRs, Templates.RandomTest, Templates.Utils,
+                       Templates.Utils.General, Templates.Utils.CHERI
   other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
   default-language:    Haskell2010

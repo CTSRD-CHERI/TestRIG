@@ -120,14 +120,14 @@ byte_swap_integer :: Integer -> Integer
 byte_swap_integer word = BW.fromListLE (concat (reverse (chunksOf 8 (BW.toListLE ((fromInteger word) :: Word32)))))
 
 data_array_to_template :: [Integer] -> Template
-data_array_to_template words = Sequence [ loadImm32 1 (head words)
-                                        , Sequence $ map (\word -> Sequence [loadImm32 2 (byte_swap_integer word), Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
+data_array_to_template words = Sequence [ li32 1 (head words)
+                                        , Sequence $ map (\word -> Sequence [li32 2 (byte_swap_integer word), Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
 
 read_rvfi_data :: [String] -> Gen TestCase
 read_rvfi_data inStr = do
   let lns = map words inStr
   genTemplateUnsized $ Sequence ((map (data_array_to_template . (map (fst . head . readHex))) lns)
-                                    ++ [ loadImm32 1 2147483648
+                                    ++ [ li32 1 2147483648
                                        , Single $ InstrCodec.encode jalr 0 1 0 ])
 
 read_rvfi_data_file :: FilePath -> IO TestCase
