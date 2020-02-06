@@ -40,7 +40,7 @@ module RISCV.RV64_F (
 , fcvt_s_lu
 ) where
 
-import RISCV.Helpers (prettyR_1op_rm)
+import RISCV.Helpers (prettyR_IF_1op_rm, prettyR_FI_1op_rm)
 import InstrCodec (DecodeBranch, (-->), encode)
 
 ----------------------
@@ -53,10 +53,10 @@ fcvt_s_l  = "1101000 00010 rs1[4:0] rm[2:0] rd[4:0] 1010011"
 fcvt_s_lu = "1101000 00011 rs1[4:0] rm[2:0] rd[4:0] 1010011"
 
 rv64_f_disass :: [DecodeBranch String]
-rv64_f_disass = [ fcvt_l_s  --> prettyR_1op_rm "fcvt.l.s"
-                , fcvt_lu_s --> prettyR_1op_rm "fcvt.lu.s"
-                , fcvt_s_l  --> prettyR_1op_rm "fcvt.s.l"
-                , fcvt_s_lu --> prettyR_1op_rm "fcvt.s.lu"
+rv64_f_disass = [ fcvt_l_s  --> prettyR_IF_1op_rm "fcvt.l.s"
+                , fcvt_lu_s --> prettyR_IF_1op_rm "fcvt.lu.s"
+                , fcvt_s_l  --> prettyR_FI_1op_rm "fcvt.s.l"
+                , fcvt_s_lu --> prettyR_FI_1op_rm "fcvt.s.lu"
                 ]
 
 rv64_f :: Integer -> Integer -> Integer -> [Integer]

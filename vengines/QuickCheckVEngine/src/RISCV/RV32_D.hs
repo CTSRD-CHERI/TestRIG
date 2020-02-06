@@ -63,7 +63,8 @@ module RISCV.RV32_D (
 ) where
 
 import RISCV.Helpers (prettyR, prettyS, prettyR4_rm, prettyR_rm,
-                      prettyR_1op, prettyR_1op_rm)
+                      prettyR_IF_1op, prettyR_FF_1op_rm, prettyR_FI_1op_rm,
+                      prettyR_IF_1op_rm)
 import InstrCodec (DecodeBranch, (-->), encode)
 
 ----------------------
@@ -98,32 +99,32 @@ fcvt_d_w  = "1101001        00000 rs1[4:0] rm[2:0]  rd[4:0] 1010011"
 fcvt_d_wu = "1101001        00001 rs1[4:0] rm[2:0]  rd[4:0] 1010011"
 
 rv32_d_disass :: [DecodeBranch String]
-rv32_d_disass = [ fld       --> prettyR        "fld"
-                , fsd       --> prettyS        "fsd"
-                , fmadd_d   --> prettyR4_rm    "fmadd.d"
-                , fmsub_d   --> prettyR4_rm    "fmsub.d"
-                , fnmsub_d  --> prettyR4_rm    "fnmsub.d"
-                , fnmadd_d  --> prettyR4_rm    "fnmadd.d"
-                , fadd_d    --> prettyR_rm     "fadd.d"
-                , fsub_d    --> prettyR_rm     "fsub.d"
-                , fmul_d    --> prettyR_rm     "fmul.d"
-                , fdiv_d    --> prettyR_rm     "fdiv.d"
-                , fsqrt_d   --> prettyR_1op_rm "fsqrt.d"
-                , fsgnj_d   --> prettyR        "fsgnj.d"
-                , fsgnjn_d  --> prettyR        "fsgnjn.d"
-                , fsgnjx_d  --> prettyR        "fsgnjx.d"
-                , fmin_d    --> prettyR        "fmin.d"
-                , fmax_d    --> prettyR        "fmax.d"
-                , fcvt_s_d  --> prettyR_1op_rm "fcvt.s.d"
-                , fcvt_d_s  --> prettyR_1op_rm "fcvt.d.s"
-                , feq_d     --> prettyR        "feq.d"
-                , flt_d     --> prettyR        "flt.d"
-                , fle_d     --> prettyR        "fle.d"
-                , fclass_d  --> prettyR_1op    "fclass.d"
-                , fcvt_w_d  --> prettyR_1op_rm "fcvt.w.d"
-                , fcvt_wu_d --> prettyR_1op_rm "fcvt.wu.d"
-                , fcvt_d_w  --> prettyR_1op_rm "fcvt.d.w"
-                , fcvt_d_wu --> prettyR_1op_rm "fcvt.d.wu"
+rv32_d_disass = [ fld       --> prettyR           "fld"
+                , fsd       --> prettyS           "fsd"
+                , fmadd_d   --> prettyR4_rm       "fmadd.d"
+                , fmsub_d   --> prettyR4_rm       "fmsub.d"
+                , fnmsub_d  --> prettyR4_rm       "fnmsub.d"
+                , fnmadd_d  --> prettyR4_rm       "fnmadd.d"
+                , fadd_d    --> prettyR_rm        "fadd.d"
+                , fsub_d    --> prettyR_rm        "fsub.d"
+                , fmul_d    --> prettyR_rm        "fmul.d"
+                , fdiv_d    --> prettyR_rm        "fdiv.d"
+                , fsqrt_d   --> prettyR_FF_1op_rm "fsqrt.d"
+                , fsgnj_d   --> prettyR           "fsgnj.d"
+                , fsgnjn_d  --> prettyR           "fsgnjn.d"
+                , fsgnjx_d  --> prettyR           "fsgnjx.d"
+                , fmin_d    --> prettyR           "fmin.d"
+                , fmax_d    --> prettyR           "fmax.d"
+                , fcvt_s_d  --> prettyR_FF_1op_rm "fcvt.s.d"
+                , fcvt_d_s  --> prettyR_FF_1op_rm "fcvt.d.s"
+                , feq_d     --> prettyR           "feq.d"
+                , flt_d     --> prettyR           "flt.d"
+                , fle_d     --> prettyR           "fle.d"
+                , fclass_d  --> prettyR_IF_1op    "fclass.d"
+                , fcvt_w_d  --> prettyR_IF_1op_rm "fcvt.w.d"
+                , fcvt_wu_d --> prettyR_IF_1op_rm "fcvt.wu.d"
+                , fcvt_d_w  --> prettyR_FI_1op_rm "fcvt.d.w"
+                , fcvt_d_wu --> prettyR_FI_1op_rm "fcvt.d.wu"
                 ]
 
 rv32_d :: Integer -> Integer -> Integer -> Integer -> Integer -> Integer

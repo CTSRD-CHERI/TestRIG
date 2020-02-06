@@ -58,8 +58,12 @@ module RISCV.Helpers (
 , prettyR_A
 , prettyR_A_1op
 , fpRoundingMode
-, prettyR_1op
-, prettyR_1op_rm
+, prettyR_FF_1op
+, prettyR_IF_1op
+, prettyR_FI_1op
+, prettyR_FF_1op_rm
+, prettyR_IF_1op_rm
+, prettyR_FI_1op_rm
 , prettyR_rm
 , prettyR4_rm
 ) where
@@ -163,9 +167,81 @@ csrs_map = -- User Trap Setup
 -----------------------------
 
 -- Register pretty printer
-reg :: Integer -> String
-reg i = "r" ++ show i
+reg = intReg
 
+intReg :: Integer -> String
+intReg i = "x" ++ show i
+
+intRegABI :: Integer -> String
+intRegABI 0 = "zero"
+intRegABI 1 = "ra"
+intRegABI 2 = "sp"
+intRegABI 3 = "gp"
+intRegABI 4 = "tp"
+intRegABI 5 = "t0"
+intRegABI 6 = "t1"
+intRegABI 7 = "t2"
+intRegABI 8 = "s0"
+intRegABI 9 = "s1"
+intRegABI 10 = "a0"
+intRegABI 11 = "a1"
+intRegABI 12 = "a2"
+intRegABI 13 = "a3"
+intRegABI 14 = "a4"
+intRegABI 15 = "a5"
+intRegABI 16 = "a6"
+intRegABI 17 = "a7"
+intRegABI 18 = "s2"
+intRegABI 19 = "s3"
+intRegABI 20 = "s4"
+intRegABI 21 = "s5"
+intRegABI 22 = "s6"
+intRegABI 23 = "s7"
+intRegABI 24 = "s8"
+intRegABI 25 = "s9"
+intRegABI 26 = "s10"
+intRegABI 27 = "s11"
+intRegABI 28 = "t3"
+intRegABI 29 = "t4"
+intRegABI 30 = "t5"
+intRegABI 31 = "t6"
+
+fpReg :: Integer -> String
+fpReg i = "f" ++ show i
+
+fpRegABI :: Integer -> String
+fpRegABI 0 = "ft0"
+fpRegABI 1 = "ft1"
+fpRegABI 2 = "ft2"
+fpRegABI 3 = "ft3"
+fpRegABI 4 = "ft4"
+fpRegABI 5 = "ft5"
+fpRegABI 6 = "ft6"
+fpRegABI 7 = "ft7"
+fpRegABI 8 = "fs0"
+fpRegABI 9 = "fs1"
+fpRegABI 10 = "fa0"
+fpRegABI 11 = "fa1"
+fpRegABI 12 = "fa2"
+fpRegABI 13 = "fa3"
+fpRegABI 14 = "fa4"
+fpRegABI 15 = "fa5"
+fpRegABI 16 = "fa6"
+fpRegABI 17 = "fa7"
+fpRegABI 18 = "fs2"
+fpRegABI 19 = "fs3"
+fpRegABI 20 = "fs4"
+fpRegABI 21 = "fs5"
+fpRegABI 22 = "fs6"
+fpRegABI 23 = "fs7"
+fpRegABI 24 = "fs8"
+fpRegABI 25 = "fs9"
+fpRegABI 26 = "fs10"
+fpRegABI 27 = "fs11"
+fpRegABI 28 = "ft8"
+fpRegABI 29 = "ft9"
+fpRegABI 30 = "ft10"
+fpRegABI 31 = "ft11"
 -- Integer pretty printer
 int :: Integer -> String
 int i = show i
@@ -241,17 +317,31 @@ fpRoundingMode 0b111 = "rdyn"
 fpRoundingMode x =
   "unsupported floating point rounding mode 0x" ++ (showHex x "")
 
-prettyR_1op instr rs1 rd =
-  concat [instr, " ", reg rd, ", ", reg rs1]
+prettyR_FF_1op instr rs1 rd =
+  concat [instr, " ", fpReg rd, ", ", fpReg rs1]
 
-prettyR_1op_rm instr rs1 rm rd =
-  concat $  [instr, " ", reg rd, ", ", reg rs1]
+prettyR_FI_1op instr rs1 rd =
+  concat [instr, " ", fpReg rd, ", ", reg rs1]
+
+prettyR_IF_1op instr rs1 rd =
+  concat [instr, " ", reg rd, ", ", fpReg rs1]
+
+prettyR_FF_1op_rm instr rs1 rm rd =
+  concat $  [instr, " ", fpReg rd, ", ", fpReg rs1]
+         ++ [", " ++ fpRoundingMode rm ]
+
+prettyR_IF_1op_rm instr rs1 rm rd =
+  concat $  [instr, " ", reg rd, ", ", fpReg rs1]
+         ++ [", " ++ fpRoundingMode rm ]
+
+prettyR_FI_1op_rm instr rs1 rm rd =
+  concat $  [instr, " ", fpReg rd, ", ", reg rs1]
          ++ [", " ++ fpRoundingMode rm ]
 
 prettyR_rm instr rs2 rs1 rm rd =
-  concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2]
+  concat $  [instr, " ", fpReg rd, ", ", fpReg rs1, ", ", fpReg rs2]
          ++ [", " ++ fpRoundingMode rm ]
 
 prettyR4_rm instr rs3 rs2 rs1 rm rd =
-  concat $  [instr, " ", reg rd, ", ", reg rs1, ", ", reg rs2, ", ", reg rs3]
+  concat $  [instr, " ", fpReg rd, ", ", fpReg rs1, ", ", fpReg rs2, ", ", fpReg rs3]
          ++ [", " ++ fpRoundingMode rm ]
