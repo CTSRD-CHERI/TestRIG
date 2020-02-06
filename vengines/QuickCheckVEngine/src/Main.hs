@@ -149,7 +149,7 @@ options =
         "Specify PATH a processed objdump file (e.g. 8000f420 2ed632d8 36da3adc 3edec2c0 c6c2cac4) to use as the initial contents of memory"
   , Option ['r']     ["architecture"]
       (ReqArg (\ f opts -> opts { arch = fromString f }) "ARCHITECTURE")
-        "Specify ARCHITECTURE to be verified (e.g. 32i)"
+        "Specify ARCHITECTURE to be verified (e.g. rv32i)"
   , Option ['i']     ["instruction generator port"]
       (ReqArg (\ f opts -> opts { instrPort = Just f }) "PORT")
         "Connect to an external instruction generator on PORT"
@@ -204,7 +204,7 @@ main = withSocketsDo $ do
                     then verboseCheckWithResult
                     else quickCheckWithResult
   let checkSingle trace verbose doShrink = do
-        quickCheckWith (Args Nothing 1 1 2048 True (if doShrink then 1000 else 0)) (prop (return trace) socA socB verbose archDesc (timeoutDelay flags) alive)
+        quickCheckWithResult (Args Nothing 1 1 2048 True (if doShrink then 1000 else 0)) (prop (return trace) socA socB verbose archDesc (timeoutDelay flags) alive)
   let checkGen gen remainingTests = do
         result <- checkResult (Args Nothing remainingTests 1 2048 True 1000) (prop gen socA socB (optVerbose flags) archDesc (timeoutDelay flags) alive)
         case result of
@@ -233,7 +233,21 @@ main = withSocketsDo $ do
           Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
                              read_rvfi_data_file memInit
           Nothing -> return mempty
-        checkSingle (initTrace <> trace) (optVerbose flags) True
+        result <- checkSingle (initTrace <> trace) (optVerbose flags) True
+        case result of
+          Failure {} -> do
+            writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
+            putStrLn "Replaying shrunk failed test case:"
+            checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result)))) True False
+            putStrLn "Save this trace (give file name or leave empty to ignore)?"
+            fileName <- getLine
+            when (not $ null fileName) $ do
+                putStrLn "One-line description?"
+                comment <- getLine
+                writeFile (fileName ++ ".S") ("# " ++ comment
+                                            ++ "\n" ++ (unlines (failingTestCase result)))
+          other -> putStrLn "Not a Failure."
+        return ()
   --
   success <- newIORef 0
   let doCheck a b = do result <- checkGen a b
@@ -355,14 +369,11 @@ prop gen socA socB doLog arch timeoutDelay alive = forAllShrink gen shrink mkPro
               sendInstructionTrace socB instTraceTerminated
               when doLog $ putStrLn "Done sending instructions to implementation B"
               -- Receive from implementations
-              when doLog $ putStrLn "----------------------------------------------------------------------"
-              when doLog $ putStrLn "Socket A Trace (model)"
-              when doLog $ putStrLn "----------------------"
               m_modTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socA
-              when doLog $ putStrLn "Socket B Trace (implementation)"
-              when doLog $ putStrLn "-------------------------------"
               m_impTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socB
               --
+              let diffStrings = zipWith (printExecutionDiff (has_xlen_64 arch)) (fromMaybe (error "broken modtrace") m_modTrace) (fromMaybe (error "broken imptrace") m_impTrace)
+              when doLog $ mapM_ putStrLn diffStrings
               return (m_modTrace, m_impTrace)
             case result of
               Right (Just modTrace, Just impTrace) ->
@@ -405,7 +416,7 @@ receiveExecutionTrace :: Bool -> Socket -> IO ([RVFI_DII_Execution])
 receiveExecutionTrace doLog sock = do
   msg <- receiveBlocking 88 sock
   let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
-  when doLog $ putStrLn ("\t"++(show traceEntry))
+  --when doLog $ putStrLn ("\t"++(show traceEntry))
   if ((rvfi_halt traceEntry) == 1)
     then return [traceEntry]
     else do
