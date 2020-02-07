@@ -13,7 +13,7 @@ executable QCVEngine
                        RISCV.RV32_I, RISCV.RV32_M, RISCV.RV32_A, RISCV.RV32_F, RISCV.RV32_D,
                        RISCV.RV32_Zifencei, RISCV.RV32_Zicsr, RISCV.RV32_Xcheri,
                        RISCV.RV64_I, RISCV.RV64_M, RISCV.RV64_A, RISCV.RV64_F, RISCV.RV64_D,
-                       RVFI_DII, Template,
+                       RISCV.RV_C, RVFI_DII, Template,
                        Templates.GenAll, Templates.GenArithmetic, Templates.GenCHERI,
                        Templates.GenControlFlow, Templates.GenMemory,
                        Templates.GenMulDiv, Templates.GenAtomics, Templates.GenFP,
