@@ -100,4 +100,5 @@ genAll desc = Random $ do
                ] | has_icsr desc]
            ++ [[ (8, uniformTemplate (rv32_xcheri src1 src2 srcScr imm mop dest))
                ] | has_cheri desc]
-  return $ Distribution (concat insts)
+  return $ (if has_f desc || has_d desc then NoShrink fp_prologue else mempty)
+            <> repeatTemplateTillEnd (Distribution $ concat insts)

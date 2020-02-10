@@ -41,7 +41,9 @@
 module Templates.Utils (
   module Templates.Utils.General
 , module Templates.Utils.CHERI
+, module Templates.Utils.FP
 ) where
 
 import Templates.Utils.General
 import Templates.Utils.CHERI
+import Templates.Utils.FP
