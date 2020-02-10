@@ -13,11 +13,12 @@ executable QCVEngine
                        RISCV.RV32_I, RISCV.RV32_M, RISCV.RV32_A, RISCV.RV32_F, RISCV.RV32_D,
                        RISCV.RV32_Zifencei, RISCV.RV32_Zicsr, RISCV.RV32_Xcheri,
                        RISCV.RV64_I, RISCV.RV64_M, RISCV.RV64_A, RISCV.RV64_F, RISCV.RV64_D,
-                       RISCV.RV_C, RVFI_DII, Template,
+                       RISCV.RV_C, Template,
                        Templates.GenAll, Templates.GenArithmetic, Templates.GenCHERI,
                        Templates.GenControlFlow, Templates.GenMemory,
                        Templates.GenMulDiv, Templates.GenAtomics, Templates.GenFP,
                        Templates.GenCSRs, Templates.RandomTest, Templates.Utils,
-                       Templates.Utils.General, Templates.Utils.CHERI, Templates.Utils.FP
-  other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables, DeriveGeneric
+                       Templates.Utils.General, Templates.Utils.CHERI, Templates.Utils.FP,
+                       RVFI_DII, RVFI_DII.RVFI, RVFI_DII.DII
+  other-extensions:    FlexibleInstances, MultiParamTypeClasses, FunctionalDependencies, OverloadedStrings, ScopedTypeVariables
   default-language:    Haskell2010

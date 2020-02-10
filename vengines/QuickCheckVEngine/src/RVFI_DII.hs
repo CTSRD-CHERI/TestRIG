@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
@@ -39,165 +37,62 @@
 -- SUCH DAMAGE.
 --
 
-{-# LANGUAGE DeriveGeneric #-}
-module RVFI_DII where
+{-# LANGUAGE ScopedTypeVariables #-}
 
-import Data.Word
-import Data.Bits
-import qualified Data.Bits.Bitwise as BW
-import Data.Binary
-import Data.String
-import Numeric (readHex, showHex, showIntAtBase)
-import GHC.Generics (Generic)
+module RVFI_DII (
+  module RVFI_DII.RVFI
+, module RVFI_DII.DII
+, readDIITrace
+, readDIITraceFile
+, readDIIDataFile
+) where
+
+import RVFI_DII.RVFI
+import RVFI_DII.DII
+
+import Data.List.Split
 import System.IO
+import Numeric
 import Test.QuickCheck
 import RISCV
---import RVxxI
-import Text.Printf
-import Data.List.Split
 import Template
-import Templates.GenArithmetic
 import Templates.Utils
 import InstrCodec
-import System.IO.Unsafe
 
-rvfi_cmd_instruction = 1 :: Word8
-rvfi_cmd_end = 0 :: Word8
-
-data RVFI_DII_Instruction = RVFI_DII_Instruction {
-  padding   :: Word8,
-  rvfi_cmd  :: Word8,
-  rvfi_time :: Word16,
-  rvfi_ins_insn :: Word32
-} deriving (Generic)
-instance Binary RVFI_DII_Instruction
-instance Num RVFI_DII_Instruction where
-  fromInteger i =
-    RVFI_DII_Instruction {
-      padding   = 0,
-      rvfi_cmd  = rvfi_cmd_instruction,
-      rvfi_time = 1,
-      rvfi_ins_insn = fromInteger i
-    }
-  (+)    = error "(+) is not defined on RVFI_DII_Instruction"
-  (*)    = error "(*) is not defined on RVFI_DII_Instruction"
-  abs    = error "abs is not defined on RVFI_DII_Instruction"
-  signum = error "signum is not defined on RVFI_DII_Instruction"
-  negate = error "negate is not defined on RVFI_DII_Instruction"
-
-inst_to_rvfi_dii :: Integer -> RVFI_DII_Instruction
-inst_to_rvfi_dii inst = RVFI_DII_Instruction {
-    padding   = 0,
-    rvfi_cmd  = rvfi_cmd_instruction,
-    rvfi_time = 1,
-    rvfi_ins_insn = fromInteger inst
-  }
-
-instance Show RVFI_DII_Instruction where
-  show inst_tok = printf ".4byte 0x%08x # %s"
-                         (rvfi_ins_insn inst_tok)
-                         (pretty $ toInteger $ rvfi_ins_insn inst_tok)
-  showList inst_toks = showString (unlines (map show inst_toks))
-
+-- | Show instance for 'TestCase' now that 'diiInstruction' is in scope
 instance Show TestCase where
-  show testCase = show $ map inst_to_rvfi_dii (fromTestCase testCase)
+  show testCase = show $ map diiInstruction (fromTestCase testCase)
 
-read_rvfi_inst_trace :: [String] -> TestCase
-read_rvfi_inst_trace inStr =
-  let lns = map (head . (splitOn "#")) inStr              -- Remove comments
-      trimmed = filter (not . null) lns                   -- Remove empty lines
-      encInsts = map ((drop 2) .(!! 1) . words) trimmed   -- Take only encoded instruction
+-- | Turns a '[String]' representation of a DII trace into a 'TestCase'
+readDIITrace :: [String] -> TestCase
+readDIITrace inStr =
+  let lns = map (head . (splitOn "#")) inStr            -- Remove comments
+      trimmed = filter (not . null) lns                 -- Remove empty lines
+      encInsts = map ((drop 2) .(!! 1) . words) trimmed -- Take only encoded instruction
       insts :: [Integer] = map (fst . head . readHex) encInsts
   in toTestCase insts
 
-read_rvfi_inst_trace_file :: FilePath -> IO TestCase
-read_rvfi_inst_trace_file inFile = do
+-- | Turns file representation of a DII trace into a 'TestCase'
+readDIITraceFile :: FilePath -> IO TestCase
+readDIITraceFile inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
-  return $ read_rvfi_inst_trace (lines contents)
+  return $ readDIITrace (lines contents)
 
-byte_swap_integer :: Integer -> Integer
-byte_swap_integer word = BW.fromListLE (concat (reverse (chunksOf 8 (BW.toListLE ((fromInteger word) :: Word32)))))
+-- | Turns a '[String]' representation of some data into a DII trace 'TestCase'
+--   that initializes memory with that data
+readDIIData :: [String] -> Gen TestCase
+readDIIData ss = genTemplateUnsized $  (writeData addr ws)
+                                    <> (li32 1 0x80000000)
+                                    <> (Single $ InstrCodec.encode jalr 0 1 0)
+  where (addr:ws) = map (fst . head . readHex . head . words) ss
 
-data_array_to_template :: [Integer] -> Template
-data_array_to_template words = Sequence [ li32 1 (head words)
-                                        , Sequence $ map (\word -> Sequence [li32 2 (byte_swap_integer word), Single $ InstrCodec.encode sw 0 2 1, Single $ InstrCodec.encode addi 4 1 1]) (tail words)]
-
-read_rvfi_data :: [String] -> Gen TestCase
-read_rvfi_data inStr = do
-  let lns = map words inStr
-  genTemplateUnsized $ Sequence ((map (data_array_to_template . (map (fst . head . readHex))) lns)
-                                    ++ [ li32 1 2147483648
-                                       , Single $ InstrCodec.encode jalr 0 1 0 ])
-
-read_rvfi_data_file :: FilePath -> IO TestCase
-read_rvfi_data_file inFile = do
+-- | Turns a File representation of some data into a DII trace 'TestCase' that
+--   initializes memory with that data
+readDIIDataFile :: FilePath -> IO TestCase
+readDIIDataFile inFile = do
   handle <- openFile inFile ReadMode
   contents <- hGetContents handle
-  let lns = length $ map (data_array_to_template . (map (fst . head . readHex))) (map words (lines contents))
-  putStrLn $ "Inst list for loading file \n" ++ (show lns)
-  testCase <- generate $ read_rvfi_data (lines contents)
+  testCase <- generate $ readDIIData (lines contents)
   putStrLn $ show (testCaseInstCount testCase)
   return testCase
-
-data RVFI_DII_Execution = RVFI_DII_Execution {
-  rvfi_intr :: Word8,
-  rvfi_halt :: Word8,
-  rvfi_trap :: Word8,
-  rvfi_rd_addr :: Word8,
-  rvfi_rs2_addr :: Word8,
-  rvfi_rs1_addr :: Word8,
-  rvfi_mem_wmask :: Word8,
-  rvfi_mem_rmask :: Word8,
-  rvfi_mem_wdata :: Word64,
-  rvfi_mem_rdata :: Word64,
-  rvfi_mem_addr :: Word64,
-  rvfi_rd_wdata :: Word64,
-  rvfi_rs2_data :: Word64,
-  rvfi_rs1_data :: Word64,
-  rvfi_exe_insn :: Word64,
-  rvfi_pc_wdata :: Word64,
-  rvfi_pc_rdata :: Word64,
-  rvfi_order :: Word64
-} deriving (Generic)
-instance Binary RVFI_DII_Execution
-
-maskUpper :: Bool -> Word64 -> Word64
-maskUpper is64 x = if is64 then x else (x Data.Bits..&. 0x00000000FFFFFFFF)
-
-byteMask2bitMask :: Word8 -> Word64
-byteMask2bitMask mask = BW.fromListLE $ concatMap ((take 8).repeat) (BW.toListLE mask)
-
-maskWith :: Word64 -> Word8 -> Word64
-maskWith a b = a Data.Bits..&. byteMask2bitMask b
-
-checkEq :: Bool -> RVFI_DII_Execution -> RVFI_DII_Execution -> Bool
-checkEq is64 x y
-    | rvfi_halt x /= 0 = (rvfi_halt x) == (rvfi_halt y)
-    | rvfi_trap x /= 0 = ((rvfi_trap x) == (rvfi_trap y)) && (maskUpper is64 (rvfi_pc_wdata x)) == (maskUpper is64 (rvfi_pc_wdata y))
-    | otherwise = (maskUpper False $ rvfi_exe_insn x) == (maskUpper False $ rvfi_exe_insn y) &&
-                  (rvfi_trap x) == (rvfi_trap y) && (rvfi_halt x) == (rvfi_halt y) &&
-                  (rvfi_rd_addr x == rvfi_rd_addr y) &&
-                  ((rvfi_rd_addr x == 0) || (maskUpper is64 (rvfi_rd_wdata x) == maskUpper is64 (rvfi_rd_wdata y))) &&
-                  (rvfi_mem_wmask x) == (rvfi_mem_wmask y) &&
-                  ((rvfi_mem_wmask x == 0) || ((maskUpper is64 (rvfi_mem_addr x)) == (maskUpper is64 (rvfi_mem_addr y)))) &&
-                  (maskUpper is64 (rvfi_pc_wdata x)) == (maskUpper is64 (rvfi_pc_wdata y)) &&
-                  (maskWith (rvfi_mem_wdata x) (rvfi_mem_wmask x)) == (maskWith (rvfi_mem_wdata y) (rvfi_mem_wmask y))
-
-instance Show RVFI_DII_Execution where
-  show tok
-    | rvfi_halt tok /= 0 = "halt token"
-    | otherwise = printf "Trap: %5s, PCWD: 0x%016x, RD: %02d, RWD: 0x%016x, MA: 0x%016x, MWD: 0x%016x, MWM: 0b%08b, I: 0x%016x (%s)"
-                  (show ((rvfi_trap tok) /= 0)) -- Trap
-                  (rvfi_pc_wdata tok)           -- PCWD
-                  (rvfi_rd_addr tok)            -- RD
-                  (rvfi_rd_wdata tok)           -- RWD
-                  (rvfi_mem_addr tok)           -- MA
-                  (rvfi_mem_wdata tok)          -- MWD
-                  (rvfi_mem_wmask tok)          -- MWM
-                  (rvfi_exe_insn tok) (pretty (toInteger (rvfi_exe_insn tok))) -- Inst
-
-printExecutionDiff :: Bool -> RVFI_DII_Execution -> RVFI_DII_Execution -> String
-printExecutionDiff is64 x y =
-    if (checkEq is64 x y) then ("     " ++ show x)
-                          else (" A < " ++ (show x) ++ "\n B > " ++ (show y))

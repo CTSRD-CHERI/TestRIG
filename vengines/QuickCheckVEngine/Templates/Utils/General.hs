@@ -1,4 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 --
 -- SPDX-License-Identifier: BSD-2-Clause
 --
@@ -39,6 +38,8 @@
 -- SUCH DAMAGE.
 --
 
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Templates.Utils.General (
   -- *RISCV pseudo-instructions
   li
@@ -61,6 +62,7 @@ module Templates.Utils.General (
 , storeOp
 , storeOp32
 , storeOp64
+, writeData
   -- ** Advanced memory helpers
 , legalLoad
 , legalStore
@@ -71,12 +73,14 @@ module Templates.Utils.General (
 , prepReg64
 ) where
 
+import qualified Data.Bits.Bitwise as BW
 import Test.QuickCheck hiding ((.&.))
 import InstrCodec
 import Template
 import RISCV
 import Data.Bits
 import Data.Word
+import Data.List.Split
 
 -- * RISCV pseudo-instructions
 --------------------------------------------------------------------------------
@@ -189,6 +193,18 @@ storeOp32 rs1 rs2 = uniformTemplate $ rv32_i_store rs1 rs2 0
 -- | 'storeOp64' provides a 'Template' for a RV64I memory store operation
 storeOp64 :: Integer -> Integer -> Template
 storeOp64 rs1 rs2 = uniformTemplate $ rv64_i_store rs1 rs2 0
+
+-- | Write provided list of 32-bit 'Integer's in memory starting at the provided
+--   address by deriving a sequence initializing register 1 with that address,
+--   register 2 with a 32-bit immediate value of each word, storing the content
+--   of register 2 at the address contrained in register 1, and incrementing
+--   that address by 4 each time
+writeData :: Integer -> [Integer] -> Template
+writeData addr ws = li32 1 addr <> Sequence (map writeWord ws)
+  where writeWord w =  li32 2 (byteSwap w)
+                    <> instSeq [ encode sw 0 2 1, encode addi 4 1 1 ]
+        byteSwap w = swpHlp ((fromInteger w) :: Word32)
+        swpHlp = BW.fromListLE . concat . reverse . chunksOf 8 . BW.toListLE
 
 -- ** Advanced memory helpers
 

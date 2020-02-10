@@ -182,19 +182,9 @@ main = withSocketsDo $ do
   addrB <- resolve (impBIP flags) (impBPort flags)
   socA <- open "implementation-A" addrA
   socB <- open "implementation-B" addrB
-  sendInstructionTrace socA ([RVFI_DII_Instruction {
-                                            padding   = 0,
-                                            rvfi_cmd  = rvfi_cmd_end,
-                                            rvfi_time = 1,
-                                            rvfi_ins_insn = 0
-                                          }])
+  sendDIIPacket socA diiEnd
   _ <- receiveExecutionTrace False socA
-  sendInstructionTrace socB ([RVFI_DII_Instruction {
-                                            padding   = 0,
-                                            rvfi_cmd  = rvfi_cmd_end,
-                                            rvfi_time = 1,
-                                            rvfi_ins_insn = 0
-                                          }])
+  sendDIIPacket socB diiEnd
   _ <- receiveExecutionTrace False socB
   addrInstr <- mapM (resolve "127.0.0.1") (instrPort flags)
   instrSoc <- mapM (open "instruction-generator-port") addrInstr
@@ -211,7 +201,7 @@ main = withSocketsDo $ do
           Failure {} -> do
             writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
             putStrLn "Replaying shrunk failed test case:"
-            checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result)))) True False
+            checkSingle (readDIITrace (lines(head(failingTestCase result)))) True False
             case (saveDir flags) of
               Nothing -> do
                 putStrLn "Save this trace (give file name or leave empty to ignore)?"
@@ -228,17 +218,17 @@ main = withSocketsDo $ do
           other -> return 0
   let checkFile (memoryInitFile :: Maybe FilePath) (fileName :: FilePath) = do
         putStrLn $ "Reading trace from " ++ fileName
-        trace <- read_rvfi_inst_trace_file fileName
+        trace <- readDIITraceFile fileName
         initTrace <- case (memoryInitFile) of
           Just memInit -> do putStrLn $ "Reading memory initialisation from file " ++ memInit
-                             read_rvfi_data_file memInit
+                             readDIIDataFile memInit
           Nothing -> return mempty
         result <- checkSingle (initTrace <> trace) (optVerbose flags) True
         case result of
           Failure {} -> do
             writeFile "last_failure.S" ("# last failing test case:\n" ++ (unlines (failingTestCase result)))
             putStrLn "Replaying shrunk failed test case:"
-            checkSingle (read_rvfi_inst_trace (lines(head(failingTestCase result)))) True False
+            checkSingle (readDIITrace (lines(head(failingTestCase result)))) True False
             putStrLn "Save this trace (give file name or leave empty to ignore)?"
             fileName <- getLine
             when (not $ null fileName) $ do
@@ -353,31 +343,26 @@ main = withSocketsDo $ do
 prop :: Gen TestCase -> Socket -> Socket -> Bool -> ArchDesc -> Int -> IORef Bool -> Property
 prop gen socA socB doLog arch timeoutDelay alive = forAllShrink gen shrink mkProp
   where mkProp testCase = monadicIO $ run $ do
-          let instTrace = map inst_to_rvfi_dii $ fromTestCase testCase
-          let instTraceTerminated = instTrace ++ [RVFI_DII_Instruction {
-                                                  padding   = 0,
-                                                  rvfi_cmd  = rvfi_cmd_end,
-                                                  rvfi_time = 1,
-                                                  rvfi_ins_insn = 0
-                                                }]
+          let instTrace = map diiInstruction $ fromTestCase testCase
+          let instTraceTerminated = instTrace ++ [diiEnd]
           currentlyAlive <- readIORef alive
           if currentlyAlive then do
             result <- try $ do
               -- Send to implementations
-              sendInstructionTrace socA instTraceTerminated
+              sendDIITrace socA instTraceTerminated
               when doLog $ putStrLn "Done sending instructions to implementation A"
-              sendInstructionTrace socB instTraceTerminated
+              sendDIITrace socB instTraceTerminated
               when doLog $ putStrLn "Done sending instructions to implementation B"
               -- Receive from implementations
               m_modTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socA
               m_impTrace <- timeout timeoutDelay $ receiveExecutionTrace doLog socB
               --
-              let diffStrings = zipWith (printExecutionDiff (has_xlen_64 arch)) (fromMaybe (error "broken modtrace") m_modTrace) (fromMaybe (error "broken imptrace") m_impTrace)
+              let diffStrings = zipWith (rvfiShowCheck $ has_xlen_64 arch) (fromMaybe (error "broken modtrace") m_modTrace) (fromMaybe (error "broken imptrace") m_impTrace)
               when doLog $ mapM_ putStrLn diffStrings
               return (m_modTrace, m_impTrace)
             case result of
               Right (Just modTrace, Just impTrace) ->
-                return $ property $ Data.List.and (zipWith (checkEq (has_xlen_64 arch)) modTrace impTrace)
+                return $ property $ Data.List.and (zipWith (rvfiCheck (has_xlen_64 arch)) modTrace impTrace)
               Right (a, b) -> do
                 writeIORef alive False
                 when (isNothing a) $ putStrLn "Error: implementation A timeout. Forcing all future tests to report 'SUCCESS'"
@@ -394,13 +379,13 @@ prop gen socA socB doLog arch timeoutDelay alive = forAllShrink gen shrink mkPro
 --------------------------------------------------------------------------------
 
 -- Send an instruction trace
-sendInstructionTrace :: Socket -> [RVFI_DII_Instruction] -> IO ()
-sendInstructionTrace sock instTrace =
-  mapM_ (sendInstruction sock) instTrace
+sendDIITrace :: Socket -> [DII_Packet] -> IO ()
+sendDIITrace sock instTrace =
+  mapM_ (sendDIIPacket sock) instTrace
 
 -- Send a single instruction
-sendInstruction :: Socket -> RVFI_DII_Instruction -> IO ()
-sendInstruction sock inst = do
+sendDIIPacket :: Socket -> DII_Packet -> IO ()
+sendDIIPacket sock inst = do
   sendAll sock (BS.reverse (encode inst))
   return ()
 
@@ -412,12 +397,12 @@ receiveBlocking n sock = if toInteger(n) == 0 then return empty else do
   return $ BS.append received remainder
 
 -- Receive an execution trace
-receiveExecutionTrace :: Bool -> Socket -> IO ([RVFI_DII_Execution])
+receiveExecutionTrace :: Bool -> Socket -> IO ([RVFI_Packet])
 receiveExecutionTrace doLog sock = do
   msg <- receiveBlocking 88 sock
-  let traceEntry = (decode (BS.reverse msg)) :: RVFI_DII_Execution
+  let traceEntry = (decode (BS.reverse msg)) :: RVFI_Packet
   --when doLog $ putStrLn ("\t"++(show traceEntry))
-  if ((rvfi_halt traceEntry) == 1)
+  if rvfiIsHalt traceEntry
     then return [traceEntry]
     else do
       remainderOfTrace <- receiveExecutionTrace doLog sock
