@@ -25,3 +25,6 @@
 [submodule "riscv-implementations/Flute"]
 	path = riscv-implementations/Flute
 	url = https://github.com/CTSRD-CHERI/Flute.git
+[submodule "vengines/QuickCheckVEngine"]
+	path = vengines/QuickCheckVEngine
+	url = https://github.com/CTSRD-CHERI/QuickCheckVEngine.git

@@ -5,8 +5,8 @@ Framework for testing RISC-V processors with Random Instruction Generation.
 TestRIG is a framework for RISC-V processor verification using the RVFI-DII (pronounced "rividy") interface.
 TestRIG supports two types of components:
 
-1. Vengines (verification engines)  
-2. Implementations (including Models)  
+1. Vengines (verification engines)
+2. Implementations (including Models)
 
 Vengines generate two equivelant streams of RVFI-DII instruction traces, and consume two streams of RVFI-DII exeuction traces, asserting that they are equivelant.
 Implemenations consume RVFI-DII instruction traces, and generate RVFI-DII execution traces.
@@ -58,12 +58,12 @@ In order to get the different submodules provided by **TestRIG**, run the follow
 $ git submodule update --init --recursive
 ```
 
-The root makefile can currently build the Quick Check Verification Engine, Spike, and the Sail implementation. Both Spike and Sail are built without CHERI support by default and Sail is built as a 32-bit version.
+The root makefile can currently build the QuickCheck Verification Engine, Spike, and the Sail implementation. Both Spike and Sail are built without CHERI support by default and Sail is built as a 32-bit version.
 
 ### Dependencies
-The dependencies for the Quick Check Verification Engine are:
+The dependencies for the QuickCheck Verification Engine are:
 - cabal `sudo apt-get install cabal-install && cabal update`
-- Haskell Quick Check verification engine dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
+- The Haskell modules dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
 
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
