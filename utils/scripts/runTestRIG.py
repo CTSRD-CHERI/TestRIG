@@ -74,18 +74,20 @@ known_vengine  = set({'QCVEngine'})
 multi_letter_exts = ["_".join(filter(None, [e0,e1,e2])) for e0 in z_ext("icsr")
                                                         for e1 in z_ext("ifencei")
                                                         for e2 in x_ext("cheri")]
-known_architectures = sorted(set([e0+e1+e2+e3+e4+e5+e6
+known_architectures = sorted(set([e0+e1+e2+e3+e4+e5+e6+e7
                                    for e0 in ["rv32i", "rv64i"]
                                    for e1 in std_ext("m")
                                    for e2 in std_ext("a")
                                    for e3 in std_ext("f")
                                    for e4 in std_ext("d")
                                    for e5 in std_ext("c")
-                                   for e6 in multi_letter_exts]
-                                 + [e0+e1+e2
+                                   for e6 in std_ext("n")
+                                   for e7 in multi_letter_exts]
+                                 + [e0+e1+e2+e3
                                    for e0 in ["rv32g", "rv64g"]
                                    for e1 in std_ext("c")
-                                   for e2 in x_ext("cheri")]
+                                   for e2 in std_ext("n")
+                                   for e3 in x_ext("cheri")]
                                 ))
 #print(known_architectures)
 known_generators = set({'internal', 'sail', 'manual'})
@@ -155,7 +157,7 @@ parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
 parser.add_argument('-r', '--architecture', type = str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
-  of the form 'rv{32,64}g[c]', or 'rv{32,64}i[m][a][f][d]' optionally followed
+  of the form 'rv{32,64}g[c][n]', or 'rv{32,64}i[m][a][f][d][n]' optionally followed
   by an '_'-separated list of one or more of {Zicsr, Zifencei, Xcheri}
   appearing in that order (e.g. rv64ifcXcheri, rv64imd,
   rv32imafZicsr_Zifencei_Xcheri ...)""")
@@ -187,6 +189,7 @@ class ISA_Configuration:
   has_f = False
   has_d = False
   has_c = False
+  has_n = False
   has_icsr = False
   has_ifencei = False
   has_cheri = False
@@ -216,6 +219,8 @@ class ISA_Configuration:
         self.has_d = True
       elif letter == 'c':
         self.has_c = True
+      elif letter == 'n':
+        self.has_n = True
       elif letter == 'g':
         self.has_i = True
         self.has_m = True
