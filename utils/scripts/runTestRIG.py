@@ -446,7 +446,7 @@ def spawn_generator(name, arch, log):
     if log:
       use_log = log
     elif args.verbose > 0:
-      use_log = os.sys.stdout
+      use_log = sys.stdout
     else:
       use_log = open(os.devnull,"w")
 
