@@ -333,10 +333,10 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     use_log = log
   if 'x' in isa_def.archstring:
     # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
-    [isa, extension] = isa_def.archstring.split('x')
+    extension = isa_def.archstring.split('x', maxsplit=1)[1]
   else:
     # No extension specified in the architecture string
-    [isa, extension] = [isa_def.archstring, ""]
+    extension = ""
 
   env2 = os.environ.copy()
   cmd = []
@@ -448,12 +448,12 @@ def spawn_generator(name, arch, log):
 
     if 'x' in arch:
       # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
-      [isa, extension] = arch.split('x')
+      isa = arch.split('x')[0]
     else:
       # No extension specified in the architecture string
-      [isa, extension] = [arch, ""]
+      isa = arch
     cmd = [args.path_to_generator, '-p', str(args.generator_port)]
-    if not ('c' in isa.split('x')[0]):
+    if 'c' not in isa:
       cmd += ['-no_compressed']
 
     print("running sail generator as: ", " ".join(cmd))
