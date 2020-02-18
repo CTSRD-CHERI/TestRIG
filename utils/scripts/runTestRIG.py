@@ -69,8 +69,8 @@ def z_ext (ext_name):
 def x_ext (ext_name):
   return ["", "X"+ext_name]
 
-known_rvfi_dii = set({'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'ibex', 'manual'})
-known_vengine  = set({'QCVEngine'})
+known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'ibex', 'manual'}
+known_vengine = {'QCVEngine'}
 multi_letter_exts = ["_".join(filter(None, [e0,e1,e2])) for e0 in z_ext("icsr")
                                                         for e1 in z_ext("ifencei")
                                                         for e2 in x_ext("cheri")]
@@ -90,7 +90,7 @@ known_architectures = sorted(set([e0+e1+e2+e3+e4+e5+e6+e7
                                    for e3 in x_ext("cheri")]
                                 ))
 #print(known_architectures)
-known_generators = set({'internal', 'sail', 'manual'})
+known_generators = {'internal', 'sail', 'manual'}
 
 parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 
