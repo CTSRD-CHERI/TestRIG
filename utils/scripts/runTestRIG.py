@@ -6,6 +6,7 @@
 # Copyright (c) 2018-2019 Alexandre Joannou
 # Copyright (c) 2019 Peter Rugg
 # Copyright (c) 2019 Marno van der Maas
+# Copyright (c) 2020 Alex Richardson
 # All rights reserved.
 #
 # This software was developed by SRI International and the University of
@@ -70,7 +71,7 @@ def z_ext(ext_name):
 def x_ext(ext_name):
   return ["", "X"+ext_name]
 
-known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'ibex', 'manual'}
+known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'ibex', 'qemu', 'manual'}
 known_vengine = {'QCVEngine'}
 multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
                      for e0 in z_ext("icsr")
@@ -139,6 +140,8 @@ parser.add_argument('--path-to-rvbs-dir', metavar='PATH', type=str,
   help="The PATH to the rvbs executable directory")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=None, help="The PATH to the spike executable")
+parser.add_argument('--path-to-qemu', metavar='PATH', type=str,
+  default=None, help="The PATH to the qemu executable")
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IMUxCHERI_RVFI_DII_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
@@ -208,7 +211,8 @@ class ISA_Configuration:
     else:
       print("ERROR: ISA string must start with rv32 or rv64")
       exit(-1)
-    for letter in parts[0][4:]:
+    self.std_extensions = parts[0][4:]
+    for letter in self.std_extensions:
       if letter == 'i':
         self.has_i = True
       elif letter == 'm':
@@ -234,7 +238,8 @@ class ISA_Configuration:
       else:
         print("ERROR: Unknown standard extension '"+letter+"'")
         exit(-1)
-    for extension in parts[1:]:
+    self.extensions = parts[1:]
+    for extension in self.extensions:
       if extension == "icsr":
         self.has_icsr = True
       elif extension == "ifencei":
@@ -299,6 +304,21 @@ class ISA_Configuration:
       print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
     return result
 
+  def get_qemu_cpu(self):
+    # See cpu.c: static Property riscv_cpu_properties[]
+    result = ""
+    if self.has_xlen_32:
+      result = "rv32"
+    elif self.has_xlen_64:
+      result = "rv64"
+    for ext in self.std_extensions:
+      result += "," + ext + "=true"
+    for ext in self.extensions:
+      result += "," + ext + "=true"
+    if self.has_cheri:
+      sys.exit("ERROR CHERI not implemented yet")
+    return result
+
   def get_sail_name(self):
     result = "riscv_rvfi"
     if self.has_icsr:
@@ -359,6 +379,19 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
 
     if extension != "" and extension != "cheri":
       cmd += ["--extension={:s}".format(extension)]
+  ##############################################################################
+  elif name == 'qemu':
+    # /Users/alex/cheri/build-debug/qemu-build/riscv64cheri-softmmu/qemu-system-riscv64cheri
+    if args.path_to_qemu is None:
+      args.path_to_qemu = "../../riscv-implementations/qemu/build"
+      if isa_def.has_xlen_32:
+        args.path_to_spike += "/riscv32-softmmu/qemu-system-riscv32"
+      else:
+        args.path_to_spike += "/riscv64cheri-softmmu/qemu-system-riscv64cheri"
+    cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_qemu), "--rvfi-dii-port", str(port),
+           "-cpu", isa_def.get_qemu_cpu(), "-bios", "default"]
+    if log:
+      cmd += ["-D", "/dev/stderr", "-d", "in_asm,cpu,exec"]
   ##############################################################################
   elif name == 'rvbs':
     env2["RVFI_DII_PORT"] = str(port)
