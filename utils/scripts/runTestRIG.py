@@ -339,12 +339,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   env2 = os.environ.copy()
   cmd = []
   ##############################################################################
-  if (name == 'spike'):
-    # This is a bit of a hack, but necessary for now, since the Spike implentation doesn't support underscores in the ISA string parsing.
-    if '_' in isa:
-      newIsa = isa.split('_')[0]
-    else:
-      newIsa = isa
+  if name == 'spike':
     if args.path_to_spike is None:
       args.path_to_spike = "../../riscv-implementations/riscv-isa-sim/build"
       if isa_def.has_cheri:
