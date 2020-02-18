@@ -360,22 +360,22 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     if extension != "" and extension != "cheri":
       cmd += ["--extension={:s}".format(extension)]
   ##############################################################################
-  elif (name == 'rvbs'):
+  elif name == 'rvbs':
     env2["RVFI_DII_PORT"] = str(port)
     print("starting RVBS server.")
     cmd = [op.join(args.path_to_rvbs_dir, isa_def.get_rvbs_name())]
     if log:
       cmd += ["+itrace"]
   ##############################################################################
-  elif (name == 'piccolo'):
+  elif name == 'piccolo':
     env2["RVFI_DII_PORT"] = str(port)
     cmd = [args.path_to_piccolo, "+v2"]
   ##############################################################################
-  elif (name == 'flute'):
+  elif name == 'flute':
     env2["RVFI_DII_PORT"] = str(port)
     cmd = [args.path_to_flute, "+v2"]
   ##############################################################################
-  elif (name == 'sail'):
+  elif name == 'sail':
     if args.path_to_sail_riscv_dir is None:
       args.path_to_sail_riscv_dir = "../../riscv-implementations/sail-"
       if isa_def.has_cheri:
@@ -392,10 +392,10 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     #cmd += ["--rvfi-dii", str(port)]
     cmd += ["-r", str(port)]
   ##############################################################################
-  elif (name == 'ibex'):
+  elif name == 'ibex':
     cmd = [args.path_to_ibex, 'localhost', str(port)]
   ##############################################################################
-  elif (name == 'manual'):
+  elif name == 'manual':
     return None
   ##############################################################################
   else:
@@ -412,20 +412,20 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
 #############################
 
 def spawn_vengine(name, mport, iport, arch):
-  if (name == 'QCVEngine'):
+  if name == 'QCVEngine':
     cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport), '-r', str(arch)]
     cmd += ['-n', str(args.number_of_tests)]
     if args.verbose > 0:
       cmd += ['-v']
-    if (args.generator != 'internal'):
+    if args.generator != 'internal':
       cmd += ['-i', str(args.generator_port)]
-    if (args.trace_file):
+    if args.trace_file:
       print("using trace_file {:s}".format(args.trace_file))
       cmd += ['-t', args.trace_file]
-    if (args.trace_dir):
+    if args.trace_dir:
       print("using trace_dir {:s}".format(args.trace_dir))
       cmd += ['-d', args.trace_dir]
-    if (args.save_dir):
+    if args.save_dir:
       cmd += ['-s', args.save_dir]
     print("running qcvengine as: ", " ".join(cmd))
     p = sub.Popen(cmd)
