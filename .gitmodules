@@ -28,3 +28,7 @@
 [submodule "vengines/QuickCheckVEngine"]
 	path = vengines/QuickCheckVEngine
 	url = https://github.com/CTSRD-CHERI/QuickCheckVEngine.git
+[submodule "riscv-implementations/qemu"]
+	path = riscv-implementations/qemu
+	url = https://github.com/CTSRD-CHERI/qemu
+	branch = qemu-cheri

@@ -124,6 +124,20 @@ $(SPIKE_DIR)/build-cheri/Makefile:
 spike-cheri: $(SPIKE_DIR)/build-cheri/Makefile
 	$(MAKE) -C $(SPIKE_DIR)/build-cheri install
 
+QEMU_DIR=riscv-implementations/qemu
+
+$(QEMU_DIR)/build/config-host.mak:
+	cd $(QEMU_DIR) && mkdir -p build && cd build && \
+	  ../configure --prefix=`pwd`/install --enable-debug --enable-sanitizers \
+	    --disable-vnc --disable-sdl --disable-gtk --disable-opengl --disable-cocoa \
+	    --disable-strip --disable-linux-aio --disable-kvm --disable-werror --disable-pie \
+	    --disable-linux-user --disable-bsd-user --disable-xen --disable-docs --disable-rdma \
+	    --disable-capstone \
+	    --enable-rvfi-dii --target-list=riscv64cheri-softmmu,riscv64-softmmu,riscv32-softmmu
+
+qemu: $(QEMU_DIR)/build/config-host.mak
+	$(MAKE) -C $(QEMU_DIR)/build
+
 sail: sail-rv32
 
 sail-rv32:
