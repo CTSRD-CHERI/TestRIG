@@ -37,58 +37,60 @@
 
 import argparse
 import os
-import signal
 import os.path as op
-import subprocess as sub
-import time
-import sys
 import re
+import signal
+import subprocess as sub
+import sys
+import time
+
 
 ################################
 # Parse command line arguments #
 ################################################################################
 
-def auto_int (x):
-  return int(x,0)
+def auto_int(x):
+  return int(x, 0)
 
-def auto_pos_int (x):
-  val = int(x,0)
+def auto_pos_int(x):
+  val = int(x, 0)
   if val <= 0:
     raise argparse.ArgumentTypeError("argument must be a positive int. Got {:d}.".format(val))
   return val
 
-def auto_write_fd (fname):
+def auto_write_fd(fname):
   return open(fname, 'w')
 
-def std_ext (ext_name):
+def std_ext(ext_name):
   return ["", ext_name]
 
-def z_ext (ext_name):
+def z_ext(ext_name):
   return ["", "Z"+ext_name]
 
-def x_ext (ext_name):
+def x_ext(ext_name):
   return ["", "X"+ext_name]
 
 known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'ibex', 'manual'}
 known_vengine = {'QCVEngine'}
-multi_letter_exts = ["_".join(filter(None, [e0,e1,e2])) for e0 in z_ext("icsr")
-                                                        for e1 in z_ext("ifencei")
-                                                        for e2 in x_ext("cheri")]
-known_architectures = sorted(set([e0+e1+e2+e3+e4+e5+e6+e7
-                                   for e0 in ["rv32i", "rv64i"]
-                                   for e1 in std_ext("m")
-                                   for e2 in std_ext("a")
-                                   for e3 in std_ext("f")
-                                   for e4 in std_ext("d")
-                                   for e5 in std_ext("c")
-                                   for e6 in std_ext("n")
-                                   for e7 in multi_letter_exts]
-                                 + [e0+e1+e2+e3
-                                   for e0 in ["rv32g", "rv64g"]
-                                   for e1 in std_ext("c")
-                                   for e2 in std_ext("n")
-                                   for e3 in x_ext("cheri")]
-                                ))
+multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
+                     for e0 in z_ext("icsr")
+                     for e1 in z_ext("ifencei")
+                     for e2 in x_ext("cheri")]
+known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7
+                                  for e0 in ["rv32i", "rv64i"]
+                                  for e1 in std_ext("m")
+                                  for e2 in std_ext("a")
+                                  for e3 in std_ext("f")
+                                  for e4 in std_ext("d")
+                                  for e5 in std_ext("c")
+                                  for e6 in std_ext("n")
+                                  for e7 in multi_letter_exts]
+                                 + [e0 + e1 + e2 + e3
+                                    for e0 in ["rv32g", "rv64g"]
+                                    for e1 in std_ext("c")
+                                    for e2 in std_ext("n")
+                                    for e3 in x_ext("cheri")]
+                                 ))
 #print(known_architectures)
 known_generators = {'internal', 'sail', 'manual'}
 
@@ -123,13 +125,13 @@ parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=5, type=a
   help="Specify a number of seconds to wait between server creation and verification engine startup.")
 parser.add_argument('-v', '--verbose', action='count', default=0,
   help="Increase verbosity level by adding more \"v\".")
-parser.add_argument('-S', '--save-dir', metavar= 'SAVEDIR', type=str,
+parser.add_argument('-S', '--save-dir', metavar='SAVEDIR', type=str,
   help="Keep running, saving each failure to directory provided.")
-parser.add_argument('-n', '--number-of-tests', metavar= 'NTESTS', type=auto_int,
+parser.add_argument('-n', '--number-of-tests', metavar='NTESTS', type=auto_int,
   default=100, help="Runs the verification engine for NTESTS tests.")
-parser.add_argument('-t', '--trace-file', metavar= 'FILENAME', type=str,
+parser.add_argument('-t', '--trace-file', metavar='FILENAME', type=str,
   help="Runs the test specified in FILENAME")
-parser.add_argument('-d', '--trace-dir', metavar= 'DIRNAME', type=str,
+parser.add_argument('-d', '--trace-dir', metavar='DIRNAME', type=str,
   help="Runs the tests contained in DIRNAME")
 parser.add_argument('--path-to-rvbs-dir', metavar='PATH', type=str,
   #default='rvbs-rv32i-rvfi-dii',
@@ -152,9 +154,9 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist-newstyle/build/x86_64-linux/ghc-8.6.3/QCVEngine-0.1.0.0/x/QCVEngine/build/QCVEngine/QCVEngine"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
-  default=None, #This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
+  default=None,  # This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
   help="The PATH to the directory containing the sail executable. Examples: riscv-implementations/sail-riscv and riscv-implementations/sail-cheri-riscv")
-parser.add_argument('-r', '--architecture', type = str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
+parser.add_argument('-r', '--architecture', type=str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
   of the form 'rv{32,64}g[c][n]', or 'rv{32,64}i[m][a][f][d][n]' optionally followed
@@ -312,7 +314,7 @@ class ISA_Configuration:
     return result
 
 
-def verboseprint(lvl,msg):
+def verboseprint(lvl, msg):
   if args.verbose >= lvl:
     print(msg)
 
@@ -325,8 +327,8 @@ def input_y_n(prompt):
 #########################
 
 def spawn_rvfi_dii_server(name, port, log, isa_def):
-  ## few common variables
-  use_log = open(os.devnull,"w")
+  # few common variables
+  use_log = open(os.devnull, "w")
   if log:
     use_log = log
   if 'x' in isa_def.archstring:
@@ -345,7 +347,8 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
       if isa_def.has_cheri:
         args.path_to_spike += "-cheri"
       args.path_to_spike += "/spike"
-    cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_spike), "--rvfi-dii-port", str(port),"--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
+    cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_spike), "--rvfi-dii-port", str(port),
+           "--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
     if "LD_LIBRARY_PATH" in env2:
       env2["LD_LIBRARY_PATH"] = "%s:%s" % (env2["LD_LIBRARY_PATH"], op.dirname(args.path_to_spike))
     else:
@@ -443,7 +446,7 @@ def spawn_generator(name, arch, log):
     elif args.verbose > 0:
       use_log = sys.stdout
     else:
-      use_log = open(os.devnull,"w")
+      use_log = open(os.devnull, "w")
 
     if 'x' in arch:
       # x Splits the standard RISC-V exenstions (e.g. rv32i) from non-standard ones like CHERI
@@ -482,7 +485,7 @@ def main():
       vengine.kill()
 
   def handle_SIGINT(sig, frame):
-    kill_procs(a,b,generator,e)
+    kill_procs(a, b, generator, e)
     exit(0)
 
   signal.signal(signal.SIGINT, handle_SIGINT)
@@ -497,7 +500,7 @@ def main():
     a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, isa_def)
     b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, isa_def)
 
-    time.sleep(args.spawn_delay) # small delay to give time to the spawned servers to be ready to listen
+    time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
     e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, args.architecture)
     generator = spawn_generator(args.generator, args.architecture, args.generator_log)
@@ -506,7 +509,7 @@ def main():
     print('run terminated')
     exit(e.returncode)
   finally:
-    kill_procs(a,b,generator,e)
+    kill_procs(a, b, generator, e)
 
 if __name__ == "__main__":
   main()
