@@ -431,8 +431,6 @@ def spawn_vengine(name, mport, iport, arch):
     p = sub.Popen(cmd)
     return p
   else:
-    if generator:
-      generator.kill()
     print("Unknown verification engine {:s}".format(name))
 
 #######################################
