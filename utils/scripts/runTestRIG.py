@@ -508,12 +508,10 @@ def main():
     generator = spawn_generator(args.generator, args.architecture, args.generator_log)
 
     e.wait()
-  except:
-    print("Exception happened: " + str(sys.exc_info()[0]))
-  else:
     print('run terminated')
-    kill_procs(a,b,generator,e)
     exit(e.returncode)
+  finally:
+    kill_procs(a,b,generator,e)
 
 if __name__ == "__main__":
   main()
