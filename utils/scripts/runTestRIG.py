@@ -437,7 +437,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   ##############################################################################
   print("running rvfi-dii server as: ", " ".join(cmd))
   p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
-  print('spawned {:s} rvfi-dii server on port: {:d}'.format(name, port))
+  print('spawned {:s} rvfi-dii server on port: {:d} ({})'.format(name, port, cmd))
   return p
 
 #############################
