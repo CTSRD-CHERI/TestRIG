@@ -306,15 +306,22 @@ class ISA_Configuration:
 
   def get_qemu_cpu(self):
     # See cpu.c: static Property riscv_cpu_properties[]
+    # Only e is off by default
+    supported_qemu_exts = list("iegmafdcsu") + ["Counters", "Zifencei", "Zicsr"]
+    # Explicitly disable QEMU extensions that are on by default and selectively enable
+    ext_map = {k: k + "=false" for k in supported_qemu_exts}
+    # TODO: mmu/pmp/priv_spec?
+    # DEFINE_PROP_STRING("priv_spec", RISCVCPU, cfg.priv_spec),
+    # DEFINE_PROP_BOOL("mmu", RISCVCPU, cfg.mmu, true),
+    # DEFINE_PROP_BOOL("pmp", RISCVCPU, cfg.pmp, true),
     result = ""
     if self.has_xlen_32:
       result = "rv32"
     elif self.has_xlen_64:
       result = "rv64"
-    for ext in self.std_extensions:
-      result += "," + ext + "=true"
-    for ext in self.extensions:
-      result += "," + ext + "=true"
+    for ext in list(self.std_extensions) + self.extensions:
+      ext_map[ext] = ext + "=true"
+    result += "," + ",".join(ext_map.values())
     if self.has_cheri:
       sys.exit("ERROR CHERI not implemented yet")
     return result
