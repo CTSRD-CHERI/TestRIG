@@ -73,7 +73,7 @@ The dependencies for RVBS are the Bluespec compiler `bsc`. For people on the Uni
 
 The dependencies for the Sail model can be installed using
 [opam](http://opam.ocaml.org/) by following the instructions from the
-[Sail wiki](https://github.com/rems-project/sail/wiki/OPAMInstall).
+[Sail wiki](https://github.com/rems-project/sail/blob/sail2/INSTALL.md).
 
 The dependencies for Ibex are verilator:
 - `sudo apt-get install verilator`
