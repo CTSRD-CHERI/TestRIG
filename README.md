@@ -49,6 +49,7 @@ Currently, the provided modules are:
 - [Piccolo](https://github.com/CTSRD-CHERI/Piccolo.git)
 - [Flute](https://github.com/CTSRD-CHERI/Flute.git)
 - [Ibex](https://github.com/CTSRD-CHERI/ibex.git)
+- [QEMU](https://github.com/CTSRD-CHERI/qemu.git)
 
 ## Getting started
 
