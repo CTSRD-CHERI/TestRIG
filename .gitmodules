@@ -7,6 +7,7 @@
 [submodule "riscv-isa-sim"]
 	path = riscv-implementations/riscv-isa-sim
 	url = https://github.com/CTSRD-CHERI/riscv-isa-sim.git
+	branch = cheri
 [submodule "sail-riscv-test-generation"]
 	path = vengines/sail-riscv-test-generation
 	url = https://github.com/rems-project/sail-riscv-test-generation.git
@@ -16,15 +17,18 @@
 [submodule "Piccolo"]
 	path = riscv-implementations/Piccolo
 	url = https://github.com/CTSRD-CHERI/Piccolo.git
+	branch = CHERI
 [submodule "sail-cheri-riscv"]
 	path = riscv-implementations/sail-cheri-riscv
 	url = https://github.com/CTSRD-CHERI/sail-cheri-riscv.git
 [submodule "ibex"]
 	path = riscv-implementations/ibex
 	url = https://github.com/CTSRD-CHERI/ibex.git
+	branch = ibex_cheri
 [submodule "riscv-implementations/Flute"]
 	path = riscv-implementations/Flute
 	url = https://github.com/CTSRD-CHERI/Flute.git
+	branch = CHERI
 [submodule "vengines/QuickCheckVEngine"]
 	path = vengines/QuickCheckVEngine
 	url = https://github.com/CTSRD-CHERI/QuickCheckVEngine.git
