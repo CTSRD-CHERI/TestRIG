@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-
+# PYTHON_ARGCOMPLETE_OK
 #-
 # SPDX-License-Identifier: BSD-2-Clause
 #
@@ -179,6 +179,12 @@ parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_
 parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
   help="Log instruction generator output")
 
+# Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
+try:
+  import argcomplete
+  argcomplete.autocomplete(parser)
+except ImportError:
+  pass
 args = parser.parse_args()
 
 ###########
