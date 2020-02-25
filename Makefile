@@ -117,12 +117,27 @@ $(SPIKE_DIR)/build/Makefile:
 spike: $(SPIKE_DIR)/build/Makefile
 	$(MAKE) -C $(SPIKE_DIR)/build install
 
+$(SPIKE_DIR)/build-misaligned/Makefile:
+	cd $(SPIKE_DIR) && mkdir -p build-misaligned && cd build-misaligned && \
+	  ../configure --prefix=`pwd` --enable-rvfi-dii --disable-cheri --enable-misaligned
+
+spike-misaligned: $(SPIKE_DIR)/build-misaligned/Makefile
+	$(MAKE) -C $(SPIKE_DIR)/build-misaligned install
+
 $(SPIKE_DIR)/build-cheri/Makefile:
 	cd $(SPIKE_DIR) && mkdir -p build-cheri && cd build-cheri && \
 	  ../configure --prefix=`pwd` --enable-rvfi-dii --enable-cheri
 
 spike-cheri: $(SPIKE_DIR)/build-cheri/Makefile
 	$(MAKE) -C $(SPIKE_DIR)/build-cheri install
+
+$(SPIKE_DIR)/build-cheri-misaligned/Makefile:
+	cd $(SPIKE_DIR) && mkdir -p build-cheri-misaligned && cd build-cheri-misaligned && \
+	  ../configure --prefix=`pwd` --enable-rvfi-dii --enable-cheri --enable-misaligned
+
+spike-cheri-misaligned: $(SPIKE_DIR)/build-cheri-misaligned/Makefile
+	$(MAKE) -C $(SPIKE_DIR)/build-cheri-misaligned install
+
 
 QEMU_DIR=riscv-implementations/qemu
 

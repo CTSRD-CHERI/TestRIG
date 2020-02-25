@@ -383,6 +383,8 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
       args.path_to_spike = "../../riscv-implementations/riscv-isa-sim/build"
       if isa_def.has_cheri:
         args.path_to_spike += "-cheri"
+      if isa_def.support_misaligned:
+        args.path_to_spike += "-misaligned"
       args.path_to_spike += "/spike"
     cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_spike), "--rvfi-dii-port", str(port),
            "--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
@@ -401,6 +403,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     # /Users/alex/cheri/build-debug/qemu-build/riscv64cheri-softmmu/qemu-system-riscv64cheri
     if args.path_to_qemu is None:
       args.path_to_qemu = "../../riscv-implementations/qemu/build"
+      # TODO: allow testing against non-CHERI versions
       if isa_def.has_xlen_32:
         args.path_to_spike += "/riscv32-softmmu/qemu-system-riscv32"
       else:
