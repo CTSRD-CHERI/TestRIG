@@ -313,9 +313,12 @@ class ISA_Configuration:
   def get_qemu_cpu(self):
     # See cpu.c: static Property riscv_cpu_properties[]
     # Only e is off by default
-    supported_qemu_exts = list("iegmafdcsu") + ["Counters", "Zifencei", "Zicsr"]
+    supported_qemu_exts = list("iegmafdc") + ["Counters", "Zifencei", "Zicsr"]
     # Explicitly disable QEMU extensions that are on by default and selectively enable
     ext_map = {k: k + "=false" for k in supported_qemu_exts}
+    # TestRIG expects s and u to be on by default
+    ext_map["s"] = "s=true"
+    ext_map["u"] = "u=true"
     # TODO: mmu/pmp/priv_spec?
     # DEFINE_PROP_STRING("priv_spec", RISCVCPU, cfg.priv_spec),
     # DEFINE_PROP_BOOL("mmu", RISCVCPU, cfg.mmu, true),
@@ -327,6 +330,7 @@ class ISA_Configuration:
       result = "rv64"
     for ext in list(self.std_extensions) + self.extensions:
       ext_map[ext] = ext + "=true"
+
     result += "," + ",".join(ext_map.values())
     if self.has_cheri:
       sys.exit("ERROR CHERI not implemented yet")
