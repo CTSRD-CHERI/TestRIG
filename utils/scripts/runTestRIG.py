@@ -333,11 +333,11 @@ class ISA_Configuration:
     elif self.has_xlen_64:
       result = "rv64"
     for ext in list(self.std_extensions) + self.extensions:
+      # Note: QEMU expects ,Xcheri=true to be passed
+      if ext == "cheri":
+        ext = "Xcheri"
       ext_map[ext] = ext + "=true"
-
     result += "," + ",".join(ext_map.values())
-    if self.has_cheri:
-      sys.exit("ERROR CHERI not implemented yet")
     return result
 
   def get_sail_name(self):
