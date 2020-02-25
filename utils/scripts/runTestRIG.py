@@ -313,12 +313,16 @@ class ISA_Configuration:
   def get_qemu_cpu(self):
     # See cpu.c: static Property riscv_cpu_properties[]
     # Only e is off by default
-    supported_qemu_exts = list("iegmafdc") + ["Counters", "Zifencei", "Zicsr"]
+    supported_qemu_exts = list("iegmafdc") + ["Counters", "Zifencei"]
     # Explicitly disable QEMU extensions that are on by default and selectively enable
     ext_map = {k: k + "=false" for k in supported_qemu_exts}
-    # TestRIG expects s and u to be on by default
+    # TestRIG expects s,u,Zicsr to be on by default:
     ext_map["s"] = "s=true"
     ext_map["u"] = "u=true"
+    print("WARNING: enabling s and u extensions by default in QEMU.")
+    if not self.has_icsr:
+      ext_map["Zicsr"] = "Zicsr=true"
+      print("WARNING: enabling icsr extension by default in QEMU.")
     # TODO: mmu/pmp/priv_spec?
     # DEFINE_PROP_STRING("priv_spec", RISCVCPU, cfg.priv_spec),
     # DEFINE_PROP_BOOL("mmu", RISCVCPU, cfg.mmu, true),
