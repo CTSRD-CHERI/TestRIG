@@ -1,8 +1,9 @@
-def configs = [ ["sail", "piccolo", "rv32izicsr_zifencei_xcheri", ""]
-              , ["sail", "flute", "rv32izicsr_zifencei_xcheri", ""]
-              , ["sail", "rvbs", "rv32izicsr_zifencei_xcheri", "--support-misaligned"]
-              , ["sail", "ibex", "rv32izicsr_zifencei_xcheri", ""]
-              , ["sail", "spike", "rv32izicsr_zifencei_xcheri", ""]
+def configs = [ ["sail", "piccolo", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
+              , ["sail", "flute", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
+              , ["sail", "flute", "rv64izicsr_zifencei_xcheri", "rv64_xcheri", ""]
+              , ["sail", "rvbs", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", "--support-misaligned"]
+              , ["sail", "ibex", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
+              , ["sail", "spike", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
               ]
 
 def jobs = [:]
@@ -16,7 +17,7 @@ configs.each {
           stage(name) {
             docker.image('ctsrd/testrig').inside {
               echo name
-              sh "/home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} -r ${conf[2]} ${conf[3]} -n 25000"
+              sh "/home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} --verification-archstring ${conf[2]}-r ${conf[3]} ${conf[4]} -n 25000"
             }
           }
         }
