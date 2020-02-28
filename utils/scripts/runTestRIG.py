@@ -166,6 +166,10 @@ parser.add_argument('-r', '--architecture', type=str.lower, metavar='ARCH', choi
   by an '_'-separated list of one or more of {Zicsr, Zifencei, Xcheri}
   appearing in that order (e.g. rv64ifcXcheri, rv64imd,
   rv32imafZicsr_Zifencei_Xcheri ...)""")
+parser.add_argument('--verification-archstring', type=str.lower, metavar='ARCH',
+  help="""The architecture string to pass to the verification engine, (defaults to the value of --architecture).
+  Setting a different value here (such as rv64xcheri) allows verifying only a subset of the extensions without
+  runnining all the integer tests before.""")
 parser.add_argument('--support-misaligned', action='store_true',
   help="""Enable misaligned memory accesses""")
 parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
@@ -559,7 +563,9 @@ def main():
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
-    e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, args.architecture)
+    # Allow --verification-archstring to override architecture
+    vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
+    e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, vengine_archstring)
     generator = spawn_generator(args.generator, args.architecture, args.generator_log)
 
     e.wait()
