@@ -10,7 +10,6 @@ ansiColor('xterm') {
           [$class: 'RelativeTargetDirectory',
            relativeTargetDir: 'TestRIG'],
           [$class: 'CloneOption',
-           shallow: true,
            noTags: true]]])
       }
     stage("Build TestRIG builder docker image") {
