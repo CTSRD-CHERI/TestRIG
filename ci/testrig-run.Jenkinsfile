@@ -17,7 +17,7 @@ configs.each {
           stage(name) {
             docker.image('ctsrd/testrig').inside {
               echo name
-              sh "/home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} --verification-archstring ${conf[2]}-r ${conf[3]} ${conf[4]} -n 25000"
+              sh "/home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} --verification-archstring ${conf[2]} -r ${conf[3]} ${conf[4]} -n 25000"
             }
           }
         }
