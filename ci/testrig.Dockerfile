@@ -1,10 +1,14 @@
 FROM ctsrd/testrig-builder as testrig
 
+# work from the jenkins user home directory
+WORKDIR /home/jenkins
+
+# copy TestRIG repo from host checkout
+COPY TestRIG ./TestRIG
+
 RUN \
   . /home/jenkins/sourceme.sh && \
-  git clone --branch test --depth 1 https://github.com/CTSRD-CHERI/TestRIG.git && \
   cd TestRIG && \
-  git submodule update --init --recursive && \
   make -j 8 QCVEngine \
   ibex-rv32ic-cheri \
   piccolo-rv32xcheri \

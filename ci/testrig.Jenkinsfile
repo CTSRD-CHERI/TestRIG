@@ -2,10 +2,19 @@ ansiColor('xterm') {
   node("docker") {
     def img
     stage("Clone TestRIG repository") {
-      checkout scm
-    }
+      checkout([$class: 'GitSCM',
+        userRemoteConfigs: [[url: 'https://github.com/CTSRD-CHERI/TestRIG.git']],
+        extensions: [
+          [$class: 'SubmoduleOption',
+           recursiveSubmodules: true],
+          [$class: 'RelativeTargetDirectory',
+           relativeTargetDir: 'TestRIG'],
+          [$class: 'CloneOption',
+           shallow: true,
+           noTags: true]]])
+      }
     stage("Build TestRIG builder docker image") {
-      img = docker.build("ctsrd/testrig", "-f ci/testrig.Dockerfile --no-cache --pull .")
+      img = docker.build("ctsrd/testrig", "-f TestRIG/ci/testrig.Dockerfile --no-cache --pull .")
     }
     stage("Push TestRIG docker image to docker hub") {
       docker.withRegistry('https://registry.hub.docker.com',
