@@ -6,8 +6,7 @@ ansiColor('xterm') {
         userRemoteConfigs: [[url: 'https://github.com/CTSRD-CHERI/TestRIG.git']],
         extensions: [
           [$class: 'SubmoduleOption',
-           recursiveSubmodules: true,
-           shallow: true],
+           recursiveSubmodules: true],
           [$class: 'RelativeTargetDirectory',
            relativeTargetDir: 'TestRIG'],
           [$class: 'CloneOption',
