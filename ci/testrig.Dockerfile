@@ -4,7 +4,7 @@ FROM ctsrd/testrig-builder as testrig
 WORKDIR /home/jenkins
 
 # copy TestRIG repo from host checkout
-COPY TestRIG ./TestRIG
+COPY --chown=jenkins TestRIG ./TestRIG
 
 RUN \
   . /home/jenkins/sourceme.sh && \
