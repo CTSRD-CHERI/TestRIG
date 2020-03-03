@@ -15,6 +15,7 @@ configs.each {
       ansiColor('xterm') {
         node('docker') {
           stage(name) {
+            docker.image('ctsrd/testrig').pull()
             docker.image('ctsrd/testrig').inside {
               echo name
               sh "/home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} -r ${conf[2]} --verification-archstring ${conf[3]} ${conf[4]} -n 25000"
