@@ -4,6 +4,7 @@ def configs = [ ["sail", "piccolo", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zi
               , ["sail", "rvbs", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", "--support-misaligned"]
               , ["sail", "ibex", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
               , ["sail", "spike", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
+              , ["sail", "spike", "rv64izicsr_zifencei_xcheri", "rv64_xcheri", ""]
               ]
 
 def jobs = [:]
