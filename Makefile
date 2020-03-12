@@ -82,6 +82,9 @@ flute-rv64xcheri:
 flute-rv32: flute-rv32xcheri #for now, just testing CHERI implementation.
 flute-rv64: flute-rv64xcheri #for now, just testing CHERI implementation.
 
+toooba-rv64:
+	$(MAKE) -C riscv-implementations/Toooba/builds/RV64ACDFIMSU_Toooba_RVFIDII_verilator ARCH=RV64I compile simulator
+
 rvbs: rvbs-rv32IZicsrZifencei
 
 rvbs-rv32IZicsrZifencei:
@@ -172,7 +175,7 @@ ibex-rv32ic-cheri:
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba
 
 clean-rvbs: clean-rvbs-rv32IZicsrZifencei
 
@@ -219,6 +222,9 @@ clean-piccolo:
 
 clean-flute:
 	rm -rf riscv-implementations/Flute/builds/RV*
+
+clean-toooba:
+	$(MAKE) -C riscv-implementations/Toooba/builds/RV64ACDFIMSU_Toooba_RVFIDII_verilator clean
 
 clean-ibex:
 	$(MAKE) -C riscv-implementations/ibex/verilator clean
