@@ -36,3 +36,6 @@
 	path = riscv-implementations/qemu
 	url = https://github.com/CTSRD-CHERI/qemu
 	branch = qemu-cheri
+[submodule "riscv-implementations/Toooba"]
+	path = riscv-implementations/Toooba
+	url = https://github.com/CTSRD-CHERI/Toooba.git
