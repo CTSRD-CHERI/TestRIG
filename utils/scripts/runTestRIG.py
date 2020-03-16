@@ -71,7 +71,7 @@ def z_ext(ext_name):
 def x_ext(ext_name):
   return ["", "X"+ext_name]
 
-known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'ibex', 'qemu', 'manual'}
+known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'qemu', 'manual'}
 known_vengine = {'QCVEngine'}
 multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
                      for e0 in z_ext("icsr")
@@ -148,6 +148,9 @@ parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
 parser.add_argument('--path-to-flute', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Flute/builds/RV64IUxCHERI_RVFI_DII_Flute_bluesim/exe_HW_sim"),
   help="The PATH to the Flute executable")
+parser.add_argument('--path-to-toooba', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Toooba/builds/RV64ACDFIMSU_Toooba_RVFIDII_verilator/exe_HW_sim"),
+  help="The PATH to the Toooba executable")
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
   help="The PATH to the Ibex executable")
@@ -437,6 +440,12 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   elif name == 'flute':
     env2["RVFI_DII_PORT"] = str(port)
     cmd = [args.path_to_flute, "+v2"]
+  ##############################################################################
+  elif name == 'toooba':
+    env2["RVFI_DII_PORT"] = str(port)
+    if not op.exists(op.join(os.getcwd(), "Mem.hex")):
+      os.symlink(op.join(op.dirname(args.path_to_toooba), "Mem.hex"), op.join(os.getcwd(), "Mem.hex"))
+    cmd = [args.path_to_toooba]
   ##############################################################################
   elif name == 'sail':
     if args.path_to_sail_riscv_dir is None:

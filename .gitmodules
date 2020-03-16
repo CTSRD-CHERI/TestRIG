@@ -39,4 +39,4 @@
 [submodule "riscv-implementations/Toooba"]
 	path = riscv-implementations/Toooba
 	url = https://github.com/CTSRD-CHERI/Toooba.git
-        branch = RVFI_DII
+        branch = CHERI
