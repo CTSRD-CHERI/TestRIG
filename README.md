@@ -80,6 +80,8 @@ The dependencies for the Sail model can be installed using
 The dependencies for Ibex are verilator:
 - `sudo apt-get install verilator`
 
+Toooba depends on the Bluespec compiler (see the dependencies for RVBS) and verilator. Toooba needs the version of verilator to be greater than: `Verilator 3.922 2018-03-17 rev verilator_3_920-32-gdf3d1a4`
+
 ### Default Configuration
 
 You can verify a default configuration by executing:
