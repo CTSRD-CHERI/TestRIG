@@ -48,6 +48,7 @@ Currently, the provided modules are:
 - [CHERI Sail RISC-V model](https://github.com/CTSRD-CHERI/sail-cheri-riscv.git)
 - [Piccolo](https://github.com/CTSRD-CHERI/Piccolo.git)
 - [Flute](https://github.com/CTSRD-CHERI/Flute.git)
+- [Toooba](https://github.com/CTSRD-CHERI/Toooba.git)
 - [Ibex](https://github.com/CTSRD-CHERI/ibex.git)
 - [QEMU](https://github.com/CTSRD-CHERI/qemu.git)
 
