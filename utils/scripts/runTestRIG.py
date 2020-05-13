@@ -162,7 +162,7 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
 parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
   default=None,  # This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
   help="The PATH to the directory containing the sail executable. Examples: riscv-implementations/sail-riscv and riscv-implementations/sail-cheri-riscv")
-parser.add_argument('-r', '--architecture', type=str.lower, metavar='ARCH', choices=map(str.lower, known_architectures),
+parser.add_argument('-r', '--architecture', type=str.lower, metavar='ARCH', choices=list(map(str.lower, known_architectures)),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
   of the form 'rv{32,64}g[c][n]', or 'rv{32,64}i[m][a][f][d][n]' optionally followed
