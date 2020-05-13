@@ -201,18 +201,25 @@ args = parser.parse_args()
 class ISA_Configuration:
   has_xlen_32 = False
   has_xlen_64 = False
-  has_i = False
-  has_m = False
-  has_a = False
-  has_f = False
-  has_d = False
-  has_c = False
-  has_n = False
-  has_icsr = False
-  has_ifencei = False
-  has_cheri = False
   support_misaligned = False
   archstring = None
+
+  def has(self, ext_name: str):
+    assert not ext_name.lower().startswith('x')
+    assert not ext_name.lower().startswith('z')
+    return self.ext_map.get(ext_name.lower(), False)
+
+  @property
+  def has_cheri(self):
+    return self.has("cheri")
+
+  @property
+  def has_icsr(self):
+    return self.has("icsr")
+
+  @property
+  def has_ifencei(self):
+    return self.has("ifencei")
 
   def __init__(self, archstring):
     parts = list(filter(None, re.split("[_zx]", archstring.lower())))
@@ -225,40 +232,24 @@ class ISA_Configuration:
       print("ERROR: ISA string must start with rv32 or rv64")
       exit(-1)
     self.std_extensions = parts[0][4:]
+    self.ext_map = {}
     for letter in self.std_extensions:
-      if letter == 'i':
-        self.has_i = True
-      elif letter == 'm':
-        self.has_m = True
-      elif letter == 'a':
-        self.has_a = True
-      elif letter == 'f':
-        self.has_f = True
-      elif letter == 'd':
-        self.has_d = True
-      elif letter == 'c':
-        self.has_c = True
-      elif letter == 'n':
-        self.has_n = True
+      if letter in ('i', 'm', 'a', 'f', 'd', 'c', 'n'):
+        self.ext_map[letter] = True
       elif letter == 'g':
-        self.has_i = True
-        self.has_m = True
-        self.has_a = True
-        self.has_f = True
-        self.has_d = True
-        self.has_icsr = True
-        self.has_ifencei = True
+        # G enables imafd+icsr+ifencei
+        for ext in ('i', 'm', 'a', 'f', 'd', 'icsr', 'ifencei'):
+          self.ext_map[ext] = True
+        self.ext_map['g'] = True
+        self.ext_map['icsr'] = True
+        self.ext_map['ifencei'] = True
       else:
         print("ERROR: Unknown standard extension '"+letter+"'")
         exit(-1)
     self.extensions = parts[1:]
     for extension in self.extensions:
-      if extension == "icsr":
-        self.has_icsr = True
-      elif extension == "ifencei":
-        self.has_ifencei = True
-      elif extension == "cheri":
-        self.has_cheri = True
+      if extension in ('icsr', 'ifencei', 'cheri'):
+        self.ext_map[extension] = True
       else:
         print("ERROR: Extension "+extension+" not currently supported")
         exit(-1)
@@ -269,19 +260,19 @@ class ISA_Configuration:
       result += "rv32"
     elif self.has_xlen_64:
       result += "rv64"
-    if self.has_i:
+    if self.has("i"):
       result += "I"
-    if self.has_c:
+    if self.has("c"):
       result += "C"
-    if self.has_m:
+    if self.has("m"):
       result += "M"
-    if self.has_a:
+    if self.has("a"):
       print("ERROR: A extenstion is currently not supported by RVBS.")
       exit(-1)
-    if self.has_f:
+    if self.has("f"):
       print("ERROR: F extenstion is currently not supported by RVBS.")
       exit(-1)
-    if self.has_d:
+    if self.has("d"):
       print("ERROR: D extenstion is currently not supported by RVBS.")
       exit(-1)
     if self.has_icsr:
@@ -299,19 +290,19 @@ class ISA_Configuration:
       result = "rv32"
     elif self.has_xlen_64:
       result = "rv64"
-    if self.has_i:
+    if self.has("i"):
       result += "i"
       if not (self.has_icsr and self.has_ifencei):
         print("WARNING: enabling I in spike also automatically enables icsr and ifencei extenstions.")
-    if self.has_m:
+    if self.has("m"):
       result += "m"
-    if self.has_a:
+    if self.has("a"):
       result += "a"
-    if self.has_f:
+    if self.has("f"):
       result += "f"
-    if self.has_d:
+    if self.has("d"):
       result += "d"
-    if self.has_c:
+    if self.has("c"):
       result += "c"
     if self.has_cheri:
       print("Make sure you have build Spike with CHERI with 'make spike-cheri'")
@@ -339,11 +330,15 @@ class ISA_Configuration:
       result = "rv32"
     elif self.has_xlen_64:
       result = "rv64"
-    for ext in list(self.std_extensions) + self.extensions:
+    for ext, value in self.ext_map.items():
       # Note: QEMU expects ,Xcheri=true to be passed
       if ext == "cheri":
         ext = "Xcheri"
-      ext_map[ext] = ext + "=true"
+      if ext == "icsr":
+        ext = "Zicsr"
+      if ext == "ifencei":
+        ext = "Zifencei"
+      ext_map[ext] = ext + "=" + str(value).lower()
     result += "," + ",".join(ext_map.values())
     return result
 
@@ -455,7 +450,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
       args.path_to_sail_riscv_dir += "riscv/c_emulator/"
     full_sail_sim = op.join(op.dirname(op.realpath(__file__)), args.path_to_sail_riscv_dir, isa_def.get_sail_name())
     cmd = [full_sail_sim]
-    if not isa_def.has_c:
+    if not isa_def.has("c"):
       #cmd += ["--disable-compressed"]
       cmd += ["-C"]
     if isa_def.support_misaligned:
