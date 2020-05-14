@@ -566,6 +566,14 @@ def main():
     b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, isa_def)
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
+    if a.poll() is not None:
+      print("ERROR: Implementation A failed to start!")
+      print(" ".join(a.args), "failed with exit code", a.poll())
+      exit(1)
+    if b.poll() is not None:
+      print("ERROR: Implementation B failed to start!")
+      print(" ".join(b.args), "failed with exit code", b.poll())
+      exit(1)
 
     # Allow --verification-archstring to override architecture
     vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
