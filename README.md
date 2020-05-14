@@ -48,6 +48,7 @@ Currently, the provided modules are:
 - [CHERI Sail RISC-V model](https://github.com/CTSRD-CHERI/sail-cheri-riscv.git)
 - [Piccolo](https://github.com/CTSRD-CHERI/Piccolo.git)
 - [Flute](https://github.com/CTSRD-CHERI/Flute.git)
+- [Toooba](https://github.com/CTSRD-CHERI/Toooba.git)
 - [Ibex](https://github.com/CTSRD-CHERI/ibex.git)
 - [QEMU](https://github.com/CTSRD-CHERI/qemu.git)
 
@@ -69,7 +70,7 @@ The dependencies for the QuickCheck Verification Engine are:
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
 
-The dependencies for RVBS are the Bluespec compiler `bsc`. For people on the University of Cambridge, Computer Laboratory's internal network; execute the following command:
+The dependencies for RVBS are the Bluespec compiler `bsc`. For people on the University of Cambridge, Computer Laboratory's internal network; execute the following command. Alternatively, you can follow the build instructions on the [B-Lang-org github](https://github.com/B-Lang-org/bsc).
 - `source /usr/groups/ecad/setup.bash`
 
 The dependencies for the Sail model can be installed using
@@ -78,6 +79,8 @@ The dependencies for the Sail model can be installed using
 
 The dependencies for Ibex are verilator:
 - `sudo apt-get install verilator`
+
+Toooba depends on the Bluespec compiler (see the dependencies for RVBS) and verilator. Toooba needs the version of verilator to be greater than: `Verilator 3.922 2018-03-17 rev verilator_3_920-32-gdf3d1a4`
 
 ### Default Configuration
 
