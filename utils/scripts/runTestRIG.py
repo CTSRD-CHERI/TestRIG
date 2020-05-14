@@ -185,7 +185,7 @@ parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_
   help="Use instruction generator on given port.")
 parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
   help="Log instruction generator output")
-
+parser.add_argument('--timeout', type=int, default=0, help="Timeout after N secods")
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
   import argcomplete
@@ -494,6 +494,8 @@ def spawn_vengine(name, mport, iport, arch):
       cmd += ['-d', args.trace_dir]
     if args.save_dir:
       cmd += ['-s', args.save_dir]
+    if args.timeout:
+      cmd += ['--timeout', str(int(args.timeout * 1000000))]
     print("running qcvengine as: ", " ".join(cmd))
     p = sub.Popen(cmd)
     return p
