@@ -419,7 +419,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     if not isa_def.support_misaligned:
       sys.exit("FATAL: --enable-misaligned must be passed for QEMU since there is no way of turning it off")
     if log:
-      cmd += ["-D", "/dev/stderr", "-d", "in_asm,cpu,exec"]
+      cmd += ["-D", "/dev/stderr", "-d", "instr"]
   ##############################################################################
   elif name == 'rvbs':
     env2["RVFI_DII_PORT"] = str(port)
