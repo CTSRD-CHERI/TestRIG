@@ -44,6 +44,7 @@ import signal
 import subprocess as sub
 import sys
 import time
+import socket
 
 
 ################################
@@ -186,6 +187,8 @@ parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_
 parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
   help="Log instruction generator output")
 parser.add_argument('--timeout', type=int, default=0, help="Timeout after N secods")
+parser.add_argument('-p', '--parallel-jobs', metavar='JOBS', default=1, type=auto_int,
+  help="Spawn the VEngine and implementations multiple times for parallel jobs")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 
@@ -481,7 +484,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
 # spawn verification engine #
 #############################
 
-def spawn_vengine(name, mport, iport, arch):
+def spawn_vengine(name, mport, iport, arch, log):
   if name == 'QCVEngine':
     cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport), '-r', str(arch)]
     cmd += ['-n', str(args.number_of_tests)]
@@ -502,7 +505,10 @@ def spawn_vengine(name, mport, iport, arch):
     if args.no_shrink:
       cmd += ['-S']
     print("running qcvengine as: ", " ".join(cmd))
-    p = sub.Popen(cmd)
+    if log is None:
+      p = sub.Popen(cmd)
+    else:
+      p = sub.Popen(cmd, stdout=log)
     return p
   else:
     print("Unknown verification engine {:s}".format(name))
@@ -543,18 +549,22 @@ def spawn_generator(name, arch, log):
 
 def main():
   def kill_procs(servA, servB, gen, vengine):
-    if servA:
-      print("killing implementation A's rvfi-dii server")
-      servA.kill()
-    if servB:
-      print("killing implementation B's rvfi-dii server")
-      servB.kill()
-    if generator:
-      print("killing generator")
-      gen.kill()
-    if vengine:
-      print("killing vengine")
-      vengine.kill()
+    print("killing implementation A's rvfi-dii server")
+    for a in servA:
+      if a != None:
+        a.kill()
+    print("killing implementation B's rvfi-dii server")
+    for b in servB:
+      if b != None:
+        b.kill()
+    print("killing generator")
+    for g in generator:
+      if g != None:
+        g.kill()
+    print("killing vengine")
+    for v in vengine:
+      if v != None:
+        v.kill()
 
   def handle_SIGINT(sig, frame):
     kill_procs(a, b, generator, e)
@@ -562,34 +572,80 @@ def main():
 
   signal.signal(signal.SIGINT, handle_SIGINT)
 
-  a = None
-  b = None
-  e = None
-  generator = None
+  # Lists of process handles, sockets being temporarily held, and ports allocated to each process
+  a = []
+  asocks = []
+  aports = []
+  b = []
+  bsocks = []
+  bports = []
+  e = []
+  generator = []
   isa_def = ISA_Configuration(args.architecture)
   isa_def.support_misaligned = args.support_misaligned
+  # Allow --verification-archstring to override architecture
+  vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
   try:
-    a = spawn_rvfi_dii_server(args.implementation_A, args.implementation_A_port, args.implementation_A_log, isa_def)
-    b = spawn_rvfi_dii_server(args.implementation_B, args.implementation_B_port, args.implementation_B_log, isa_def)
+    if (args.parallel_jobs > 1):
+      try:
+        os.mkdir('parallel-logs')
+      except FileExistsError:
+        () # do nothing
+      for job in range(args.parallel_jobs):
+        # Open a socket to allocate a free port
+        asock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        asock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        asock.bind(('', 0))
+        asocks.append(asock)
+        bsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        bsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        bsock.bind(('', 0))
+        bsocks.append(bsock)
+
+    for job in range(args.parallel_jobs):
+      if (args.parallel_jobs == 1):
+        aports.append(args.implementation_A_port)
+        bports.append(args.implementation_B_port)
+        aLog = args.implementation_A_log
+        bLog = args.implementation_B_log
+        genLog = args.generator_log
+        eLog = None
+      else:
+        aports.append(asocks[job].getsockname()[1])
+        asocks[job].close
+        bports.append(bsocks[job].getsockname()[1])
+        bsocks[job].close
+        # Ignore user-supplied arguments since they don't make sense for multiple jobs (TODO print error if they are supplied?)
+        aLog = auto_write_fd('parallel-logs/a' + str(job))
+        bLog = auto_write_fd('parallel-logs/b' + str(job))
+        genLog = auto_write_fd('parallel-logs/g' + str(job))
+        eLog = auto_write_fd('parallel-logs/v' + str(job))
+
+      a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def))
+      b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def))
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
-    if a.poll() is not None:
-      print("ERROR: Implementation A failed to start!")
-      print(" ".join(a.args), "failed with exit code", a.poll())
-      exit(1)
-    if b.poll() is not None:
-      print("ERROR: Implementation B failed to start!")
-      print(" ".join(b.args), "failed with exit code", b.poll())
-      exit(1)
 
-    # Allow --verification-archstring to override architecture
-    vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
-    e = spawn_vengine(args.verification_engine, args.implementation_A_port, args.implementation_B_port, vengine_archstring)
-    generator = spawn_generator(args.generator, args.architecture, args.generator_log)
+    for job in range(args.parallel_jobs):
+      if a[job].poll() is not None:
+        print("ERROR: Implementation A failed to start!")
+        print(" ".join(a[job].args), "failed with exit code", a[job].poll())
+        exit(1)
+      if b[job].poll() is not None:
+        print("ERROR: Implementation B failed to start!")
+        print(" ".join(b[job].args), "failed with exit code", b[job].poll())
+        exit(1)
+      e.append(spawn_vengine(args.verification_engine, aports[job], bports[job], vengine_archstring, eLog))
 
-    e.wait()
+    retMax = 0
+    for job in range(args.parallel_jobs):
+      e[job].wait()
+      retMax = max(retMax,e[job].returncode)
+
+    # TODO support non-standard generator in parallel builds
+    generator.append(spawn_generator(args.generator, args.architecture, genLog))
     print('run terminated')
-    exit(e.returncode)
+    exit(retMax)
   finally:
     kill_procs(a, b, generator, e)
 
