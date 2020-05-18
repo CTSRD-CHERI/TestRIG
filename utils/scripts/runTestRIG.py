@@ -186,6 +186,9 @@ parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_
 parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
   help="Log instruction generator output")
 parser.add_argument('--timeout', type=int, default=0, help="Timeout after N secods")
+parser.add_argument('--no-shrink', action='count', default=0,
+  help="Disable VEngine test case shrinking")
+
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
   import argcomplete
@@ -496,6 +499,8 @@ def spawn_vengine(name, mport, iport, arch):
       cmd += ['-s', args.save_dir]
     if args.timeout:
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
+    if args.no_shrink:
+      cmd += ['-S']
     print("running qcvengine as: ", " ".join(cmd))
     p = sub.Popen(cmd)
     return p
