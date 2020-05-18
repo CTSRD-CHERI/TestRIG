@@ -187,7 +187,7 @@ parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_
 parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_write_fd,
   help="Log instruction generator output")
 parser.add_argument('--timeout', type=int, default=0, help="Timeout after N secods")
-parser.add_argument('-p', '--parallel-jobs', metavar='JOBS', default=1, type=auto_int,
+parser.add_argument('-j', '--parallel-jobs', metavar='JOBS', default=1, type=auto_int,
   help="Spawn the VEngine and implementations multiple times for parallel jobs")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
