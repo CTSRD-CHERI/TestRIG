@@ -639,11 +639,11 @@ def main():
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
     for job in range(args.parallel_jobs):
-      if a[job].poll() is not None:
+      if a[job] is not None and a[job].poll() is not None:
         print("ERROR: Implementation A failed to start!")
         print(" ".join(a[job].args), "failed with exit code", a[job].poll())
         exit(1)
-      if b[job].poll() is not None:
+      if b[job] is not None and b[job].poll() is not None:
         print("ERROR: Implementation B failed to start!")
         print(" ".join(b[job].args), "failed with exit code", b[job].poll())
         exit(1)
