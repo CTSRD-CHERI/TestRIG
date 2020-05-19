@@ -125,8 +125,8 @@ parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known
 # general configuration args
 parser.add_argument('-s', '--spawn-delay', metavar='DELAYSEC', default=5, type=auto_int,
   help="Specify a number of seconds to wait between server creation and verification engine startup.")
-parser.add_argument('-v', '--verbose', action='count', default=0,
-  help="Increase verbosity level by adding more \"v\".")
+parser.add_argument('-v', '--verbosity', metavar='VERB', type=auto_int,
+  default=1, help="Increase verbosity level by adding more \"v\".")
 parser.add_argument('-S', '--save-dir', metavar='SAVEDIR', type=str,
   help="Keep running, saving each failure to directory provided.")
 parser.add_argument('-n', '--number-of-tests', metavar='NTESTS', type=auto_int,
@@ -191,6 +191,8 @@ parser.add_argument('-j', '--parallel-jobs', metavar='JOBS', default=1, type=aut
   help="Spawn the VEngine and implementations multiple times for parallel jobs")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
+parser.add_argument('--no-save', action='count', default=0,
+  help="Don't ask to save files")
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
@@ -364,7 +366,7 @@ class ISA_Configuration:
 
 
 def verboseprint(lvl, msg):
-  if args.verbose >= lvl:
+  if args.verbosity >= lvl:
     print(msg)
 
 def input_y_n(prompt):
@@ -488,8 +490,7 @@ def spawn_vengine(name, mport, iport, arch, log):
   if name == 'QCVEngine':
     cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport), '-r', str(arch)]
     cmd += ['-n', str(args.number_of_tests)]
-    if args.verbose > 0:
-      cmd += ['-v']
+    cmd += ['-v', str(args.verbosity)]
     if args.generator != 'internal':
       cmd += ['-i', str(args.generator_port)]
     if args.trace_file:
@@ -504,6 +505,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
     if args.no_shrink:
       cmd += ['-S']
+    if args.no_save:
+      cmd += ['--no-save']
     print("running qcvengine as: ", " ".join(cmd))
     if log is None:
       p = sub.Popen(cmd)
