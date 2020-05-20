@@ -640,13 +640,29 @@ def main():
         exit(1)
       e.append(spawn_vengine(args.verification_engine, aports[job], bports[job], vengine_archstring, eLog))
 
+    # TODO support non-standard generator in parallel builds
+    generator.append(spawn_generator(args.generator, args.architecture, genLog))
+
+    # Periodic non-blocking loop over processes to terminate those that finish early
+    alive = args.parallel_jobs
+    while alive > 1:
+      alive = 0
+      time.sleep(5) # Wait for 5 seconds in between polls
+      for job in range(args.parallel_jobs):
+        if e[job].poll() == None:
+          alive += 1
+        else:
+          # Kill the process, since it is done
+          kill_procs([a[job]],[b[job]],[None],[e[job]])
+          a[job] = None
+          b[job] = None
+          # Keep a handle to the vengine so we can get the returncode later
+
     retMax = 0
     for job in range(args.parallel_jobs):
       e[job].wait()
       retMax = max(retMax,e[job].returncode)
 
-    # TODO support non-standard generator in parallel builds
-    generator.append(spawn_generator(args.generator, args.architecture, genLog))
     print('run terminated')
     exit(retMax)
   finally:
