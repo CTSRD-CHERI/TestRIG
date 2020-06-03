@@ -189,6 +189,8 @@ parser.add_argument('--generator-log', metavar='PATH', default=None, type=auto_w
 parser.add_argument('--timeout', type=int, default=0, help="Timeout after N secods")
 parser.add_argument('-j', '--parallel-jobs', metavar='JOBS', default=1, type=auto_int,
   help="Spawn the VEngine and implementations multiple times for parallel jobs")
+parser.add_argument('-l', '--parallel-log', action='count', default=0,
+  help="Enable parallel logging in ./parallel-logs. Note that this may use lots of space")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 parser.add_argument('--no-save', action='count', default=0,
@@ -591,7 +593,8 @@ def main():
   try:
     if (args.parallel_jobs > 1):
       try:
-        os.mkdir('parallel-logs')
+        if (args.parallel_log):
+          os.mkdir('parallel-logs')
       except FileExistsError:
         () # do nothing
       for job in range(args.parallel_jobs):
@@ -619,10 +622,16 @@ def main():
         bports.append(bsocks[job].getsockname()[1])
         bsocks[job].close
         # Ignore user-supplied arguments since they don't make sense for multiple jobs (TODO print error if they are supplied?)
-        aLog = auto_write_fd('parallel-logs/a' + str(job))
-        bLog = auto_write_fd('parallel-logs/b' + str(job))
-        genLog = auto_write_fd('parallel-logs/g' + str(job))
-        eLog = auto_write_fd('parallel-logs/v' + str(job))
+        if (args.parallel_log):
+          aLog = auto_write_fd('parallel-logs/a' + str(job))
+          bLog = auto_write_fd('parallel-logs/b' + str(job))
+          genLog = auto_write_fd('parallel-logs/g' + str(job))
+          eLog = auto_write_fd('parallel-logs/v' + str(job))
+        else:
+          aLog = None
+          bLog = None
+          genLog = None
+          eLog = None
 
       a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def))
       b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def))
