@@ -421,13 +421,13 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
       args.path_to_qemu = "../../riscv-implementations/qemu/build"
       # TODO: allow testing against non-CHERI versions
       if isa_def.has_xlen_32:
-        args.path_to_spike += "/riscv32-softmmu/qemu-system-riscv32"
+        args.path_to_qemu += "/riscv32-softmmu/qemu-system-riscv32"
       else:
-        args.path_to_spike += "/riscv64cheri-softmmu/qemu-system-riscv64cheri"
+        args.path_to_qemu += "/riscv64cheri-softmmu/qemu-system-riscv64cheri"
     cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_qemu), "--rvfi-dii-port", str(port),
            "-cpu", isa_def.get_qemu_cpu(), "-bios", "none"]
     if not isa_def.support_misaligned:
-      sys.exit("FATAL: --enable-misaligned must be passed for QEMU since there is no way of turning it off")
+      sys.exit("FATAL: --support-misaligned must be passed for QEMU since there is no way of turning it off")
     if log:
       cmd += ["-D", "/dev/stderr", "-d", "instr"]
   ##############################################################################
