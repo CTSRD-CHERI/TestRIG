@@ -13,6 +13,7 @@ RUN \
   ibex-rv32ic-cheri \
   piccolo-rv32xcheri \
   flute-rv64xcheri \
+  qemu \
   rvbs \
   rvbs-rv32ICZicsrZifencei \
   rvbs-rv32ICZicsrZifenceiXcheri \
