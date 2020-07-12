@@ -83,7 +83,7 @@ flute-rv32: flute-rv32xcheri #for now, just testing CHERI implementation.
 flute-rv64: flute-rv64xcheri #for now, just testing CHERI implementation.
 
 toooba-rv64xcheri:
-	$(MAKE) -C riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_verilator compile simulator
+	$(MAKE) -C riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim compile simulator
 
 toooba-rv64: toooba-rv64xcheri #for now, just testing CHERI implementation.
 

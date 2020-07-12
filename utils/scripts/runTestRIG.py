@@ -151,7 +151,7 @@ parser.add_argument('--path-to-flute', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Flute/builds/RV64ACDFIMSUxCHERI_RVFI_DII_Flute_bluesim/exe_HW_sim"),
   help="The PATH to the Flute executable")
 parser.add_argument('--path-to-toooba', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_verilator/exe_HW_sim"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim/exe_HW_sim"),
   help="The PATH to the Toooba executable")
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
