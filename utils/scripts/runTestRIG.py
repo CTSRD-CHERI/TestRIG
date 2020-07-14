@@ -449,8 +449,6 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   ##############################################################################
   elif name == 'toooba':
     env2["RVFI_DII_PORT"] = str(port)
-    if not op.exists(op.join(os.getcwd(), "Mem.hex")):
-      os.symlink(op.join(op.dirname(args.path_to_toooba), "Mem.hex"), op.join(os.getcwd(), "Mem.hex"))
     cmd = [args.path_to_toooba]
   ##############################################################################
   elif name == 'sail':
