@@ -78,15 +78,16 @@ multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
                      for e0 in z_ext("icsr")
                      for e1 in z_ext("ifencei")
                      for e2 in x_ext("cheri")]
-known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7
+known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8
                                   for e0 in ["rv32i", "rv64i"]
                                   for e1 in std_ext("m")
-                                  for e2 in std_ext("a")
-                                  for e3 in std_ext("f")
-                                  for e4 in std_ext("d")
-                                  for e5 in std_ext("c")
-                                  for e6 in std_ext("n")
-                                  for e7 in multi_letter_exts]
+                                  for e2 in std_ext("s")
+                                  for e3 in std_ext("a")
+                                  for e4 in std_ext("f")
+                                  for e5 in std_ext("d")
+                                  for e6 in std_ext("c")
+                                  for e7 in std_ext("n")
+                                  for e8 in multi_letter_exts]
                                  + [e0 + e1 + e2 + e3
                                     for e0 in ["rv32g", "rv64g"]
                                     for e1 in std_ext("c")
@@ -244,11 +245,11 @@ class ISA_Configuration:
     self.std_extensions = parts[0][4:]
     self.ext_map = {}
     for letter in self.std_extensions:
-      if letter in ('i', 'm', 'a', 'f', 'd', 'c', 'n'):
+      if letter in ('i', 'm', 's', 'a', 'f', 'd', 'c', 'n'):
         self.ext_map[letter] = True
       elif letter == 'g':
         # G enables imafd+icsr+ifencei
-        for ext in ('i', 'm', 'a', 'f', 'd', 'icsr', 'ifencei'):
+        for ext in ('i', 'm', 's', 'a', 'f', 'd', 'icsr', 'ifencei'):
           self.ext_map[ext] = True
         self.ext_map['g'] = True
         self.ext_map['icsr'] = True
