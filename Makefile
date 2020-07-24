@@ -77,7 +77,7 @@ flute-rv32xcheri:
 	$(MAKE) -C riscv-implementations/Flute/builds -f Resources/Build_all.mk ARCH=RV32IMUxCHERI_RVFI_DII SIM=bluesim build
 
 flute-rv64xcheri:
-	$(MAKE) -C riscv-implementations/Flute/builds -f Resources/Build_all.mk ARCH=RV64IUxCHERI_RVFI_DII SIM=bluesim build
+	$(MAKE) -C riscv-implementations/Flute/builds -f Resources/Build_all.mk ARCH=RV64ACDFIMSUxCHERI_RVFI_DII SIM=bluesim build
 
 flute-rv32: flute-rv32xcheri #for now, just testing CHERI implementation.
 flute-rv64: flute-rv64xcheri #for now, just testing CHERI implementation.
