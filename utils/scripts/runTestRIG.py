@@ -554,19 +554,18 @@ def spawn_generator(name, arch, log):
 
 def main():
   def kill_procs(servA, servB, gen, vengine):
-    print("killing implementation A's rvfi-dii server")
     for a in servA:
       if a != None:
+        print("killing implementation A's rvfi-dii server")
         a.kill()
-    print("killing implementation B's rvfi-dii server")
     for b in servB:
       if b != None:
+        print("killing implementation B's rvfi-dii server")
         b.kill()
-    print("killing generator")
     for g in generator:
       if g != None:
+        print("killing generator")
         g.kill()
-    print("killing vengine")
     for v in vengine:
       if v != None:
         v.kill()
