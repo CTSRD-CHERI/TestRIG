@@ -102,7 +102,7 @@ parser = argparse.ArgumentParser(description='Runs a TestRIG configuration')
 parser.add_argument('-a', '--implementation-A', metavar='IMP', choices=known_rvfi_dii,
   default='sail',
   help="The implementation A to use. (one of {:s})".format(str(known_rvfi_dii)))
-parser.add_argument('--implementation-A-port', metavar='PORT', type=auto_int, default=5000,
+parser.add_argument('--implementation-A-port', metavar='PORT', type=auto_int, default=0,
   help="The port to use for implementation A's rvfi-dii server")
 parser.add_argument('--implementation-A-log', metavar='PATH',
   default=None, type=auto_write_fd,
@@ -112,7 +112,7 @@ parser.add_argument('--implementation-A-log', metavar='PATH',
 parser.add_argument('-b', '--implementation-B', metavar='IMP', choices=known_rvfi_dii,
   default='spike',
   help="The implementation B to use. (one of {:s})".format(str(known_rvfi_dii)))
-parser.add_argument('--implementation-B-port', metavar='PORT', type=auto_int, default=5001,
+parser.add_argument('--implementation-B-port', metavar='PORT', type=auto_int, default=0,
   help="The port to use for implementation B's rvfi-dii server")
 parser.add_argument('--implementation-B-log', metavar='PATH',
   default=None, type=auto_write_fd,
@@ -590,36 +590,30 @@ def main():
   # Allow --verification-archstring to override architecture
   vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
   try:
+    for job in range(args.parallel_jobs):
+      # Open a socket to allocate a free port
+      asock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      asock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      asock.bind(('', 0))
+      asocks.append(asock)
+      bsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      bsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      bsock.bind(('', 0))
+      bsocks.append(bsock)
     if (args.parallel_jobs > 1):
       try:
         if (args.parallel_log):
           os.mkdir('parallel-logs')
       except FileExistsError:
         () # do nothing
-      for job in range(args.parallel_jobs):
-        # Open a socket to allocate a free port
-        asock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        asock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        asock.bind(('', 0))
-        asocks.append(asock)
-        bsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        bsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        bsock.bind(('', 0))
-        bsocks.append(bsock)
 
     for job in range(args.parallel_jobs):
       if (args.parallel_jobs == 1):
-        aports.append(args.implementation_A_port)
-        bports.append(args.implementation_B_port)
         aLog = args.implementation_A_log
         bLog = args.implementation_B_log
         genLog = args.generator_log
         eLog = None
       else:
-        aports.append(asocks[job].getsockname()[1])
-        asocks[job].close
-        bports.append(bsocks[job].getsockname()[1])
-        bsocks[job].close
         # Ignore user-supplied arguments since they don't make sense for multiple jobs (TODO print error if they are supplied?)
         if (args.parallel_log):
           aLog = auto_write_fd('parallel-logs/a' + str(job))
@@ -631,6 +625,17 @@ def main():
           bLog = None
           genLog = None
           eLog = None
+
+      if (args.implementation_A_port != 0):
+        aports.append(args.implementation_A_port)
+      else:
+        aports.append(asocks[job].getsockname()[1])
+      asocks[job].close
+      if (args.implementation_B_port != 0):
+        bports.append(args.implementation_B_port)
+      else:
+        bports.append(bsocks[job].getsockname()[1])
+      bsocks[job].close
 
       a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def))
       b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def))
