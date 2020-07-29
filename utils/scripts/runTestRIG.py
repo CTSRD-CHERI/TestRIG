@@ -680,6 +680,7 @@ def main():
     print('run terminated')
     exit(retMax)
   finally:
+    time.sleep(2)
     kill_procs(a, b, generator, e)
 
 if __name__ == "__main__":
