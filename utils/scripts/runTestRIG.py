@@ -196,6 +196,8 @@ parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 parser.add_argument('--no-save', action='count', default=0,
   help="Don't ask to save files")
+parser.add_argument('--test-len', metavar='LEN', default=None, type=auto_int,
+  help="Tell vengine to generate tests up to LEN instructions long")
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
@@ -508,6 +510,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['-S']
     if args.no_save:
       cmd += ['--no-save']
+    if args.test_len:
+      cmd += ['-L', str(args.test_len)]
     print("running qcvengine as: ", " ".join(cmd))
     if log is None:
       p = sub.Popen(cmd)
