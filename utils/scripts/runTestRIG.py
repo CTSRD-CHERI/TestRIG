@@ -503,6 +503,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       print("using trace_dir {:s}".format(args.trace_dir))
       cmd += ['-d', args.trace_dir]
     if args.save_dir:
+      if not os.path.isdir(args.save_dir):
+        sys.exit("--save-dir does not exist: " + os.path.abspath(args.save_dir))
       cmd += ['-s', args.save_dir]
     if args.timeout:
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
