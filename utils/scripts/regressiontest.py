@@ -87,6 +87,7 @@ async def run_testrig(args: argparse.Namespace, remaining_args: list, output_dir
              "--save-dir", output_dir,
              "-a", args.reference_impl,
              "-b", args.test_impl,
+             "--no-shrink",
              ] + remaining_args
   if args.timeout:
     command += ["--timeout", str(args.timeout)]
