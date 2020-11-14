@@ -88,7 +88,7 @@ async def run_testrig(args: argparse.Namespace, remaining_args: list, output_dir
              "-a", args.reference_impl,
              "-b", args.test_impl,
              "--no-shrink",
-             ] + remaining_args
+             ] + remaining_args + ["-v", "1"]  # verbosity 1 required for output
   if args.timeout:
     command += ["--timeout", str(args.timeout)]
 
@@ -153,6 +153,9 @@ async def run_testrig(args: argparse.Namespace, remaining_args: list, output_dir
     if output.startswith(b'+++ OK, passed'):
       # End of testcase
       if current_test.result is not None:
+        if isinstance(current_test.result, junitparser.Failure):
+          print_coloured("ERROR, but TestRIG reported OK", colour=AnsiColour.red)
+          continue
         assert isinstance(current_test.result, junitparser.Skipped), "unexpected test result"
         print_coloured("SKIPPED", colour=AnsiColour.yellow)
       else:
