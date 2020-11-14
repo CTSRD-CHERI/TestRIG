@@ -138,7 +138,7 @@ async def run_testrig(args: argparse.Namespace, remaining_args: list, output_dir
     if not output and process.stdout.at_eof():
       info("EOF")
       break
-    debug("==>TR: \x1b[1;33m", output, "\x1b[0m", sep="")
+    debug("==>TR: \x1b[1;33m", output.decode("utf-8").rstrip(), "\x1b[0m", sep="")
     if output.startswith(b'Reading trace from '):
       # start of testcase
       assert current_test is None, "Reading new test before last one finished?"
