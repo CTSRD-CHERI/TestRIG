@@ -1,7 +1,7 @@
 # RVFI-DII Specification
 
 RVFI-DII (Risc-V Formal Interface - Direct Instruction Injection) is based on RVFI from
-Clifford Wolf used for formal verification of Risc-V implementations. It adds an instruction
+Claire Wolf used for formal verification of Risc-V implementations. It adds an instruction
 trace format and standardises a packet format for the execution trace.
 
 RVFI-DII is composed of two packet structures designed to send across sockets.
@@ -64,7 +64,7 @@ Specifically:
 ## RVFI Trace Reporting
 The records for the execution trace format must be preserved to the end of the pipeline and reported over the RVFI-DII
 socket interface.
-This requirement is very similar to standard RVFI support recommended by Clifford Wolf, but standardises a socket interface
+This requirement is very similar to standard RVFI support recommended by Claire Wolf, but standardises a socket interface
 for interoperability between verification tools.
 
 ## Direct Instruction Injection
