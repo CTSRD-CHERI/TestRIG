@@ -14,6 +14,7 @@
 [submodule "sail-riscv"]
 	path = riscv-implementations/sail-riscv
 	url = https://github.com/rems-project/sail-riscv.git
+	branch = hpm_events
 [submodule "Piccolo"]
 	path = riscv-implementations/Piccolo
 	url = https://github.com/CTSRD-CHERI/Piccolo.git
