@@ -20,7 +20,7 @@ USER jenkins
 
 # install opam and rems repo
 RUN \
-  opam init -y && \
+  opam init --disable-sandboxing -y && \
   opam switch 4.12.0 -y && \
   eval `opam config env -y` && \
   opam repository add rems https://github.com/rems-project/opam-repository.git -y
