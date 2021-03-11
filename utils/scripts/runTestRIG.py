@@ -175,6 +175,8 @@ parser.add_argument('--verification-archstring', type=str.lower, metavar='ARCH',
   help="""The architecture string to pass to the verification engine, (defaults to the value of --architecture).
   Setting a different value here (such as rv64xcheri) allows verifying only a subset of the extensions without
   runnining all the integer tests before.""")
+parser.add_argument('--test-select-regex', type=str, metavar='regex',
+  help="""A regex describing the subset of tests to run on the verification engine, (defaults to .*).""")
 parser.add_argument('--support-misaligned', action='store_true',
   help="""Enable misaligned memory accesses""")
 parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
@@ -514,6 +516,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['--no-save']
     if args.test_len:
       cmd += ['-L', str(args.test_len)]
+    if args.test_select_regex:
+      cmd += ['-R', args.test_select_regex]
     print("running qcvengine as: ", " ".join(cmd))
     if log is None:
       p = sub.Popen(cmd)
