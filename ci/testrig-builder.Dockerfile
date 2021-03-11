@@ -20,7 +20,6 @@ USER jenkins
 
 # install opam and rems repo
 RUN \
-  sysctl kernel.unprivileged_userns_clone=1 && \\
   opam init -y && \
   opam switch 4.12.0 -y && \
   eval `opam config env -y` && \
