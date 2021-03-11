@@ -19,8 +19,7 @@ RUN \
 USER jenkins
 
 # install BSV
-ADD bsc-install-focal.tar.xz bsc-install-focal.tar.xz
-RUN tar -Jxf bsc-install-focal.tar.xz && rm -r bsc-install-focal.tar.xz
+ADD bsc-install-focal.tar.xz /home/jenkins/bsc-install/
 ENV BLUESPECDIR=/home/jenkins/bsc-install/lib/
 ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
