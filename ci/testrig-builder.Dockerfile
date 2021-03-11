@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 AS testrig-builder
+FROM ubuntu:20.04 AS testrig-builder
 
 # create a jenkins user
 RUN \
@@ -21,7 +21,7 @@ USER jenkins
 # install opam and rems repo
 RUN \
   opam init -y && \
-  opam switch 4.07.0 -y && \
+  opam switch 4.12.0 -y && \
   eval `opam config env -y` && \
   opam repository add rems https://github.com/rems-project/opam-repository.git -y
 
