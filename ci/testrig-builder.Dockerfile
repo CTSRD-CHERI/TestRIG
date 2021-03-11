@@ -18,6 +18,12 @@ RUN \
 # switch to jenkins user
 USER jenkins
 
+# install BSV
+ADD bsc-install-focal.tar.xz bsc-install-focal.tar.xz
+RUN tar -Jxf bsc-install-focal.tar.xz && rm -r bsc-install-focal.tar.xz
+ENV BLUESPECDIR=/home/jenkins/bsc-install/lib/
+ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
+
 # install opam and rems repo
 RUN \
   opam init --disable-sandboxing -y && \
@@ -30,12 +36,6 @@ RUN \
   opam update -y && \
   opam install sail -y && \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
-
-# install BSV
-ADD bsc-install-focal.tar.xz bsc-install-focal.tar.xz
-RUN tar -xzf bsc-install-focal.tar.xz && rm -r bsc-install-focal.tar.xz
-ENV BLUESPECDIR=/home/jenkins/bsc-install/lib/
-ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
 # install cabal packages
 COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
