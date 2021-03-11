@@ -32,14 +32,10 @@ RUN \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
 
 # install BSV
-ENV BSVURL="https://s3.wasabisys.com/bluespec/downloads/Bluespec-2019.05.beta2-debian9stretch-amd64.tar.gz"
-RUN \
-  wget $BSVURL && \
-  tar -xzf Bluespec-2019.05.beta2-debian9stretch-amd64.tar.gz && \
-  rm -r Bluespec-2019.05.beta2-debian9stretch-amd64.tar.gz
-ENV BLUESPECDIR=/home/jenkins/Bluespec-2019.05.beta2-debian9stretch-amd64/lib/
-ENV BLUESPEC_LICENSE_FILE=27001@lmserv-bluespec.cl.cam.ac.uk
-ENV PATH=/home/jenkins/Bluespec-2019.05.beta2-debian9stretch-amd64/bin/:$PATH
+ADD bsc-install-focal.tar.xz bsc-install-focal.tar.xz
+RUN tar -xzf bsc-install-focal.tar.xz && rm -r bsc-install-focal.tar.xz
+ENV BLUESPECDIR=/home/jenkins/bsc-install/lib/
+ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
 # install cabal packages
 COPY vengines/QuickCheckVEngine/QCVEngine.cabal .

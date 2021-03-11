@@ -5,6 +5,7 @@ ansiColor('xterm') {
       checkout scm
     }
     stage("Build TestRIG builder docker image") {
+      copyArtifacts filter: 'bsc-install-focal.tar.xz', fingerprintArtifacts: true, projectName: 'bsc-build'
       img = docker.build("ctsrd/testrig-builder", "-f ci/testrig-builder.Dockerfile .")
     }
     stage("Push TestRIG builder docker image to docker hub") {
