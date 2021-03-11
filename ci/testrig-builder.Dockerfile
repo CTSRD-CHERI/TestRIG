@@ -12,7 +12,7 @@ WORKDIR /home/jenkins
 ENV PACKAGES="ghc cabal-install build-essential wget opam libgmp-dev z3 m4 pkg-config zlib1g-dev verilator python3 gcc g++ device-tree-compiler libfontconfig libxft2"
 RUN \
   apt-get update && \
-  apt-get -y install $PACKAGES && \
+  DEBIAN_FRONTEND="noninteractive" TZ="Europe/London" apt-get -y -qq install $PACKAGES && \
   ldconfig
 
 # switch to jenkins user
