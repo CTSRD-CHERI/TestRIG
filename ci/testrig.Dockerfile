@@ -11,7 +11,7 @@ RUN \
   cd TestRIG && \
   make -j 8 QCVEngine \
   ibex-rv32ic-cheri \
-  piccolo-rv32xcheri \
+  #piccolo-rv32xcheri \
   flute-rv64xcheri \
   rvbs \
   rvbs-rv32ICZicsrZifencei \
