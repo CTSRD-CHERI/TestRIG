@@ -1,6 +1,6 @@
 def configs = [
               //["sail", "piccolo", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
-                ["sail", "flute", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "", "^(compressed|atomic(64)?|memAmo(64)?|float(64)?|caprandom|capmisc|double(64)?|hpm|csr|all|capdecode|pte)\$"]
+                ["sail", "flute", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "", ""]
               //["sail", "flute", "rv64izicsr_zifencei_xcheri", "rv64_xcheri", ""]
               //["sail", "rvbs", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", "--support-misaligned"]
               //["sail", "ibex", "rv32izicsr_zifencei_xcheri", "rv32izicsr_zifencei_xcheri", ""]
