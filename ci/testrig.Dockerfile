@@ -12,6 +12,7 @@ RUN \
   make -j 8 QCVEngine \
   ibex-rv32ic-cheri \
   flute-rv64xcheri \
+  qemu \
   rvbs \
   rvbs-rv32ICZicsrZifencei \
   rvbs-rv32ICZicsrZifenceiXcheri \
