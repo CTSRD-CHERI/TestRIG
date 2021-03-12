@@ -24,16 +24,20 @@ ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
 # install opam and rems repo
 RUN \
-  opam init --disable-sandboxing -y && \
-  opam switch create 4.12.0 -y && \
+  opam init --disable-sandboxing -y --compile=4.12.0 && \
   eval `opam config env -y` && \
   opam repository add rems https://github.com/rems-project/opam-repository.git -y
 
 # install sail
 RUN \
+  git clone https://github.com/rems-project/sail.git && \
   opam update -y && \
-  opam install sail -y && \
+  opam pin add sail sail -y && \
+  eval `opam config env -y` && \
+  make -C sail/sailcov && \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
+
+ENV SAIL_DIR=/home/jenkins/sail/
 
 # install rust
 RUN \
@@ -43,7 +47,7 @@ RUN \
 RUN \
   eval `opam config env -y` && \
   . /home/jenkins/.cargo/env && \
-  make -C $OPAM_SWITCH_PREFIX/share/sail/lib/coverage
+  make -C $SAIL_DIR/lib/coverage
 
 # install cabal packages
 COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
