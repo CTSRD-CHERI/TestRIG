@@ -10,22 +10,22 @@ RUN \
   . /home/jenkins/sourceme.sh && \
   cd TestRIG && \
   make -j 8 QCVEngine \
-  ibex-rv32ic-cheri \
   flute-rv64xcheri \
-  rvbs \
-  rvbs-rv32ICZicsrZifencei \
-  rvbs-rv32ICZicsrZifenceiXcheri \
-  rvbs-rv32IZicsrZifencei \
-  rvbs-rv32IZicsrZifenceiXcheri \
-  rvbs-rv64ICZicsrZifencei \
-  rvbs-rv64ICZicsrZifenceiXcheri \
-  rvbs-rv64IZicsrZifencei \
-  rvbs-rv64IZicsrZifenceiXcheri \
   sail \
-  sail-rv32 \
-  sail-rv32-cheri \
-  sail-rv64 \
-  sail-rv64-cheri \
-  spike \
-  spike-cheri
+  sail-rv64-cheri
+  #ibex-rv32ic-cheri
   #piccolo-rv32xcheri
+  #rvbs
+  #rvbs-rv32ICZicsrZifencei
+  #rvbs-rv32ICZicsrZifenceiXcheri
+  #rvbs-rv32IZicsrZifencei
+  #rvbs-rv32IZicsrZifenceiXcheri
+  #rvbs-rv64ICZicsrZifencei
+  #rvbs-rv64ICZicsrZifenceiXcheri
+  #rvbs-rv64IZicsrZifencei
+  #rvbs-rv64IZicsrZifenceiXcheri
+  #sail-rv32
+  #sail-rv32-cheri
+  #sail-rv64
+  #spike
+  #spike-cheri
