@@ -9,7 +9,7 @@ RUN \
 WORKDIR /home/jenkins
 
 # install packages as root
-ENV PACKAGES="ghc cabal-install build-essential wget opam libgmp-dev z3 m4 pkg-config zlib1g-dev verilator python3 gcc g++ device-tree-compiler libfontconfig libxft2 libtcl8.6"
+ENV PACKAGES="ghc cabal-install build-essential wget opam libgmp-dev z3 m4 pkg-config zlib1g-dev verilator python3 gcc g++ device-tree-compiler libfontconfig libxft2 libtcl8.6 curl"
 RUN \
   apt-get update && \
   DEBIAN_FRONTEND="noninteractive" TZ="Europe/London" apt-get -y -qq install $PACKAGES && \
@@ -36,6 +36,16 @@ RUN \
   opam update -y && \
   opam install sail -y && \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
+
+# install rust
+RUN \
+  curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+# build sail coverage library
+RUN \
+  eval `opam config env -y` && \
+  . /home/jenkins/.cargo/env && \
+  make -C $OPAM_SWITCH_PREFIX/share/sail/lib/coverage
 
 # install cabal packages
 COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
