@@ -37,8 +37,6 @@ RUN \
   make -C sail/sailcov && \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
 
-ENV SAIL_DIR=/home/jenkins/sail/
-
 # install rust
 RUN \
   curl https://sh.rustup.rs -sSf | sh -s -- -y
@@ -47,7 +45,7 @@ RUN \
 RUN \
   eval `opam config env -y` && \
   . /home/jenkins/.cargo/env && \
-  make -C $SAIL_DIR/lib/coverage
+  make -C $OPAM_SWITCH_PREFIX/share/sail/lib/coverage
 
 # install cabal packages
 COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
