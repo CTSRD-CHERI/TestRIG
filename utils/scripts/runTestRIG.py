@@ -447,11 +447,11 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   ##############################################################################
   elif name == 'piccolo':
     env2["RVFI_DII_PORT"] = str(port)
-    cmd = [args.path_to_piccolo, "+v2"]
+    cmd = [args.path_to_piccolo, "+v2" if log else "+v0"]
   ##############################################################################
   elif name == 'flute':
     env2["RVFI_DII_PORT"] = str(port)
-    cmd = [args.path_to_flute, "+v2"]
+    cmd = [args.path_to_flute, "+v2" if log else "+v0"]
   ##############################################################################
   elif name == 'toooba':
     env2["RVFI_DII_PORT"] = str(port)
