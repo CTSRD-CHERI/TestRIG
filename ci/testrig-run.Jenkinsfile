@@ -20,7 +20,9 @@ configs.each {
             docker.image('ctsrd/testrig').pull()
             docker.image('ctsrd/testrig').inside {
               echo name
-              sh "/home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} -r ${conf[2]} --verification-archstring ${conf[3]} ${conf[4]} -n 10 --test-include-regex ${conf[5]} --test-exclude-regex ${conf[6]}"
+              sh "TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} -b ${conf[1]} -r ${conf[2]} --verification-archstring ${conf[3]} ${conf[4]} -n 10 --test-include-regex ${conf[5]} --test-exclude-regex ${conf[6]}"
+              sh "mkdir coverage && sail/sailcov/sailcov -t TestRIG/sail_coverage -a TestRIG/riscv-implementations/sail-cheri-riscv/generated_definitions/c/all_branches --index index --prefix coverage/ `find TestRIG/riscv-implementations/sail-cheri-riscv -name '*.sail'`"
+              archiveArtifacts "coverage/*"
             }
           }
         }
