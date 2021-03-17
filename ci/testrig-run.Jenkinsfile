@@ -12,7 +12,7 @@ def jobs = [:]
 
 configs.each {
   conf ->
-    def name = conf[0]+" vs "+conf[1]+" - "+conf[2]+"-"+conf[3]+"-"+conf[4]
+    def name = conf[0]+"vs"+conf[1]+"-"+conf[2]+"-"+conf[3]+"-"+conf[4]
     jobs.put(name, {
       ansiColor('xterm') {
         node('docker') {
