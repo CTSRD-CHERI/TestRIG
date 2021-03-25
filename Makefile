@@ -226,8 +226,8 @@ clean-flute:
 	rm -rf riscv-implementations/Flute/builds/RV*
 
 clean-toooba:
-	if [ -e riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_verilator ]; then \
-	    $(MAKE) -C riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_verilator clean; \
+	if [ -e riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim ]; then \
+	    $(MAKE) -C riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim clean; \
 	fi
 
 clean-ibex:
