@@ -1,18 +1,18 @@
 def configs = [
-                ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(data_scc|inst_scc|sbc_cond_1|sbc_jumps|sbc_excps|stc)\$'"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(data_scc)\$'"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(inst_scc)\$'"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(sbc_cond_1)\$'"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(sbc_jumps)\$'"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(sbc_excps)\$'"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(stc)\$'"]
+                ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(data_scc|inst_scc|sbc_cond_1|sbc_jumps|sbc_excps|stc)\$'", "all"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(data_scc)\$'", "data_scc"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(inst_scc)\$'", "inst_scc"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(sbc_cond_1)\$'", "sbc_cond_1"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(sbc_jumps)\$'", "sbc_jumps"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(sbc_excps)\$'", "sbc_excps"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsczifencei_xcheri", "", "'^(stc)\$'", "stc"]
               ]
 
 def jobs = [:]
 
 configs.each {
   conf ->
-    def name = conf[0]+"vs"+conf[1]+"-"+conf[5]
+    def name = conf[0]+"vs"+conf[1]+"-"+conf[6]
     jobs.put(name, {
       ansiColor('xterm') {
         node('docker') {
