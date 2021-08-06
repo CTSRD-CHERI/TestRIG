@@ -1,11 +1,11 @@
 def configs = [
-              //  ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(data_scc|inst_scc|sbc_cond_1|sbc_jumps|sbc_excps|stc)\$'", "all", "500"]
-              //, ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(data_scc)\$'", "data_scc", "500"]
-              //, ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(inst_scc)\$'", "inst_scc", "500"]
-              //, ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(sbc_cond_1)\$'", "sbc_cond_1", "500"]
-              //, ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(sbc_jumps)\$'", "sbc_jumps", "500"]
-                ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(sbc_excps)\$'", "sbc_excps", "500"]
-              //, ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(stc)\$'", "stc", "500"]
+                ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(data_scc|inst_scc|sbc_cond_1|sbc_jumps|sbc_excps|stc)\$'", "all", "750"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(data_scc)\$'", "data_scc", "750"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(inst_scc)\$'", "inst_scc", "750"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(sbc_cond_1)\$'", "sbc_cond_1", "750"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(sbc_jumps)\$'", "sbc_jumps", "750"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(sbc_excps)\$'", "sbc_excps", "750"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "rv64imsafdczicsr_zifencei_xcheri", "", "'^(stc)\$'", "stc", "750"]
               ]
 
 def jobs = [:]
