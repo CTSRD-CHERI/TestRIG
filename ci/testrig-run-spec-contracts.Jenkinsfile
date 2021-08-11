@@ -17,8 +17,8 @@ configs.each {
       ansiColor('xterm') {
         node('docker') {
           stage(name) {
-            docker.image('ctsrd/testrig').pull()
-            docker.image('ctsrd/testrig').inside {
+            docker.image('ctsrd/testrig-pdr32').pull()
+            docker.image('ctsrd/testrig-pdr32').inside {
               echo name
               sh "rm -rf ${name} && mkdir ${name}"
               def retval = sh returnStatus: true, script: "cd ${name} && mkdir failures && /home/jenkins/TestRIG/utils/scripts/runTestRIG.py -a ${conf[0]} --implementation-A-log implAlog.txt -b ${conf[1]} --implementation-B-log implBlog.txt -r ${conf[2]} --verification-archstring ${conf[3]} ${conf[4]} -n ${conf[7]} --test-include-regex ${conf[5]} --no-shrink --continue-on-fail -S failures/"

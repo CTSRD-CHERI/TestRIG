@@ -13,7 +13,7 @@ ansiColor('xterm') {
            noTags: true]]])
       }
     stage("Build TestRIG builder docker image") {
-      img = docker.build("ctsrd/testrig", "-f TestRIG/ci/testrig.Dockerfile --no-cache --pull .")
+      img = docker.build("ctsrd/testrig-pdr32", "-f TestRIG/ci/testrig.Dockerfile --no-cache --pull .")
     }
     stage("Push TestRIG docker image to docker hub") {
       docker.withRegistry('https://registry.hub.docker.com',
