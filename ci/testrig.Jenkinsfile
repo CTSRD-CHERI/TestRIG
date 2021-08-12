@@ -4,7 +4,7 @@ ansiColor('xterm') {
     stage("Clone TestRIG repository") {
       checkout([$class: 'GitSCM',
         userRemoteConfigs: [[url: 'https://github.com/CTSRD-CHERI/TestRIG.git', refspec: 'refs/heads/pdr32-submodules:refs/remotes/origin/pdr32-submodules']],
-        branches: [$class: 'BranchSpec', name: 'refs/heads/pdr32-submodules'],
+        branches: [name: 'refs/heads/pdr32-submodules'],
         extensions: [
           [$class: 'SubmoduleOption',
            recursiveSubmodules: true],
