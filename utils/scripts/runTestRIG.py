@@ -109,6 +109,10 @@ parser.add_argument('--implementation-A-log', metavar='PATH',
   default=None, type=auto_write_fd,
   #nargs='?', const=sub.PIPE,
   help="Turn on logging for implementation A's rvfi-dii server (optionally specifying a file path)")
+parser.add_argument('--implementation-A-dir', metavar='PATH',
+  default=None, type=str,
+  #nargs='?', const=sub.PIPE,
+  help="Specify directory in which to run implementation A")
 # implementation args
 parser.add_argument('-b', '--implementation-B', metavar='IMP', choices=known_rvfi_dii,
   default='spike',
@@ -119,6 +123,10 @@ parser.add_argument('--implementation-B-log', metavar='PATH',
   default=None, type=auto_write_fd,
   #nargs='?', const=sub.PIPE,
   help="Turn on logging for implementation B's rvfi-dii server (optionally specifying a file path)")
+parser.add_argument('--implementation-B-dir', metavar='PATH',
+  default=None, type=str,
+  #nargs='?', const=sub.PIPE,
+  help="Specify directory in which to run implementation B")
 # verification engine args
 parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known_vengine,
   default='QCVEngine',
@@ -390,7 +398,7 @@ def input_y_n(prompt):
 # spawn rvfi_dii server #
 #########################
 
-def spawn_rvfi_dii_server(name, port, log, isa_def):
+def spawn_rvfi_dii_server(name, port, log, isa_def, cwd):
   # few common variables
   use_log = open(os.devnull, "w")
   if log:
@@ -489,7 +497,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     return None
   ##############################################################################
   print("running rvfi-dii server as: ", " ".join(cmd))
-  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log)
+  p = sub.Popen(cmd, env=env2, stdin=None, stdout=use_log, stderr=use_log, cwd=cwd)
   print('spawned {:s} rvfi-dii server on port: {:d} ({})'.format(name, port, cmd))
   return p
 
@@ -658,8 +666,8 @@ def main():
         bports.append(bsocks[job].getsockname()[1])
       bsocks[job].close
 
-      a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def))
-      b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def))
+      a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def, args.implementation_A_dir))
+      b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def, args.implementation_B_dir))
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
