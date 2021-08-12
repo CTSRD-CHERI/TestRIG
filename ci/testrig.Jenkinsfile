@@ -3,7 +3,7 @@ ansiColor('xterm') {
     def img
     stage("Clone TestRIG repository") {
       checkout([$class: 'GitSCM',
-        userRemoteConfigs: [[url: 'https://github.com/CTSRD-CHERI/TestRIG.git']],
+        userRemoteConfigs: [[url: 'https://github.com/CTSRD-CHERI/TestRIG.git', refspec: 'refs/remotes/origin/pdr32-submodules']],
         extensions: [
           [$class: 'SubmoduleOption',
            recursiveSubmodules: true],
