@@ -202,6 +202,8 @@ parser.add_argument('--no-save', action='count', default=0,
   help="Don't ask to save files")
 parser.add_argument('--continue-on-fail', action='count', default=0,
   help="Continue when encountering a failure")
+parser.add_argument('--ignore-asserts', action='count', default=0,
+  help="Don't fail a test if an assert fails")
 parser.add_argument('--test-len', metavar='LEN', default=None, type=auto_int,
   help="Tell vengine to generate tests up to LEN instructions long")
 
@@ -520,6 +522,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['--no-save']
     if args.continue_on_fail:
       cmd += ['--continue-on-fail']
+    if args.ignore_asserts:
+      cmd += ['--ignore-asserts']
     if args.test_len:
       cmd += ['-L', str(args.test_len)]
     if args.test_include_regex:
