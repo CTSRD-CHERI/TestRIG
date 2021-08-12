@@ -11,10 +11,10 @@ RUN \
   cd TestRIG && \
   SAILCOV=1 \
   make -j 8 QCVEngine \
-  flute-rv64xcheri \
+  #flute-rv64xcheri \
   sail \
   sail-rv64-cheri \
-  toooba-rv64xcheri
+  #toooba-rv64xcheri
   #ibex-rv32ic-cheri
   #piccolo-rv32xcheri
   #rvbs
