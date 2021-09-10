@@ -6,10 +6,14 @@ TestRIG is a framework for RISC-V processor verification using the RVFI-DII (pro
 TestRIG supports two types of components:
 
 1. Vengines (verification engines)
-2. Implementations (including Models)
+2. Implementations (including models, simulators, and SoCs)
 
-Vengines generate two equivalent streams of RVFI-DII instruction traces, and consume two streams of RVFI-DII execution traces, asserting that they are equivalant.
-Implementations consume RVFI-DII instruction traces, and generate RVFI-DII execution traces.
+Vengines generate two equivalent streams of DII instruction traces,
+and consume two streams of RVFI execution traces, asserting that they
+are equivalant.  Implementations consume DII instruction traces, and
+generate RVFI execution traces.
+
+<img src="diagram.svg" width="450">
 
 TestRIG eliminates the "test gap" between specification and implementation.
 If the specification is an executable model (see Sail, L3, and many other efforts), then TestRIG allows automated verification of any specified property without passing through human interpretation and hand-writing tests.
