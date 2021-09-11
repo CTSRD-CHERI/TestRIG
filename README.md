@@ -8,10 +8,11 @@ TestRIG supports two types of components:
 1. Vengines (verification engines)
 2. Implementations (including models, simulators, and SoCs)
 
-Vengines generate two equivalent streams of DII instruction traces,
-and consume two streams of RVFI execution traces, asserting that they
-are equivalant.  Implementations consume DII instruction traces, and
-generate RVFI execution traces.
+Vengines generate one or more DII streams of instruction traces, and consume one
+or more RVFI streams of execution traces. Implementations consume a DII
+instruction trace, and generate an RVFI execution trace. A Vengine can, for
+example, produce two equivalent DII streams for two implementations and check
+that the two generated RVFI streams are equivalent.
 
 <img src="diagram.svg" width="450">
 
