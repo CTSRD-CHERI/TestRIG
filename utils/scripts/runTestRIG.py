@@ -73,7 +73,7 @@ def x_ext(ext_name):
   return ["", "X"+ext_name]
 
 known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'qemu', 'manual'}
-known_vengine = {'QCVEngine'}
+known_vengine = {'QCVEngine', 'QCVEngine-docker'}
 multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
                      for e0 in z_ext("icsr")
                      for e1 in z_ext("ifencei")
@@ -496,8 +496,21 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
 #############################
 
 def spawn_vengine(name, mport, iport, arch, log):
-  if name == 'QCVEngine':
-    cmd = [args.path_to_QCVEngine, '-a', str(mport), '-b', str(iport), '-r', str(arch)]
+  if name == 'QCVEngine-docker':
+    cmd = ["docker", "run", "--rm", "-t", "-p", f"{mport}:{mport}", "-p", f"{iport}:{iport}",
+           "ctsrd/testrig", "./TestRIG/vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine",
+           # Use the host IP addresses in the docker container:
+           "-A", "host.docker.internal", "-B", "host.docker.internal"]
+    useQCVEngine = True
+  elif name == 'QCVEngine':
+    cmd = [args.path_to_QCVEngine]
+    useQCVEngine = True
+  else:
+    cmd = ["false"]
+    useQCVEngine = False
+
+  if useQCVEngine:
+    cmd += ['-a', str(mport), '-b', str(iport), '-r', str(arch)]
     cmd += ['-n', str(args.number_of_tests)]
     cmd += ['-v', str(args.verbosity)]
     if args.generator != 'internal':
