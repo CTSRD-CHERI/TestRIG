@@ -14,8 +14,8 @@ RUN \
   flute-rv64xcheri \
   sail \
   sail-rv64-cheri \
-  toooba-rv64xcheri \
-  piccolo-rv32xcheri
+  toooba-rv64xcheri
+  #piccolo-rv32xcheri
   #ibex-rv32ic-cheri
   #rvbs
   #rvbs-rv32ICZicsrZifencei
