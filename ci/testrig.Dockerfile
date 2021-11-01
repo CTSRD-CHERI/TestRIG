@@ -15,8 +15,8 @@ RUN \
   sail \
   sail-rv64-cheri \
   toooba-rv64xcheri
-  #ibex-rv32ic-cheri
   #piccolo-rv32xcheri
+  #ibex-rv32ic-cheri
   #rvbs
   #rvbs-rv32ICZicsrZifencei
   #rvbs-rv32ICZicsrZifenceiXcheri
