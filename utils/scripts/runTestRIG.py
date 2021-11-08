@@ -204,6 +204,8 @@ parser.add_argument('--continue-on-fail', action='count', default=0,
   help="Continue when encountering a failure")
 parser.add_argument('--test-len', metavar='LEN', default=None, type=auto_int,
   help="Tell vengine to generate tests up to LEN instructions long")
+parser.add_argument('--supported-features', metavar='FEAT', type=str,
+  help="Specify supported features to vengine, separated by '_'. Each feature should begin with 'X'.")
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
@@ -510,7 +512,7 @@ def spawn_vengine(name, mport, iport, arch, log):
     useQCVEngine = False
 
   if useQCVEngine:
-    cmd += ['-a', str(mport), '-b', str(iport), '-r', str(arch)]
+    cmd += ['-a', str(mport), '-b', str(iport), '-r', str(arch) + "_" + args.supported_features]
     cmd += ['-n', str(args.number_of_tests)]
     cmd += ['-v', str(args.verbosity)]
     if args.generator != 'internal':
