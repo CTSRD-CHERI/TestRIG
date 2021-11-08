@@ -512,7 +512,11 @@ def spawn_vengine(name, mport, iport, arch, log):
     useQCVEngine = False
 
   if useQCVEngine:
-    cmd += ['-a', str(mport), '-b', str(iport), '-r', str(arch) + "_" + args.supported_features]
+    if args.supported_features is not None:
+      QCVEngineArch = str(arch) + "_" + args.supported_features
+    else:
+      QCVEngineArch = str(arch)
+    cmd += ['-a', str(mport), '-b', str(iport), '-r', QCVEngineArch]
     cmd += ['-n', str(args.number_of_tests)]
     cmd += ['-v', str(args.verbosity)]
     if args.generator != 'internal':
