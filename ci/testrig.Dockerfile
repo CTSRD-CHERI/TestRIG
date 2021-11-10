@@ -9,6 +9,7 @@ COPY --chown=jenkins TestRIG ./TestRIG
 RUN \
   . /home/jenkins/sourceme.sh && \
   cd TestRIG && \
+  make clean && \
   SAILCOV=1 \
   make -j 8 QCVEngine \
   flute-rv64xcheri \
