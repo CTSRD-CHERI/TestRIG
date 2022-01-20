@@ -50,6 +50,6 @@ RUN \
 # install cabal packages
 COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
 RUN \
-  cabal update && \
-  cabal install --only-dependencies && \
+  cabal v1-update && \
+  cabal v1-install --only-dependencies && \
   rm *.cabal
