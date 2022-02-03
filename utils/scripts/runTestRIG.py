@@ -72,7 +72,7 @@ def z_ext(ext_name):
 def x_ext(ext_name):
   return ["", "X"+ext_name]
 
-known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'qemu', 'manual'}
+known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'qemu', 'manual', 'none'}
 known_vengine = {'QCVEngine', 'QCVEngine-docker'}
 multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
                      for e0 in z_ext("icsr")
@@ -484,6 +484,9 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   elif name == 'manual':
     return None
   ##############################################################################
+  elif name == 'none':
+    return None
+  ##############################################################################
   else:
     print("Unknown rvfi-dii server {:s}".format(name))
     return None
@@ -545,6 +548,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['-I', args.test_include_regex]
     if args.test_exclude_regex:
       cmd += ['-x', args.test_exclude_regex]
+    if args.implementation_A == 'none' or args.implementation_B == 'none':
+      cmd += ['--single-implementation']
     print("running qcvengine as: ", " ".join(cmd))
     if log is None:
       p = sub.Popen(cmd)
