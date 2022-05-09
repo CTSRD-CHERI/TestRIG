@@ -32,9 +32,10 @@ RUN \
 RUN \
   git clone --branch sail2 https://github.com/rems-project/sail.git && \
   opam update -y && \
-  opam pin add sail sail -y && \
+  cd sail && \
+  opam pin add . -y && \
+  cd .. && \
   eval `opam config env -y` && \
-  opam install -y -v sail && \
   sail -v
 
 # install sailcov and source script
