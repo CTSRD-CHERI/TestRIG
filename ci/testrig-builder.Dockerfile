@@ -30,7 +30,7 @@ RUN \
 
 # install sail
 RUN \
-  git clone https://github.com/rems-project/sail.git && \
+  git clone --branch 0.13 https://github.com/rems-project/sail.git && \
   opam update -y && \
   opam pin add sail sail -y && \
   eval `opam config env -y` && \
