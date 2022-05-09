@@ -24,7 +24,7 @@ ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
 # install opam and rems repo
 RUN \
-  opam init --disable-sandboxing -y --compile=4.08.0 && \
+  opam init --disable-sandboxing -y --compiler=4.08.0 && \
   eval `opam config env -y` && \
   opam repository add rems https://github.com/rems-project/opam-repository.git -y
 
