@@ -24,7 +24,7 @@ ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
 # install opam, rems repo and sail
 RUN \
-  git clone --branch 0.13 https://github.com/rems-project/sail.git && \
+  git clone --branch sail2 https://github.com/rems-project/sail.git && \
   cd sail && \
   ./etc/ci_opam_build.sh && \
   cd ..
