@@ -22,12 +22,21 @@ USER jenkins
 ADD bsc-install-focal.tar.xz /home/jenkins/
 ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
 
-# install opam, rems repo and sail
+# install opam and rems repo
+RUN \
+  opam init --disable-sandboxing -y --compile=4.08.0 && \
+  eval `opam config env -y` && \
+  opam repository add rems https://github.com/rems-project/opam-repository.git -y
+
+# install sail
 RUN \
   git clone --branch sail2 https://github.com/rems-project/sail.git && \
-  cd sail && \
-  ./etc/ci_opam_build.sh && \
-  cd ..
+  opam update -y && \
+  opam pin add sail sail -y && \
+  eval `opam config env -y` && \
+  opam install -y -v sail && \
+  sail -v
+
 # install sailcov and source script
 RUN \
   eval `opam config env -y` && \
