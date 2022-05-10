@@ -41,6 +41,7 @@ RUN \
 # install sailcov and source script
 RUN \
   eval `opam config env -y` && \
+  sed -i "s=_build/default/main.exe=\.\./_build/default/sailcov/main.exe=g" sail/sailcov/Makefile && \
   make -C sail/sailcov && \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
 
