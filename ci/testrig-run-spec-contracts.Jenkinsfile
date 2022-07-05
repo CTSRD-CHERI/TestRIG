@@ -1,11 +1,11 @@
 def configs = [
-                ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(csc_data|csc_inst|bsc_cond_1|bsc_jumps|bsc_excps|tsc)\$'", "all", "1000"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(csc_data)\$'", "csc_data", "1000"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(csc_inst)\$'", "csc_inst", "1000"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(bsc_cond_1)\$'", "bsc_cond_1", "1000"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(bsc_jumps)\$'", "bsc_jumps", "1000"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(bsc_excps)\$'", "bsc_excps", "1000"]
-              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(tsc)\$'", "tsc", "1000"]
+                ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(csc_data|csc_inst|bsc_cond_1|bsc_jumps|bsc_excps|tsc)\$'", "all", "500"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(csc_data)\$'", "csc_data", "500"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(csc_inst)\$'", "csc_inst", "500"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(bsc_cond_1)\$'", "bsc_cond_1", "500"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(bsc_jumps)\$'", "bsc_jumps", "500"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(bsc_excps)\$'", "bsc_excps", "500"]
+              , ["sail", "toooba", "rv64imsafdczicsr_zifencei_xcheri", "'^(tsc)\$'", "tsc", "500"]
               ]
 
 def jobs = [:]
