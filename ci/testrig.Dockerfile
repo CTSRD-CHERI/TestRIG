@@ -8,6 +8,7 @@ COPY --chown=jenkins TestRIG ./TestRIG
 
 RUN \
   . /home/jenkins/sourceme.sh && \
+  . /home/jenkins/.ghcup/env && \
   cd TestRIG && \
   make clean && \
   SAILCOV=1 \

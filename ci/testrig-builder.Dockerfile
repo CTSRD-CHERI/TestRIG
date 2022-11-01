@@ -9,7 +9,7 @@ RUN \
 WORKDIR /home/jenkins
 
 # install packages as root
-ENV PACKAGES="ghc cabal-install build-essential wget opam libgmp-dev z3 m4 pkg-config zlib1g-dev verilator python3 pip gcc g++ device-tree-compiler libfontconfig libxft2 libtcl8.6 curl"
+ENV PACKAGES="build-essential wget opam libgmp-dev z3 m4 pkg-config zlib1g-dev verilator python3 pip gcc g++ device-tree-compiler libfontconfig libxft2 libtcl8.6 curl libffi-dev libffi7 libgmp-dev libgmp10 libncurses-dev libncurses5 libtinfo5"
 RUN \
   apt-get update && \
   DEBIAN_FRONTEND="noninteractive" TZ="Europe/London" apt-get -y -qq install $PACKAGES && \
@@ -48,6 +48,10 @@ RUN \
 # install rust
 RUN \
   curl https://sh.rustup.rs -sSf | sh -s -- -y
+  
+# install ghc and cabal
+RUN \  
+  curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh -s -- -y
 
 # build sail coverage library
 RUN \
@@ -56,8 +60,11 @@ RUN \
   make -C $OPAM_SWITCH_PREFIX/share/sail/lib/coverage
 
 # install cabal packages
-COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
-RUN \
-  cabal v1-update && \
-  cabal v1-install --only-dependencies && \
-  rm *.cabal
+# COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
+#RUN \
+#  cd vengines/QuickCheckVEngine/ &&\
+#  . /home/jenkins/.ghcup/env && \
+#  cabal configure && \
+#  cabal update && \
+#  cabal install --only-dependencies && \
+#  cd ../../
