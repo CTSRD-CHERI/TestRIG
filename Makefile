@@ -175,9 +175,12 @@ sail-rv64-cheri:
 ibex-rv32ic-cheri:
 	$(MAKE) -C riscv-implementations/ibex/verilator
 
+muntjac-rv64imac:
+	$(MAKE) -C riscv-implementations/muntjac
+
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac
 
 clean-rvbs: clean-rvbs-rv32IZicsrZifencei
 
@@ -232,3 +235,6 @@ clean-toooba:
 
 clean-ibex:
 	$(MAKE) -C riscv-implementations/ibex/verilator clean
+
+clean-muntjac:
+	$(MAKE) -C riscv-implementations/muntjac clean

@@ -41,3 +41,6 @@
 	path = riscv-implementations/Toooba
 	url = https://github.com/CTSRD-CHERI/Toooba.git
         branch = CHERI
+[submodule "riscv-implementations/muntjac"]
+	path = riscv-implementations/muntjac
+	url = https://github.com/CTSRD-CHERI/muntjac.git

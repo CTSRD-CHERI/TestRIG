@@ -72,7 +72,7 @@ def z_ext(ext_name):
 def x_ext(ext_name):
   return ["", "X"+ext_name]
 
-known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'qemu', 'manual', 'none'}
+known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'muntjac', 'qemu', 'manual', 'none'}
 known_vengine = {'QCVEngine', 'QCVEngine-docker'}
 multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
                      for e0 in z_ext("icsr")
@@ -156,6 +156,9 @@ parser.add_argument('--path-to-toooba', metavar='PATH', type=str,
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
   help="The PATH to the Ibex executable")
+parser.add_argument('--path-to-muntjac', metavar='PATH', type=str,
+  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/muntjac/bin/muntjac_core"),
+  help="The PATH to the Muntjac executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   #default='QCVEngine',
   default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
@@ -480,6 +483,10 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   ##############################################################################
   elif name == 'ibex':
     cmd = [args.path_to_ibex, 'localhost', str(port)]
+  ##############################################################################
+  elif name == 'muntjac':
+    env2["RVFI_DII_PORT"] = str(port)
+    cmd = [args.path_to_muntjac]
   ##############################################################################
   elif name == 'manual':
     return None
