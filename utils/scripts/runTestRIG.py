@@ -45,6 +45,9 @@ import subprocess as sub
 import sys
 import time
 import socket
+import typing
+from dataclasses import dataclass
+from typing import Optional
 
 
 ################################
@@ -600,6 +603,15 @@ def spawn_generator(name, arch, log):
 # main function #
 #################
 
+
+@dataclass
+class LogfileConfiguration:
+  impl_a_log: Optional[typing.TextIO]
+  impl_b_log: Optional[typing.TextIO]
+  generator_log: Optional[typing.TextIO]
+  error_log: Optional[typing.TextIO]
+
+
 def main():
   def kill_procs(servA, servB, gen, vengine):
     for a in servA:
@@ -655,24 +667,24 @@ def main():
       except FileExistsError:
         pass  # do nothing
 
+    logs: "list[LogfileConfiguration]" = []
     for job in range(args.parallel_jobs):
-      if (args.parallel_jobs == 1):
-        aLog = args.implementation_A_log
-        bLog = args.implementation_B_log
-        genLog = args.generator_log
-        eLog = None
+      if args.parallel_jobs == 1:
+        logs.append(LogfileConfiguration(
+          impl_a_log=args.implementation_A_log,
+          impl_b_log=args.implementation_B_log,
+          generator_log=args.generator_log,
+          error_log=None))
       else:
         # Ignore user-supplied arguments since they don't make sense for multiple jobs (TODO print error if they are supplied?)
-        if (args.parallel_log):
-          aLog = auto_write_fd('parallel-logs/a' + str(job))
-          bLog = auto_write_fd('parallel-logs/b' + str(job))
-          genLog = auto_write_fd('parallel-logs/g' + str(job))
-          eLog = auto_write_fd('parallel-logs/v' + str(job))
+        if args.parallel_log:
+          logs.append(LogfileConfiguration(
+            impl_a_log=auto_write_fd('parallel-logs/a' + str(job)),
+            impl_b_log=auto_write_fd('parallel-logs/b' + str(job)),
+            generator_log=auto_write_fd('parallel-logs/g' + str(job)),
+            error_log=auto_write_fd('parallel-logs/v' + str(job))))
         else:
-          aLog = None
-          bLog = None
-          genLog = None
-          eLog = None
+          logs.append(LogfileConfiguration(None, None, None, None))
 
       if (args.implementation_A_port != 0):
         aports.append(args.implementation_A_port)
@@ -685,8 +697,10 @@ def main():
         bports.append(bsocks[job].getsockname()[1])
       bsocks[job].close()
 
-      a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def))
-      b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def))
+      a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job],
+                                     logs[job].impl_a_log, isa_def))
+      b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job],
+                                     logs[job].impl_b_log, isa_def))
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
@@ -699,10 +713,12 @@ def main():
         print("ERROR: Implementation B failed to start!")
         print(" ".join(b[job].args), "failed with exit code", b[job].poll())
         exit(1)
-      e.append(spawn_vengine(args.verification_engine, aports[job], bports[job], vengine_archstring, eLog))
+      e.append(spawn_vengine(args.verification_engine, aports[job], bports[job],
+                             vengine_archstring, logs[job].error_log))
 
     # TODO support non-standard generator in parallel builds
-    generator.append(spawn_generator(args.generator, args.architecture, genLog))
+    generator.append(spawn_generator(args.generator, args.architecture,
+                                     logs[0].generator_log))
 
     # Periodic non-blocking loop over processes to terminate those that finish early
     alive = args.parallel_jobs
