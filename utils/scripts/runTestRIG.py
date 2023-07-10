@@ -215,7 +215,7 @@ try:
   import argcomplete
   argcomplete.autocomplete(parser)
 except ImportError:
-  pass
+  argcomplete = None
 args = parser.parse_args()
 
 ###########
