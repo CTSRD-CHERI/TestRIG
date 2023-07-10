@@ -678,12 +678,12 @@ def main():
         aports.append(args.implementation_A_port)
       else:
         aports.append(asocks[job].getsockname()[1])
-      asocks[job].close
+      asocks[job].close()
       if (args.implementation_B_port != 0):
         bports.append(args.implementation_B_port)
       else:
         bports.append(bsocks[job].getsockname()[1])
-      bsocks[job].close
+      bsocks[job].close()
 
       a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job], aLog, isa_def))
       b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job], bLog, isa_def))
