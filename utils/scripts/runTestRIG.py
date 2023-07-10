@@ -77,10 +77,11 @@ def x_ext(ext_name):
 
 known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'muntjac', 'qemu', 'manual', 'none'}
 known_vengine = {'QCVEngine', 'QCVEngine-docker'}
-multi_letter_exts = ["_".join(filter(None, [e0, e1, e2]))
+multi_letter_exts = ["_".join(filter(None, [e0, e1, e2, e3]))
                      for e0 in z_ext("icsr")
-                     for e1 in z_ext("ifencei")
-                     for e2 in x_ext("cheri")]
+                     for e1 in z_ext("ihpm")
+                     for e2 in z_ext("ifencei")
+                     for e3 in x_ext("cheri")]
 known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8
                                   for e0 in ["rv32i", "rv64i"]
                                   for e1 in std_ext("m")
@@ -264,18 +265,16 @@ class ISA_Configuration:
       if letter in ('i', 'm', 's', 'a', 'f', 'd', 'c', 'n'):
         self.ext_map[letter] = True
       elif letter == 'g':
-        # G enables imafd+icsr+ifencei
-        for ext in ('i', 'm', 's', 'a', 'f', 'd', 'icsr', 'ifencei'):
+        # G enables imafd+icsr+ihpm+ifencei
+        for ext in ('i', 'm', 's', 'a', 'f', 'd', 'icsr', 'ihpm', 'ifencei'):
           self.ext_map[ext] = True
         self.ext_map['g'] = True
-        self.ext_map['icsr'] = True
-        self.ext_map['ifencei'] = True
       else:
         print("ERROR: Unknown standard extension '"+letter+"'")
         exit(-1)
     self.extensions = parts[1:]
     for extension in self.extensions:
-      if extension in ('icsr', 'ifencei', 'cheri'):
+      if extension in ('icsr', 'ifencei', 'ihpm', 'cheri'):
         self.ext_map[extension] = True
       else:
         print("ERROR: Extension "+extension+" not currently supported")
@@ -347,7 +346,7 @@ class ISA_Configuration:
     print("WARNING: enabling s and u extensions by default in QEMU.")
     if not self.has_icsr:
       ext_map["Zicsr"] = "Zicsr=true"
-      print("WARNING: enabling icsr extension by default in QEMU.")
+      print("WARNING: enabling Zicsr extension by default in QEMU.")
     # TODO: mmu/pmp/priv_spec?
     # DEFINE_PROP_STRING("priv_spec", RISCVCPU, cfg.priv_spec),
     # DEFINE_PROP_BOOL("mmu", RISCVCPU, cfg.mmu, true),
@@ -363,6 +362,8 @@ class ISA_Configuration:
         ext = "Xcheri"
       if ext == "icsr":
         ext = "Zicsr"
+      if ext == "ihpm":
+        ext = "Counters"
       if ext == "ifencei":
         ext = "Zifencei"
       ext_map[ext] = ext + "=" + str(value).lower()
