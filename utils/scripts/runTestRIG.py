@@ -653,7 +653,7 @@ def main():
         if (args.parallel_log):
           os.mkdir('parallel-logs')
       except FileExistsError:
-        () # do nothing
+        pass  # do nothing
 
     for job in range(args.parallel_jobs):
       if (args.parallel_jobs == 1):
