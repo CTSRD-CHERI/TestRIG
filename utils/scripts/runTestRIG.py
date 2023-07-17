@@ -203,6 +203,8 @@ parser.add_argument('-j', '--parallel-jobs', metavar='JOBS', default=1, type=aut
   help="Spawn the VEngine and implementations multiple times for parallel jobs")
 parser.add_argument('-l', '--parallel-log', action='count', default=0,
   help="Enable parallel logging in ./parallel-logs. Note that this may use lots of space")
+parser.add_argument('-R', '--relaxed-comparison', action='count', default=0,
+  help="Comparea reduced set of RVFI fields in VEngine")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 parser.add_argument('--no-save', action='count', default=0,
@@ -549,6 +551,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
     if args.no_shrink:
       cmd += ['-S']
+    if args.relaxed_comparison:
+      cmd += ['-R']
     if args.no_save:
       cmd += ['--no-save']
     if args.continue_on_fail:
