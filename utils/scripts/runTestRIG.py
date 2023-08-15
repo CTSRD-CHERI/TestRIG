@@ -186,6 +186,10 @@ parser.add_argument('--test-include-regex', type=str, metavar='regex',
   help="""A regex describing the subset of tests to run on the verification engine, (defaults to all tests).""")
 parser.add_argument('--test-exclude-regex', type=str, metavar='regex',
   help="""A regex describing the subset of tests to exclude (overriding test-include-regex) on the verification engine, (defaults to no tests).""")
+parser.add_argument('--csr-include-regex', type=str, metavar='regex',
+  help="""A regex describing the subset of CSRs to include in tests, (defaults to all CSRs).""")
+parser.add_argument('--csr-exclude-regex', type=str, metavar='regex',
+  help="""A regex describing the subset of CSRs to exclude (overriding csr-include-regex) on the verification engine, (defaults to no CSRs).""")
 parser.add_argument('--support-misaligned', action='store_true',
   help="""Enable misaligned memory accesses""")
 parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
@@ -564,6 +568,10 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['-I', args.test_include_regex]
     if args.test_exclude_regex:
       cmd += ['-x', args.test_exclude_regex]
+    if args.csr_include_regex:
+      cmd += ['--csr-include-regex', args.csr_include_regex]
+    if args.csr_exclude_regex:
+      cmd += ['--csr-exclude-regex', args.csr_exclude_regex]
     if args.implementation_A == 'none' or args.implementation_B == 'none':
       cmd += ['--single-implementation']
     print("running qcvengine as: ", " ".join(cmd))
