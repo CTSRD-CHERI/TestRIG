@@ -39,7 +39,7 @@ vengines: QCVEngine
 QCVEngine: Makefile
 	cd vengines/QuickCheckVEngine &&\
 	if cabal --help 2>&1 | grep v1-build > /dev/null; then \
-	  (cabal v1-install --only-dependencies && cabal v1-configure && cabal v1-build); \
+	  (cabal v1-install --only-dependencies && cabal v1-configure && cabal -j$$(( `nproc` < 64 ? `nproc` : 64 )) v1-build); \
 	else \
 	  (cabal install --only-dependencies && cabal configure && cabal build); \
 	fi
