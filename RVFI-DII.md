@@ -9,23 +9,24 @@ RVFI-DII is composed of two packet structures designed to send across sockets.
  * The **execution trace** format that is reported from the implementation to the vengine
 
 ## RVFI-DII Instruction Packet (8 bytes)
- ~~~
-
+~~~
 struct RVFI_DII_Instruction_Packet {
-   Bit8  padding;        // [7]
-   Bit8  rvfi_cmd;       // [6] This token is a trace command.  For example, reset device under test.
-   Bit16 rvfi_time;      // [5 - 4] Time to inject token.  The difference between this and the previous
-                   // instruction time gives a delay before injecting this instruction.
-                   // This can be ignored for models but gives repeatability for implementations
-                   // while shortening counterexamples.
-   Bit32 rvfi_insn;      // [0 - 3] Instruction word: 32-bit instruction or command. The lower 16-bits
-                   // may decode to a 16-bit compressed instruction.
+   Bit8  padding;   // [7]
+   Bit8  rvfi_cmd;  // [6] This token is a trace command.  For example, reset device under test.
+   Bit16 rvfi_time; // [5 - 4] Time to inject token.  The difference between this and the previous
+                       // instruction time gives a delay before injecting this instruction.
+                       // This can be ignored for models but gives repeatability for implementations
+                       // while shortening counterexamples.
+   Bit32 rvfi_insn; // [0 - 3] Instruction word: 32-bit instruction or command. The lower 16-bits
+                       // may decode to a 16-bit compressed instruction.
 }
 ~~~
 
-The **rvfi_cmd** field currently has two values defined:  
-0 = **EndOfTrace** // Reset the implemenation, including registers, memory, and PC (to 0x80000000)  
-1 = **Instruction** // Execute the instruction in rvfi_insn  
+The `rvfi_cmd` field currently has two values defined:
+~~~
+0 = EndOfTrace  // Reset the implemenation, including registers, memory, and PC (to 0x80000000)
+1 = Instruction // Execute the instruction in rvfi_insn
+~~~
 
 ## RVFI-DII Execution Packet (88 bytes)
 ~~~
@@ -72,16 +73,16 @@ An implementation that can be verified using TestRIG must support direct instruc
 That is, any ICache and branch prediction mechanism must be bypassed, and instructions should be consumed
 from the RVFI-DII socket interface.
 The Bluespec HDL example receives instruction traces from the RVFI-DII socket and fills a FIFO until it receives
-an **EndOfTrace** token, indicating that the FIFO holds a complete instruction trace.
-It then begins injecting instructions when a 16-bit counter is equal to the value in the **rvfi_time** field.
+an `EndOfTrace` token, indicating that the FIFO holds a complete instruction trace.
+It then begins injecting instructions when a 16-bit counter is equal to the value in the `rvfi_time` field.
 This preserves timing relationships between instructions even as the vengine eliminates intervening instructions.
 
 ## TestRIG-triggered Reset
-The design must reset on each **EndOfTrace** command from the RVFI-DII instruction trace socket.
+The design must reset on each `EndOfTrace` command from the RVFI-DII instruction trace socket.
 That is, all general-purpose register values must be set to zero, CSRs to reset value, and memory to zero.
 
-## 64KiB Memory at 0x80000000
-Memory must be 64KiB in size and mapped at 0x80000000.
+## 64KiB Memory at `0x80000000`
+Memory must be 64KiB in size and mapped at `0x80000000`.
 Test generators are responsible to attempt to generate addresses within this 64KiB region.
 
 # Potential RVFI-DII extensions
