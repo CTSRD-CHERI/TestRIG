@@ -164,9 +164,7 @@ parser.add_argument('--path-to-muntjac', metavar='PATH', type=str,
   default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/muntjac/bin/muntjac_core"),
   help="The PATH to the Muntjac executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
-  #default='QCVEngine',
-  default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine"),
-  #default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/dist-newstyle/build/x86_64-linux/ghc-8.6.3/QCVEngine-0.1.0.0/x/QCVEngine/build/QCVEngine/QCVEngine"),
+  default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/bin/QCVEngine"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
   default=None,  # This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
