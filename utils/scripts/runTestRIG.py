@@ -115,7 +115,7 @@ parser.add_argument('--implementation-A-log', metavar='PATH',
   help="Turn on logging for implementation A's rvfi-dii server (optionally specifying a file path)")
 # implementation args
 parser.add_argument('-b', '--implementation-B', metavar='IMP', choices=known_rvfi_dii,
-  default='sail',
+  default='qemu',
   help="The implementation B to use. (one of {:s})".format(str(known_rvfi_dii)))
 parser.add_argument('--implementation-B-port', metavar='PORT', type=auto_int, default=0,
   help="The port to use for implementation B's rvfi-dii server")
@@ -188,7 +188,7 @@ parser.add_argument('--csr-include-regex', type=str, metavar='regex',
   help="""A regex describing the subset of CSRs to include in tests, (defaults to all CSRs).""")
 parser.add_argument('--csr-exclude-regex', type=str, metavar='regex',
   help="""A regex describing the subset of CSRs to exclude (overriding csr-include-regex) on the verification engine, (defaults to no CSRs).""")
-parser.add_argument('--support-misaligned', action='store_true',
+parser.add_argument('--support-misaligned', action=argparse.BooleanOptionalAction, default=True,
   help="""Enable misaligned memory accesses""")
 parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators,
   default='internal',
