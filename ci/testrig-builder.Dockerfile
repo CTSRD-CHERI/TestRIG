@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS testrig-builder
+FROM ubuntu:22.04 AS testrig-builder
 
 # create a jenkins user
 RUN \
@@ -20,51 +20,42 @@ RUN \
 USER jenkins
 
 # install BSV
-ADD bsc-install-focal.tar.xz /home/jenkins/
-ENV PATH=/home/jenkins/bsc-install/bin/:$PATH
-
-# install opam and rems repo
+ADD --chown=jenkins:jenkins https://github.com/B-Lang-org/bsc/releases/download/2023.07/bsc-2023.07-ubuntu-22.04.tar.gz /home/jenkins/
 RUN \
-  opam init --disable-sandboxing -y --compiler=4.08.0 && \
-  eval `opam config env -y` && \
-  opam repository add rems https://github.com/rems-project/opam-repository.git -y
+  tar -xzf bsc-2023.07-ubuntu-22.04.tar.gz
+ENV PATH=/home/jenkins/bsc-2023.07-ubuntu-22.04/bin/:$PATH
 
-# install sail
+# install rust
 RUN \
-  git clone --branch sail2 https://github.com/rems-project/sail.git && \
+  curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+# install ghc and cabal
+RUN \
+  curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh -s -- -y
+
+# install opam and sail
+RUN \
+  opam init --disable-sandboxing -y --compiler=5.1.1
+#RUN \
+#  eval `opam config env -y` && opam install -y sail
+#RUN \
+#  eval `opam config env -y` && sail -v
+RUN \
+  git clone https://github.com/rems-project/sail.git && \
   opam update -y && \
   cd sail && \
   opam pin add . -y && \
   cd .. && \
   eval `opam config env -y` && \
   sail -v
-
 # install sailcov and source script
 RUN \
   eval `opam config env -y` && \
   make -C sail/sailcov && \
   echo ". /home/jenkins/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true" > /home/jenkins/sourceme.sh
 
-# install rust
-RUN \
-  curl https://sh.rustup.rs -sSf | sh -s -- -y
-  
-# install ghc and cabal
-RUN \  
-  curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh -s -- -y
-
 # build sail coverage library
 RUN \
   eval `opam config env -y` && \
   . /home/jenkins/.cargo/env && \
   make -C $OPAM_SWITCH_PREFIX/share/sail/lib/coverage
-
-# install cabal packages
-# COPY vengines/QuickCheckVEngine/QCVEngine.cabal .
-#RUN \
-#  cd vengines/QuickCheckVEngine/ &&\
-#  . /home/jenkins/.ghcup/env && \
-#  cabal configure && \
-#  cabal update && \
-#  cabal install --only-dependencies && \
-#  cd ../../
