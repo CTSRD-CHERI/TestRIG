@@ -91,7 +91,7 @@ Toooba depends on the Bluespec compiler (see the dependencies for RVBS) and veri
 You can verify a default configuration by executing:
 ```sh
 $ make
-$ utils/scripts/runTestRIG.py
+$ utils/scripts/runTestRIG.py --support-misaligned
 ```
 
 ## Custom Configurations
