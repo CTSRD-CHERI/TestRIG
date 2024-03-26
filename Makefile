@@ -60,7 +60,7 @@ clean-sail-generator:
 
 # RISCV implementations
 ################################################################################
-riscv-implementations: spike sail
+riscv-implementations: qemu sail
 
 piccolo-rv32xcheri:
 	$(MAKE) -C riscv-implementations/Piccolo/builds -f Resources/Build_all.mk ARCH=RV32IMUxCHERI_RVFI_DII SIM=bluesim build
