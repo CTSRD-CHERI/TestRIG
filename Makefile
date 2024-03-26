@@ -178,7 +178,7 @@ muntjac-rv64imac:
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac clean-qemu
 
 clean-rvbs: clean-rvbs-rv32IZicsrZifencei
 
@@ -236,3 +236,6 @@ clean-ibex:
 
 clean-muntjac:
 	$(MAKE) -C riscv-implementations/muntjac clean
+
+clean-qemu:
+	rm -rf $(QEMU_DIR)/build
