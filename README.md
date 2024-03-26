@@ -101,13 +101,13 @@ Look at the `Makefile` to see different targets to compare against each other. A
 $ utils/scripts/runTestRIG.py --help
 ```
 
-### CHERI 64-bit: Sail vs Spike
-Executing the following commands will compare Sail and Spike with the 64-bit version of the RISC-V instruction set and CHERI extensions enabled, assuming that you've initialized the submodules and have installed all the dependencies described above.
+### CHERI 64-bit: Sail vs Toooba
+Executing the following commands will compare Sail and Toooba with the 64-bit version of the RISC-V instruction set and CHERI extensions enabled, assuming that you've initialized the submodules and have installed all the dependencies described above.
 ```sh
 $ make
 $ make sail-rv64-cheri
-$ make spike-cheri
-$ utils/scripts/runTestRIG.py -a sail -b spike -r rv64ixcheri
+$ make toooba-rv64xcheri
+$ utils/scripts/runTestRIG.py -a sail -b toooba -r rv64ixcheri
 ```
 
 ### CHERI 32-bit: Sail vs Ibex
