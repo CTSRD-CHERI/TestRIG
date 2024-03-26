@@ -178,7 +178,7 @@ muntjac-rv64imac:
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac clean-qemu
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac clean-qemu clean-sail-rv32-cheri clean-sail-rv64-cheri
 
 clean-rvbs: clean-rvbs-rv32IZicsrZifencei
 
