@@ -52,9 +52,14 @@ sail-generator:
 
 clean-vengines: clean-QCVEngine clean-sail-generator
 
+# Clean the older cabal build location to match the QCVEngine build recipe
 clean-QCVEngine:
 	cd vengines/QuickCheckVEngine &&\
-	cabal clean
+	if cabal --help 2>&1 | grep v1-build > /dev/null; then \
+	  (cabal v1-clean); \
+	else \
+	  (cabal clean); \
+	fi
 
 clean-sail-generator:
 	cd vengines/sail-riscv-test-generation &&\
