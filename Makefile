@@ -38,9 +38,11 @@ vengines: QCVEngine
 # Scripts expect the older build directory, so we have to use v1-build with newer cabal binaries
 QCVEngine: Makefile
 	cd vengines/QuickCheckVEngine &&\
-	cabal install --only-dependencies --overwrite-policy=always &&\
-	cabal configure &&\
-	cabal build
+	if cabal --help 2>&1 | grep v1-build > /dev/null; then \
+	  (cabal v1-install --only-dependencies && cabal v1-configure && cabal -j$$(( `nproc` < 64 ? `nproc` : 64 )) v1-build); \
+	else \
+	  (cabal install --only-dependencies && cabal configure && cabal build); \
+	fi
 
 sail-generator:
 	cd vengines/sail-riscv-test-generation &&\
@@ -50,9 +52,14 @@ sail-generator:
 
 clean-vengines: clean-QCVEngine clean-sail-generator
 
+# Clean the older cabal build location to match the QCVEngine build recipe
 clean-QCVEngine:
 	cd vengines/QuickCheckVEngine &&\
-	cabal clean
+	if cabal --help 2>&1 | grep v1-build > /dev/null; then \
+	  (cabal v1-clean); \
+	else \
+	  (cabal clean); \
+	fi
 
 clean-sail-generator:
 	cd vengines/sail-riscv-test-generation &&\
