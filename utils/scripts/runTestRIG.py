@@ -120,7 +120,7 @@ parser.add_argument('--implementation-A-log', metavar='PATH',
   help="Turn on logging for implementation A's rvfi-dii server (optionally specifying a file path)")
 # implementation args
 parser.add_argument('-b', '--implementation-B', metavar='IMP', choices=known_rvfi_dii,
-  default='qemu',
+  default='sail',
   help="The implementation B to use. (one of {:s})".format(str(known_rvfi_dii)))
 parser.add_argument('--implementation-B-port', metavar='PORT', type=auto_int, default=0,
   help="The port to use for implementation B's rvfi-dii server")
