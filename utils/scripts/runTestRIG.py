@@ -49,6 +49,11 @@ import typing
 from dataclasses import dataclass
 from typing import Optional
 
+## misc paths variables ##
+scripts_path=op.dirname(op.realpath(__file__))
+testrig_root_path=op.join(scripts_path, op.pardir, op.pardir)
+implementations_path=op.join(testrig_root_path, "riscv-implementations")
+vengines_path=op.join(testrig_root_path, "vengines")
 
 ################################
 # Parse command line arguments #
@@ -141,30 +146,29 @@ parser.add_argument('-t', '--trace-file', metavar='FILENAME', type=str,
 parser.add_argument('-d', '--trace-dir', metavar='DIRNAME', type=str,
   help="Runs the tests contained in DIRNAME")
 parser.add_argument('--path-to-rvbs-dir', metavar='PATH', type=str,
-  #default='rvbs-rv32i-rvfi-dii',
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/RVBS/output/"),
+  default=op.join(implementations_path, "RVBS/output/"),
   help="The PATH to the rvbs executable directory")
 parser.add_argument('--path-to-spike', metavar='PATH', type=str,
   default=None, help="The PATH to the spike executable")
 parser.add_argument('--path-to-qemu', metavar='PATH', type=str,
   default=None, help="The PATH to the qemu executable")
 parser.add_argument('--path-to-piccolo', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Piccolo/builds/RV32IMUxCHERI_RVFI_DII_Piccolo_bluesim/exe_HW_sim"),
+  default=op.join(implementations_path, "Piccolo/builds/RV32IMUxCHERI_RVFI_DII_Piccolo_bluesim/exe_HW_sim"),
   help="The PATH to the Piccolo executable")
 parser.add_argument('--path-to-flute', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Flute/builds/RV64ACDFIMSUxCHERI_RVFI_DII_Flute_bluesim/exe_HW_sim"),
+  default=op.join(implementations_path, "Flute/builds/RV64ACDFIMSUxCHERI_RVFI_DII_Flute_bluesim/exe_HW_sim"),
   help="The PATH to the Flute executable")
 parser.add_argument('--path-to-toooba', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim/exe_HW_sim"),
+  default=op.join(implementations_path, "Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim/exe_HW_sim"),
   help="The PATH to the Toooba executable")
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/ibex/verilator/obj_dir/Vibex_core_avalon"),
+  default=op.join(implementations_path, "ibex/verilator/obj_dir/Vibex_core_avalon"),
   help="The PATH to the Ibex executable")
 parser.add_argument('--path-to-muntjac', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../riscv-implementations/muntjac/bin/muntjac_core"),
+  default=op.join(implementations_path, "muntjac/bin/muntjac_core"),
   help="The PATH to the Muntjac executable")
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/QuickCheckVEngine/bin/QCVEngine"),
+  default=op.join(vengines_path, "QuickCheckVEngine/bin/QCVEngine"),
   help="The PATH to the QCVEngine executable")
 parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
   default=None,  # This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
@@ -194,7 +198,7 @@ parser.add_argument('--generator', metavar='GENERATOR', choices=known_generators
   default='internal',
   help="The instruction generator to use. (one of {:s})".format(str(known_generators)))
 parser.add_argument('--path-to-generator', metavar='PATH', type=str,
-  default=op.join(op.dirname(op.realpath(__file__)), "../../vengines/sail-riscv-test-generation/main.native"),
+  default=op.join(vengines_path, "sail-riscv-test-generation/main.native"),
   help="The PATH to the instruction generation (not needed for internal or manual generators)")
 parser.add_argument('--generator-port', metavar='PORT', default=5002, type=auto_int,
   help="Use instruction generator on given port.")
@@ -418,13 +422,13 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   ##############################################################################
   if name == 'spike':
     if args.path_to_spike is None:
-      args.path_to_spike = "../../riscv-implementations/riscv-isa-sim/build"
+      args.path_to_spike = op.join(implementations_path, "riscv-isa-sim/build")
       if isa_def.has_cheri:
         args.path_to_spike += "-cheri"
       if isa_def.support_misaligned:
         args.path_to_spike += "-misaligned"
       args.path_to_spike += "/spike"
-    cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_spike), "--rvfi-dii-port", str(port),
+    cmd = [args.path_to_spike, "--rvfi-dii-port", str(port),
            "--isa={:s}".format(isa_def.get_spike_arch()), "-m0x80000000:0x10000"]
     if "LD_LIBRARY_PATH" in env2:
       env2["LD_LIBRARY_PATH"] = "%s:%s" % (env2["LD_LIBRARY_PATH"], op.dirname(args.path_to_spike))
@@ -438,15 +442,14 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
       cmd += ["--extension={:s}".format(extension)]
   ##############################################################################
   elif name == 'qemu':
-    # /Users/alex/cheri/build-debug/qemu-build/riscv64cheri-softmmu/qemu-system-riscv64cheri
     if args.path_to_qemu is None:
-      args.path_to_qemu = "../../riscv-implementations/qemu/build"
+      args.path_to_qemu = op.join(implementations_path, "qemu/build")
       # TODO: allow testing against non-CHERI versions
       if isa_def.has_xlen_32:
         args.path_to_qemu += "/riscv32-softmmu/qemu-system-riscv32"
       else:
         args.path_to_qemu += "/riscv64cheri-softmmu/qemu-system-riscv64cheri"
-    cmd = [op.join(op.dirname(op.realpath(__file__)), args.path_to_qemu), "--rvfi-dii-port", str(port),
+    cmd = [args.path_to_qemu, "--rvfi-dii-port", str(port),
            "-cpu", isa_def.get_qemu_cpu(), "-bios", "none"]
     if not isa_def.support_misaligned:
       sys.exit("FATAL: --support-misaligned must be passed for QEMU since there is no way of turning it off")
@@ -474,7 +477,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   ##############################################################################
   elif name == 'sail':
     if args.path_to_sail_riscv_dir is None:
-      args.path_to_sail_riscv_dir = "../../riscv-implementations/sail-"
+      args.path_to_sail_riscv_dir = op.join(implementations_path, "sail-")
       if isa_def.has_cheri:
         args.path_to_sail_riscv_dir += "cheri-"
       args.path_to_sail_riscv_dir += "riscv/c_emulator/"
