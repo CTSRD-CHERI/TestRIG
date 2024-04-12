@@ -69,6 +69,7 @@ The root makefile can currently build the QuickCheck Verification Engine, Spike,
 
 ### Dependencies
 The dependencies for the QuickCheck Verification Engine are `cabal` and `ghc`, both of which you can install using [GHCup](https://www.haskell.org/ghcup/).
+For `cabal` you must install version 3.4 or later to use the `list-bin` command.
 
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
