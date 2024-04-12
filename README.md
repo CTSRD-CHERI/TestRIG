@@ -68,9 +68,7 @@ $ git submodule update --init --recursive
 The root makefile can currently build the QuickCheck Verification Engine, Spike, and the Sail implementation. Both Spike and Sail are built without CHERI support by default and Sail is built as a 32-bit version.
 
 ### Dependencies
-The dependencies for the QuickCheck Verification Engine are:
-- cabal `sudo apt-get install cabal-install && cabal update`
-- The Haskell modules dependencies `cd vengines/QuickCheckVEngine && cabal install --only-dependencies && cd ../..`
+The dependencies for the QuickCheck Verification Engine are `cabal` and `ghc`, both of which you can install using [GHCup](https://www.haskell.org/ghcup/).
 
 The dependencies for Spike are:
 - `sudo apt-get install device-tree-compiler`
