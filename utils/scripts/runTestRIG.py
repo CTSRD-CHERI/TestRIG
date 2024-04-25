@@ -210,7 +210,7 @@ parser.add_argument('-j', '--parallel-jobs', metavar='JOBS', default=1, type=aut
 parser.add_argument('-l', '--parallel-log', action='count', default=0,
   help="Enable parallel logging in ./parallel-logs. Note that this may use lots of space")
 parser.add_argument('-R', '--relaxed-comparison', action='count', default=0,
-  help="Comparea reduced set of RVFI fields in VEngine")
+  help="Compare a reduced set of RVFI fields in VEngine")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 parser.add_argument('--no-save', action='count', default=0,
