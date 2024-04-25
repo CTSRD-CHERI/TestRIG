@@ -209,8 +209,10 @@ parser.add_argument('-j', '--parallel-jobs', metavar='JOBS', default=1, type=aut
   help="Spawn the VEngine and implementations multiple times for parallel jobs")
 parser.add_argument('-l', '--parallel-log', action='count', default=0,
   help="Enable parallel logging in ./parallel-logs. Note that this may use lots of space")
-parser.add_argument('-R', '--relaxed-comparison', action='count', default=0,
+parser.add_argument('--relaxed-comparison', action='count', default=0,
   help="Compare a reduced set of RVFI fields in VEngine")
+parser.add_argument('--strict-comparison', action='count', default=0,
+  help="Compare all RVFI fields in VEngine")
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 parser.add_argument('--no-save', action='count', default=0,
@@ -541,6 +543,7 @@ def spawn_vengine(name, mport, iport, arch, log):
     cmd += ['-a', str(mport), '-b', str(iport), '-r', QCVEngineArch]
     cmd += ['-n', str(args.number_of_tests)]
     cmd += ['-v', str(args.verbosity)]
+    relaxed = True
     if args.generator != 'internal':
       cmd += ['-i', str(args.generator_port)]
     if args.trace_file:
@@ -558,7 +561,9 @@ def spawn_vengine(name, mport, iport, arch, log):
     if args.no_shrink:
       cmd += ['-S']
     if args.relaxed_comparison:
-      cmd += ['-R']
+      relaxed = True
+    if args.strict_comparison:
+      relaxed = False
     if args.no_save:
       cmd += ['--no-save']
     if args.continue_on_fail:
@@ -575,6 +580,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['--csr-exclude-regex', args.csr_exclude_regex]
     if args.implementation_A == 'none' or args.implementation_B == 'none':
       cmd += ['--single-implementation']
+    if not relaxed:
+      cmd += ['--strict-comparison']
     print("running qcvengine as: ", " ".join(cmd))
     if log is None:
       p = sub.Popen(cmd)
