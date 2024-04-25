@@ -213,6 +213,11 @@ parser.add_argument('--relaxed-comparison', action='count', default=0,
   help="Compare a reduced set of RVFI fields in VEngine")
 parser.add_argument('--strict-comparison', action='count', default=0,
   help="Compare all RVFI fields in VEngine")
+parser.add_argument('--relaxed-comparison', action='count', default=0,
+  help="Comparea reduced set of RVFI fields in VEngine")
+parser.add_argument('--strict-comparison', action='count', default=0,
+  help="Compare all RVFI fields in VEngine")
+>>>>>>> ee834b1 (Added default to be relaxed comparison; also added option for strict comparison)
 parser.add_argument('--no-shrink', action='count', default=0,
   help="Disable VEngine test case shrinking")
 parser.add_argument('--no-save', action='count', default=0,
