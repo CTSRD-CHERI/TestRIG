@@ -559,7 +559,7 @@ def spawn_vengine(name, mport, iport, arch, log):
     if args.timeout:
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
     if args.no_shrink:
-        cmd += ['-S']
+      cmd += ['-S']
     if args.relaxed_comparison:
       relaxed = True
     if args.strict_comparison:
