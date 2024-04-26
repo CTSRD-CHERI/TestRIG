@@ -559,7 +559,7 @@ def spawn_vengine(name, mport, iport, arch, log):
     if args.timeout:
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
     if args.no_shrink:
-      cmd += ['-S']
+        cmd += ['-S']
     if args.relaxed_comparison:
       relaxed = True
     if args.strict_comparison:
@@ -669,6 +669,9 @@ def main():
   generator = []
   isa_def = ISA_Configuration(args.architecture)
   isa_def.support_misaligned = args.support_misaligned
+  if args.relaxed_comparison and args.strict_comparison:
+    print('Cannot do both relaxed and strict comparison')
+    exit(-1)
   # Allow --verification-archstring to override architecture
   vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
   try:
