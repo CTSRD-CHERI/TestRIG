@@ -44,7 +44,6 @@ QCVENGINE_BIN_DIR=$(CURDIR)/vengines/QuickCheckVEngine/bin
 QCVEngine: Makefile
 	( cd $(CURDIR)/vengines/QuickCheckVEngine && \
 	  cabal install --only-dependencies --overwrite-policy=always && \
-	  cabal configure && \
 	  cabal build )
 	$(eval QCVENGINE_BUILT = $(shell \
 	  cd $(CURDIR)/vengines/QuickCheckVEngine && \
