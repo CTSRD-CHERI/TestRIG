@@ -162,7 +162,7 @@ parser.add_argument('--path-to-toooba', metavar='PATH', type=str,
   default=op.join(implementations_path, "Toooba/builds/RV64ACDFIMSUxCHERI_Toooba_RVFI_DII_bluesim/exe_HW_sim"),
   help="The PATH to the Toooba executable")
 parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
-  default=op.join(implementations_path, "ibex/verilator/obj_dir/Vibex_core_avalon"),
+  default=op.join(implementations_path, "ibex/build/lowrisc_ibex_ibex_testrig_0/default-verilator/Vibex_top_sram"),
   help="The PATH to the Ibex executable")
 parser.add_argument('--path-to-muntjac', metavar='PATH', type=str,
   default=op.join(implementations_path, "muntjac/bin/muntjac_core"),
@@ -496,7 +496,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     cmd += ["-i"]
   ##############################################################################
   elif name == 'ibex':
-    cmd = [args.path_to_ibex, 'localhost', str(port)]
+    cmd = [args.path_to_ibex, str(port), "3"]
   ##############################################################################
   elif name == 'muntjac':
     env2["RVFI_DII_PORT"] = str(port)

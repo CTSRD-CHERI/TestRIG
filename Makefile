@@ -185,7 +185,7 @@ sail-rv64-cheri:
 	$(MAKE) -C riscv-implementations/sail-cheri-riscv c_emulator/cheri_riscv_rvfi_RV64
 
 ibex-rv32ic-cheri:
-	$(MAKE) -C riscv-implementations/ibex/verilator
+	cd riscv-implementations/ibex && fusesoc --cores-root=. run --setup --build lowrisc:ibex:ibex_testrig
 
 muntjac-rv64imac:
 	$(MAKE) -C riscv-implementations/muntjac
@@ -246,7 +246,7 @@ clean-toooba:
 	fi
 
 clean-ibex:
-	$(MAKE) -C riscv-implementations/ibex/verilator clean
+	rm -rf riscv-implementations/ibex/build
 
 clean-muntjac:
 	$(MAKE) -C riscv-implementations/muntjac clean
