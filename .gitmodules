@@ -22,10 +22,6 @@
 [submodule "sail-cheri-riscv"]
 	path = riscv-implementations/sail-cheri-riscv
 	url = https://github.com/CTSRD-CHERI/sail-cheri-riscv.git
-[submodule "ibex"]
-	path = riscv-implementations/ibex
-	url = https://github.com/CTSRD-CHERI/ibex-old.git
-	branch = ibex_cheri
 [submodule "riscv-implementations/Flute"]
 	path = riscv-implementations/Flute
 	url = https://github.com/CTSRD-CHERI/Flute.git
