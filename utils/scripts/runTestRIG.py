@@ -118,6 +118,8 @@ parser.add_argument('--implementation-A-log', metavar='PATH',
   default=None, type=auto_write_fd,
   #nargs='?', const=sub.PIPE,
   help="Turn on logging for implementation A's rvfi-dii server (optionally specifying a file path)")
+parser.add_argument('--implementation-A-host', metavar='HOST',
+  help="The remote host of implementation A's manual rvfi-dii server")
 # implementation args
 parser.add_argument('-b', '--implementation-B', metavar='IMP', choices=known_rvfi_dii,
   default='sail',
@@ -128,6 +130,8 @@ parser.add_argument('--implementation-B-log', metavar='PATH',
   default=None, type=auto_write_fd,
   #nargs='?', const=sub.PIPE,
   help="Turn on logging for implementation B's rvfi-dii server (optionally specifying a file path)")
+parser.add_argument('--implementation-B-host', metavar='HOST',
+  help="The remote host of implementation B's manual rvfi-dii server")
 # verification engine args
 parser.add_argument('-e', '--verification-engine', metavar='VENG', choices=known_vengine,
   default='QCVEngine',
@@ -521,7 +525,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
 # spawn verification engine #
 #############################
 
-def spawn_vengine(name, mport, iport, arch, log):
+def spawn_vengine(name, mport, iport, arch, log, more_args=[]):
   if name == 'QCVEngine-docker':
     cmd = ["docker", "run", "--rm", "-t", "-p", f"{mport}:{mport}", "-p", f"{iport}:{iport}",
            "ctsrd/testrig", "./TestRIG/vengines/QuickCheckVEngine/dist/build/QCVEngine/QCVEngine",
@@ -534,6 +538,8 @@ def spawn_vengine(name, mport, iport, arch, log):
   else:
     cmd = ["false"]
     useQCVEngine = False
+
+  cmd += more_args
 
   if useQCVEngine:
     if args.supported_features is not None:
@@ -672,6 +678,20 @@ def main():
   if args.relaxed_comparison and args.strict_comparison:
     print('Cannot do both relaxed and strict comparison')
     exit(-1)
+
+  if args.implementation_A_host and not (args.implementation_A == "manual"):
+    print("Specifying host A is only possible for manual implementations")
+    exit(-1)
+
+  if args.implementation_B_host and not (args.implementation_B == "manual"):
+    print("Specifying host B is only possible for manual implementations")
+    exit(-1)
+
+  if (args.implementation_A_host or args.implementation_B_host) \
+   and not (args.parallel_jobs == 1):
+    print("Specifying implementation host requires no job parallelism")
+    exit(-1)
+
   # Allow --verification-archstring to override architecture
   vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
   try:
@@ -729,6 +749,12 @@ def main():
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
+    extra_vengine_args = []
+    if args.implementation_A_host:
+      extra_vengine_args += [ "-A", args.implementation_A_host ]
+    if args.implementation_B_host:
+      extra_vengine_args += [ "-B", args.implementation_B_host ]
+
     for job in range(args.parallel_jobs):
       if a[job] is not None and a[job].poll() is not None:
         print("ERROR: Implementation A failed to start!")
@@ -739,7 +765,8 @@ def main():
         print(" ".join(b[job].args), "failed with exit code", b[job].poll())
         exit(1)
       e.append(spawn_vengine(args.verification_engine, aports[job], bports[job],
-                             vengine_archstring, logs[job].error_log))
+                             vengine_archstring, logs[job].error_log,
+                             more_args=extra_vengine_args))
 
     # TODO support non-standard generator in parallel builds
     generator.append(spawn_generator(args.generator, args.architecture,
