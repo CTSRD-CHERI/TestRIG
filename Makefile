@@ -190,9 +190,12 @@ ibex-rv32ic-cheri:
 muntjac-rv64imac:
 	$(MAKE) -C riscv-implementations/muntjac
 
+muntjac-cheri:
+	$(MAKE) -C riscv-implementations/muntjac-cheri
+
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
-clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac clean-qemu clean-sail-rv32-cheri clean-sail-rv64-cheri
+clean-riscv-implementations: clean-rvbs clean-spike clean-sail clean-piccolo clean-flute clean-toooba clean-muntjac clean-muntjac-cheri clean-qemu clean-sail-rv32-cheri clean-sail-rv64-cheri
 
 clean-rvbs: clean-rvbs-rv32IZicsrZifencei
 
@@ -251,5 +254,7 @@ clean-ibex:
 clean-muntjac:
 	$(MAKE) -C riscv-implementations/muntjac clean
 
+clean-muntjac-cheri:
+	$(MAKE) -C riscv-implementations/muntjac-cheri clean
 clean-qemu:
 	rm -rf $(QEMU_DIR)/build
