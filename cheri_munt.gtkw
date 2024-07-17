@@ -1,0 +1,30 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Tue Jul 16 20:36:58 2024
+[*]
+[dumpfile] "/home/yue/repo/muntjac_cheri/TestRIG/munt_cheri.vcd"
+[dumpfile_mtime] "Tue Jul 16 20:34:39 2024"
+[dumpfile_size] 4328135
+[savefile] "/home/yue/repo/muntjac_cheri/TestRIG/cheri_munt.gtkw"
+[timestart] 12
+[size] 2488 1352
+[pos] -51 -51
+*-1.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.pipeline_wrapper.
+[treeopen] TOP.pipeline_wrapper.pipeline.
+[treeopen] TOP.pipeline_wrapper.pipeline.backend.
+[sst_width] 233
+[signals_width] 158
+[sst_expanded] 1
+[sst_vpaned_height] 406
+@28
+TOP.pipeline_wrapper.pipeline.backend.clk_i
+@201
+-fetch_i
+@22
+TOP.pipeline_wrapper.pipeline.backend.fetch_instr_i.instr_word[31:0]
+TOP.pipeline_wrapper.pipeline.backend.fetch_instr_i.pc[63:0]
+TOP.pipeline_wrapper.pipeline.backend.fetch_instr_i.seq_id[3:0]
+[pattern_trace] 1
+[pattern_trace] 0
