@@ -494,6 +494,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     #cmd += ["--rvfi-dii", str(port)]
     cmd += ["-r", str(port)]
     cmd += ["-i"]
+    cmd += ["--c-hints-expand"]
   ##############################################################################
   elif name == 'ibex':
     cmd = [args.path_to_ibex, str(port), "3"]
@@ -672,6 +673,21 @@ def main():
   if args.relaxed_comparison and args.strict_comparison:
     print('Cannot do both relaxed and strict comparison')
     exit(-1)
+  # Sanitise inputs based on implementation restrictions
+  force_misaligned_support = False
+  force_misaligned_no_support = False
+  implementations = [args.implementation_A, args.implementation_B]
+  if "ibex" in implementations:
+    force_misaligned_support = True
+  if force_misaligned_support and force_misaligned_no_support:
+    print("ERROR: implementations need incompatible misaligned support")
+    exit(1)
+  if force_misaligned_support:
+    print("Forcing support for misaligned since an implementation requires it")
+    isa_def.support_misaligned = True
+  if force_misaligned_no_support:
+    print("Forcing no support for misaligned since an implementation requires it")
+    isa_def.support_misaligned = False
   # Allow --verification-archstring to override architecture
   vengine_archstring = args.verification_archstring if args.verification_archstring else args.architecture
   try:
