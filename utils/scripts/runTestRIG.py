@@ -223,6 +223,8 @@ parser.add_argument('--test-len', metavar='LEN', default=None, type=auto_int,
   help="Tell vengine to generate tests up to LEN instructions long")
 parser.add_argument('--supported-features', metavar='FEAT', type=str,
   help="Specify supported features to vengine, separated by '_'. Each feature should begin with 'X'.")
+parser.add_argument('--no-trap-debug', action='count', default=0,
+  help="Tell vengine not to add additional debug instructions on failing tests containing traps")
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
@@ -561,6 +563,8 @@ def spawn_vengine(name, mport, iport, arch, log):
       cmd += ['--timeout', str(int(args.timeout * 1000000))]
     if args.no_shrink:
       cmd += ['-S']
+    if args.no_trap_debug:
+      cmd += ['--no-trap-debug']
     if args.relaxed_comparison:
       relaxed = True
     if args.strict_comparison:
