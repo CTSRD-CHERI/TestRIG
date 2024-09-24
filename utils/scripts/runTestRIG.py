@@ -497,6 +497,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     cmd += ["-r", str(port)]
     cmd += ["-i"]
     cmd += ["--c-hints-expand"]
+    cmd += ["-F"]
   ##############################################################################
   elif name == 'ibex':
     cmd = [args.path_to_ibex, str(port), "3"]
