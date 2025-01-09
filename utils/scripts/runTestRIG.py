@@ -177,6 +177,8 @@ parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
 parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
   default=None,  # This value is set to None so that later it can be set depending on whether CHERI is enabled or not.
   help="The PATH to the directory containing the sail executable. Examples: riscv-implementations/sail-riscv and riscv-implementations/sail-cheri-riscv")
+parser.add_argument('--path-to-dut', metavar='PATH', type=str, default=None,
+  help="The PATH to use for implementation-B, overriding implementation-specific paths. Useful when comparing two instances of the same implementation")
 parser.add_argument('-r', '--architecture', type=str.lower, metavar='ARCH', choices=list(map(str.lower, known_architectures)),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
@@ -411,7 +413,7 @@ def input_y_n(prompt):
 # spawn rvfi_dii server #
 #########################
 
-def spawn_rvfi_dii_server(name, port, log, isa_def):
+def spawn_rvfi_dii_server(name, port, log, isa_def, is_dut):
   # few common variables
   use_log = open(os.devnull, "w")
   if log:
@@ -482,6 +484,8 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     cmd = [args.path_to_toooba]
   ##############################################################################
   elif name == 'sail':
+    if is_dut and args.path_to_dut is not None:
+      args.path_to_sail_riscv_dir = args.path_to_dut
     if args.path_to_sail_riscv_dir is None:
       args.path_to_sail_riscv_dir = op.join(implementations_path, "sail-")
       if isa_def.has_cheri:
@@ -743,9 +747,9 @@ def main():
       bsocks[job].close()
 
       a.append(spawn_rvfi_dii_server(args.implementation_A, aports[job],
-                                     logs[job].impl_a_log, isa_def))
+                                     logs[job].impl_a_log, isa_def, False))
       b.append(spawn_rvfi_dii_server(args.implementation_B, bports[job],
-                                     logs[job].impl_b_log, isa_def))
+                                     logs[job].impl_b_log, isa_def, True))
 
     time.sleep(args.spawn_delay)  # small delay to give time to the spawned servers to be ready to listen
 
