@@ -8,7 +8,7 @@ import time
 import sys
 from pathlib import Path
 import shutil
-import duckdb
+import sqlite3
 
 testrig_root = "../../"
 sail_dir = f"{testrig_root}/riscv-implementations/sail-cheri-riscv"
@@ -21,6 +21,7 @@ class Context:
         subprocess.run(["mkdir", self.dir])
         self._indent = 0
         self.db = db
+        self.cur = self.db.cursor()
         self.depth = depth
 
     def log(self, message):
@@ -35,6 +36,11 @@ class Context:
     def unindent(self):
         self._indent -= 2
 
+    def sql(self, *args, **kwargs):
+        x = self.cur.execute(*args, **kwargs)
+        self.db.commit()
+        return x
+
 def check_divergence(sail_dut_file, new_sail_content, example_label, context, update):
     with tempfile.TemporaryDirectory(prefix="rigcover-") as sail_build_dir:
         impl_path = f"{sail_build_dir}/riscv-implementations/"
@@ -45,7 +51,7 @@ def check_divergence(sail_dut_file, new_sail_content, example_label, context, up
             f.write(new_sail_content)
         makeresult = subprocess.run(["make", "-C", sail_build_dir, "sail-rv32-cheri"])
         if makeresult.returncode != 0:
-            context.db.execute(update, [context.depth, False, None])
+            context.sql(update, [context.depth, False, None])
             context.log("Build failed!")
             return
         context.log("Build success")
@@ -68,10 +74,10 @@ def check_divergence(sail_dut_file, new_sail_content, example_label, context, up
           newfile = f"{context.dir}/{example_label}.S"
           shutil.move(f"{m[1]}", newfile)
           context.log(f"Found counterexample: {example_label}.S")
-          context.db.execute(update, [context.depth, True, newfile])
+          context.sql(update, [context.depth, True, newfile])
         else:
           context.log("No counterexample found?")
-          context.db.execute(update, [context.depth, True, None])
+          context.sql(update, [context.depth, True, None])
         context.unindent()
 
 def line_num(content, index):
@@ -92,10 +98,10 @@ def sanitise(text):
 
 def find_all_branches(sail_dut_file, sail_content, context):
     try:
-        context.db.execute("CREATE TABLE branches(charindex int, thenoffset int, linenum int, cond text, PRIMARY KEY(charindex))")
-        context.db.execute("CREATE TABLE exclude(branchindex int, FOREIGN KEY(branchindex) REFERENCES branches(charindex))")
-    except duckdb.duckdb.CatalogException:
-        context.log("Branches table already exists")
+        context.sql("CREATE TABLE branches(charindex int, thenoffset int, linenum int, cond text, PRIMARY KEY(charindex))")
+        context.sql("CREATE TABLE exclude(branchindex int, FOREIGN KEY(branchindex) REFERENCES branches(charindex))")
+    except sqlite3.OperationalError as e:
+        context.log(f"Error creating tables: {e}")
         return
     for m in re.finditer(f"{ws}if{ws}", sail_content):
         line = line_num(sail_content, m.span()[0])
@@ -108,16 +114,16 @@ def find_all_branches(sail_dut_file, sail_content, context):
         else:
             context.log(f"found 'then' at {n.span()[0] + 1}")
             old_cond = remaining[:n.span()[0] + 1]
-            context.db.execute("INSERT INTO branches VALUES (?, ?, ?, ?)", [m.span()[1]-1, n.span()[0]+1, line, old_cond])
+            context.sql("INSERT INTO branches VALUES (?, ?, ?, ?)", [m.span()[1]-1, n.span()[0]+1, line, old_cond])
         context.unindent()
 
 def run_all_branches(sail_dut_file, sail_content, context, predicate):
     find_all_branches(sail_dut_file, sail_content, context)
     try:
-        context.db.execute("CREATE TABLE runs(branchindex int, newcond bool, depth int, builds bool, counterexample text, FOREIGN KEY(branchindex) REFERENCES branches(charindex))")
-    except duckdb.duckdb.CatalogException:
-        context.log("Runs table already exists")
-    for (charindex, thenoffset, linenum, old_cond) in context.db.sql(f"SELECT charindex, thenoffset, linenum, cond from branches where charindex IN ({predicate})").fetchall():
+        context.sql("CREATE TABLE runs(branchindex int, newcond bool, depth int, builds bool, counterexample text, FOREIGN KEY(branchindex) REFERENCES branches(charindex))")
+    except sqlite3.OperationalError as e:
+        context.log(f"Error creating runs table: {e}")
+    for (charindex, thenoffset, linenum, old_cond) in context.sql(f"SELECT charindex, thenoffset, linenum, cond from branches where charindex IN ({predicate})").fetchall():
         for new_cond in ["true", "false"]:
             context.log(f"Replacing old condition with {new_cond}")
             new_content = f"{sail_content [:charindex]} {new_cond} /* {old_cond} */ {sail_content[charindex+thenoffset:]}"
@@ -160,11 +166,13 @@ def main(args):
 
     sail_content = strip_comments(sail_content)
 
-    db = duckdb.connect(args.db)
+    db = sqlite3.connect(args.db)
 
     context = Context(args.verbose, db, args.depth)
 
     run_all_branches(args.sail_path, sail_content, context, args.predicate)
+
+    db.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
