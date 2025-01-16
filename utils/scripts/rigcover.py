@@ -49,13 +49,13 @@ def check_divergence(sail_dut_file, new_sail_content, example_label, context, up
         shutil.copy(f"{testrig_root}/Makefile", sail_build_dir)
         with open(f"{impl_path}/sail-cheri-riscv/{sail_dut_file}", "w") as f:
             f.write(new_sail_content)
-        makeresult = subprocess.run(["make", "-C", sail_build_dir, "sail-rv32-cheri"])
+        makeresult = subprocess.run(["make", "-C", sail_build_dir, "sail-rv64-cheri"])
         if makeresult.returncode != 0:
             context.sql(update, [context.depth, False, None])
             context.log("Build failed!")
             return
         context.log("Build success")
-        args = [ "-r", "rv32icxcheri"
+        args = [ "-r", "rv64icxcheri"
                , "--test-include-regex", "caprandom"
                , "-n", str(context.depth)
                ]
