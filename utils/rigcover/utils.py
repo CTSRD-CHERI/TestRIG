@@ -29,3 +29,31 @@ def strip_comments(content):
                 new_content += content[0]
             content = content[1:]
     return new_content
+
+class Context:
+    def __init__(self, verbose, db, depth):
+        self.verbose = verbose
+        self.dir = time.strftime("run-%Y%m%d-%H%M%S")
+        subprocess.run(["mkdir", self.dir])
+        self._indent = 0
+        self.db = db
+        self.cur = self.db.cursor()
+        self.depth = depth
+
+    def log(self, message):
+        with open(f"{self.dir}/log.txt", "a+") as l:
+            l.write((" " * self._indent) + message + "\n");
+        if self.verbose:
+            print(message)
+
+    def indent(self):
+        self._indent += 2
+
+    def unindent(self):
+        self._indent -= 2
+
+    def sql(self, *args, **kwargs):
+        self.log(args[0])
+        x = self.cur.execute(*args, **kwargs)
+        self.db.commit()
+        return x

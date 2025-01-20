@@ -16,34 +16,6 @@ from utils import *
 testrig_root = "../../"
 sail_dir = f"{testrig_root}/riscv-implementations/sail-cheri-riscv"
 
-class Context:
-    def __init__(self, verbose, db, depth):
-        self.verbose = verbose
-        self.dir = time.strftime("run-%Y%m%d-%H%M%S")
-        subprocess.run(["mkdir", self.dir])
-        self._indent = 0
-        self.db = db
-        self.cur = self.db.cursor()
-        self.depth = depth
-
-    def log(self, message):
-        with open(f"{self.dir}/log.txt", "a+") as l:
-            l.write((" " * self._indent) + message + "\n");
-        if self.verbose:
-            print(message)
-
-    def indent(self):
-        self._indent += 2
-
-    def unindent(self):
-        self._indent -= 2
-
-    def sql(self, *args, **kwargs):
-        self.log(args[0])
-        x = self.cur.execute(*args, **kwargs)
-        self.db.commit()
-        return x
-
 def check_divergence(context, sail_dut_file, new_sail_content, example_label):
     with tempfile.TemporaryDirectory(prefix="rigcover-") as sail_build_dir:
         impl_path = f"{sail_build_dir}/riscv-implementations/"
