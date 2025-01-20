@@ -4,7 +4,7 @@ import html
 import re
 import uuid
 
-from CoverIf import CoverIf
+from Coverage import CoverTypes
 from utils import *
 
 testrig_root = "../../"
@@ -46,7 +46,7 @@ def tooltip(prose, tip):
 
 def main(args):
   sep = uuid.uuid4()
-  coverTypes = [CoverIf(None)]
+  coverTypes = [c(None) for c in CoverTypes]
   with open(f"{sail_dir}/{args.sail_path}", "r") as sail_file:
     sail_content = sail_file.read()
 

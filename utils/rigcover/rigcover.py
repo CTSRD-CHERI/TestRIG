@@ -4,13 +4,12 @@ import re
 import argparse
 import subprocess
 import tempfile
-import time
 import sys
 from pathlib import Path
 import shutil
 import sqlite3
 
-from CoverIf import CoverIf
+from Coverage import CoverTypes
 from utils import *
 
 testrig_root = "../../"
@@ -68,7 +67,7 @@ def main(args):
     with sqlite3.connect(args.db) as db:
         context = Context(args.verbose, db, args.depth)
 
-        coverTypes = [CoverIf(context)]
+        coverTypes = [c(context) for c in CoverTypes]
 
         for cover in coverTypes:
             codeFields = ["file", "startindex", "endindex", "linenum"] + cover.extraFields
@@ -118,5 +117,6 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--depth', required=False, default=100)
     parser.add_argument('--train', action = 'store_true')
+    parser.add_argument('-j', required=False, default=1)
 
     main(parser.parse_args())
