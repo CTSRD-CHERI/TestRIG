@@ -45,10 +45,10 @@ class Context:
         self.cur = self.db.cursor()
         self.depth = depth
 
-    def log(self, message):
+    def log(self, message, force_print=False):
         with open(f"{self.dir}/log.txt", "a+") as l:
             l.write((" " * self._indent) + message + "\n");
-        if self.verbose:
+        if self.verbose or force_print:
             print(message)
 
     def indent(self):

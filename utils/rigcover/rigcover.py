@@ -64,12 +64,18 @@ def createTable(context, name, fields, fieldTypes, addId = False, foreignText=""
         context.log(f"Error creating {name}: {e}")
         return False
 
+def tableExists(context, name):
+    return context.sql(f'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type="table" AND name="{name}")').fetchall() != []
+
 def doRun(args):
     [entry, Cover, sail_content, sail_path, db, depth] = args
     context = Context(False, db, depth)
     cover = Cover(context)
     oldBuildFails = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = FALSE").fetchall()
     if oldBuildFails:
+        return
+    oldBuildCounters = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = TRUE AND counterexample IS NOT NULL").fetchall()
+    if oldBuildCounters:
         return
     modif_sail, label = cover.getRun(sail_content, entry[2:])
     context.indent()
@@ -81,7 +87,7 @@ def doRun(args):
 def main(args):
     context = Context(args.verbose, args.db, args.depth)
 
-    coverTypes = [c(context) for c in CoverTypes]
+    coverTypes = [C(context) for C in CoverTypes if args.train is None or C(None).name == args.train]
 
     for cover in coverTypes:
         codeFields = ["file", "startindex", "endindex", "linenum"] + cover.extraFields
@@ -90,7 +96,17 @@ def main(args):
         runsFieldTypes = ["int", "int", "bool", "text"]
         codeTable = f"{cover.name}_code"
         runsTable = f"{cover.name}_runs"
-        if args.train:
+        if args.train is not None:
+             if tableExists(context, codeTable) or tableExists(context, runsTable):
+                 if args.retrain:
+                     try:
+                         context.sql(f"DROP TABLE {codeTable}")
+                         context.sql(f"DROP TABLE {runsTable}")
+                     except sqlite3.OperationalError as e:
+                         pass
+                 else:
+                     context.log(f"Error: table {codeTable} or {runsTable} already exists. Run with --retrain to overwrite", force_print=True)
+                     exit(1)
              createTable(context, codeTable, codeFields, codeFieldTypes, addId = True)
              createTable(context, runsTable, runsFields, runsFieldTypes, addId = False,
                  foreignText=f", FOREIGN KEY (codeid) references {codeTable}(id)")
@@ -99,7 +115,7 @@ def main(args):
             with open(f"{sail_dir}/{sail_path}", "r") as sail_file:
                 sail_content = sail_file.read()
             sail_content = strip_comments(sail_content)
-            if args.train:
+            if args.train is not None:
                 entries = cover.train(sail_content)
                 for entry in entries:
                     entry = [sail_path] + entry
@@ -108,8 +124,8 @@ def main(args):
                 try:
                     entries = context.sql(f"SELECT * FROM {codeTable} WHERE file == '{sail_path}'").fetchall()
                 except sqlite3.OperationalError as e:
-                    context.log("Error getting code table. Need to train first?")
-                    context.log(str(e))
+                    context.log("Error getting code table. Need to train first?", force_print=True)
+                    context.log(str(e), force_print=True)
                     exit(1)
                 jobs = []
                 for entry in entries:
@@ -117,16 +133,25 @@ def main(args):
                 with Pool(args.j) as p:
                     p.map(doRun, jobs)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-                        prog="RigCover"
-                      , description="Measure coverage from perturbing the Sail model"
-                      )
-    parser.add_argument('sail_paths', nargs='+')
-    parser.add_argument('--db', required=False, default='rigcover.db')
-    parser.add_argument('-v', '--verbose', action='store_true')
-    parser.add_argument('--depth', required=False, default=100)
-    parser.add_argument('--train', action = 'store_true')
-    parser.add_argument('-j', required=False, default=1, type=int)
+parser = argparse.ArgumentParser(
+               prog="RigCover"
+             , description="Measure coverage from perturbing the Sail model"
+             )
+parser.add_argument('sail_paths', nargs='+')
+parser.add_argument('--db', required=False, default='rigcover.db')
+parser.add_argument('-v', '--verbose', action='store_true')
+parser.add_argument('--depth', required=False, default=100)
+parser.add_argument('--train', metavar='covertype', choices=[C(None).name for C in CoverTypes])
+parser.add_argument('--retrain', action='store_true')
+parser.add_argument('-j', required=False, default=1, type=int)
 
-    main(parser.parse_args())
+# Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
+try:
+  import argcomplete
+  argcomplete.autocomplete(parser)
+except ImportError:
+  argcomplete = None
+args = parser.parse_args()
+
+if __name__ == "__main__":
+    main(args)
