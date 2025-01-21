@@ -78,13 +78,12 @@ def main(args):
     codeId = int(mS.groups()[1])
     cover = coverTypes[coverI]
     mE = re.search(f"{sep};{coverI};{codeId};END;", sail_content[idx:])
-    assert mE, f"START without END: {codeId}"
+    assert mE, f"START without END: {codeId} {sail_content[idx+mS.start():idx+mS.start()+200]}"
     pre_content = sail_content[:idx + mS.start()]
     in_content = sail_content[idx + mS.end() : idx + mE.start()]
     post_content = sail_content[idx + mE.end():]
     idx += mS.start()
     runs = cur.execute(f"SELECT depth, builds, counterexample FROM {cover.name}_runs WHERE codeId = {codeId}").fetchall()
-    if runs: print("FOUND")
     counters = [f'<a href="{r[2]}"></a>' for r in runs if r[1] and r[2] is not None]
     buildfails = ["No build" for r in runs if not r[1]]
     counterfails = [f"(NA after {r[0]})" for r in runs if r[1] and r[2] is None]
@@ -94,7 +93,7 @@ def main(args):
     elif counterfails:
         bg = "red"
     elif buildfails:
-        bg = "blue"
+        bg = "#aed6f1"
     sail_content = pre_content \
                  + tooltip(f'<span style="background-color: {bg};">{in_content}</span>', ", ".join(counters + buildfails + counterfails)) \
                  + post_content

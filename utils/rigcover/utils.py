@@ -1,7 +1,9 @@
 import time
 import subprocess
+import sqlite3
+from shortuuid import ShortUUID
 
-ws = r"([^a-zA-Z0-9_]|^|$)"
+ws = r"[ \t]"
 intV = r"[0-9]*"
 
 def line_num(content, index):
@@ -34,12 +36,12 @@ def strip_comments(content):
     return new_content
 
 class Context:
-    def __init__(self, verbose, db, depth):
+    def __init__(self, verbose, dbname, depth):
         self.verbose = verbose
-        self.dir = time.strftime("run-%Y%m%d-%H%M%S")
+        self.dir = time.strftime("run-%Y%m%d-%H%M%S") + ShortUUID().random(length=8)
         subprocess.run(["mkdir", self.dir])
         self._indent = 0
-        self.db = db
+        self.db = sqlite3.connect(dbname)
         self.cur = self.db.cursor()
         self.depth = depth
 

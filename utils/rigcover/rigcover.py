@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 import shutil
 import sqlite3
+from multiprocessing import Pool
 
 from Coverage import CoverTypes
 from utils import *
@@ -63,49 +64,55 @@ def createTable(context, name, fields, fieldTypes, addId = False, foreignText=""
         context.log(f"Error creating {name}: {e}")
         return False
 
+def doRun(args):
+    [entry, Cover, sail_content, sail_path, db, depth] = args
+    context = Context(False, db, depth)
+    cover = Cover(context)
+    modif_sail, label = cover.getRun(sail_content, entry[2:])
+    context.indent()
+    built, counterexample = check_divergence(context, sail_path, modif_sail, label)
+    context.unindent()
+    context.sql(f"INSERT INTO {cover.name}_runs VALUES (?, ?, ?, ?)",
+        [entry[0], context.depth, built, counterexample])
+
 def main(args):
-    with sqlite3.connect(args.db) as db:
-        context = Context(args.verbose, db, args.depth)
+    context = Context(args.verbose, args.db, args.depth)
 
-        coverTypes = [c(context) for c in CoverTypes]
+    coverTypes = [c(context) for c in CoverTypes]
 
-        for cover in coverTypes:
-            codeFields = ["file", "startindex", "endindex", "linenum"] + cover.extraFields
-            codeFieldTypes = ["text", "int", "int", "int"] + cover.extraFieldTypes
-            runsFields = ["codeid", "depth", "builds", "counterexample"]
-            runsFieldTypes = ["int", "int", "bool", "text"]
-            codeTable = f"{cover.name}_code"
-            runsTable = f"{cover.name}_runs"
+    for cover in coverTypes:
+        codeFields = ["file", "startindex", "endindex", "linenum"] + cover.extraFields
+        codeFieldTypes = ["text", "int", "int", "int"] + cover.extraFieldTypes
+        runsFields = ["codeid", "depth", "builds", "counterexample"]
+        runsFieldTypes = ["int", "int", "bool", "text"]
+        codeTable = f"{cover.name}_code"
+        runsTable = f"{cover.name}_runs"
+        if args.train:
+             createTable(context, codeTable, codeFields, codeFieldTypes, addId = True)
+             createTable(context, runsTable, runsFields, runsFieldTypes, addId = False,
+                 foreignText=f", FOREIGN KEY (codeid) references {codeTable}(id)")
+
+        for sail_path in args.sail_paths:
+            with open(f"{sail_dir}/{sail_path}", "r") as sail_file:
+                sail_content = sail_file.read()
+            sail_content = strip_comments(sail_content)
             if args.train:
-                 createTable(context, codeTable, codeFields, codeFieldTypes, addId = True)
-                 createTable(context, runsTable, runsFields, runsFieldTypes, addId = False,
-                     foreignText=f", FOREIGN KEY (codeid) references {codeTable}(id)")
-
-            for sail_path in args.sail_paths:
-                with open(f"{sail_dir}/{sail_path}", "r") as sail_file:
-                    sail_content = sail_file.read()
-                sail_content = strip_comments(sail_content)
-                if args.train:
-                    entries = cover.train(sail_content)
-                    for entry in entries:
-                        entry = [sail_path] + entry
-                        context.sql(f"INSERT into {codeTable} ({','.join(codeFields)}) VALUES ({','.join(['?' for e in entry])})", entry)
-                else:
-                    try:
-                        entries = context.sql(f"SELECT * FROM {codeTable} WHERE file == '{sail_path}'").fetchall()
-                    except sqlite3.OperationalError as e:
-                        context.log("Error getting code table. Need to train first?")
-                        context.log(str(e))
-                        exit(1)
-                    for entry in entries:
-                        print(entry)
-                        entry = entry # Trim filename and ID
-                        modif_sail, label = cover.getRun(sail_content, entry[2:])
-                        context.indent()
-                        built, counterexample = check_divergence(context, sail_path, modif_sail, label)
-                        context.unindent()
-                        context.sql(f"INSERT INTO {runsTable} VALUES (?, ?, ?, ?)",
-                            [entry[0], context.depth, built, counterexample])
+                entries = cover.train(sail_content)
+                for entry in entries:
+                    entry = [sail_path] + entry
+                    context.sql(f"INSERT into {codeTable} ({','.join(codeFields)}) VALUES ({','.join(['?' for e in entry])})", entry)
+            else:
+                try:
+                    entries = context.sql(f"SELECT * FROM {codeTable} WHERE file == '{sail_path}'").fetchall()
+                except sqlite3.OperationalError as e:
+                    context.log("Error getting code table. Need to train first?")
+                    context.log(str(e))
+                    exit(1)
+                jobs = []
+                for entry in entries:
+                    jobs.append([entry, type(cover), sail_content, sail_path, args.db, args.depth])
+                with Pool(args.j) as p:
+                    p.map(doRun, jobs)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -117,6 +124,6 @@ if __name__ == "__main__":
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--depth', required=False, default=100)
     parser.add_argument('--train', action = 'store_true')
-    parser.add_argument('-j', required=False, default=1)
+    parser.add_argument('-j', required=False, default=1, type=int)
 
     main(parser.parse_args())

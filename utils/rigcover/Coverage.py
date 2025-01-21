@@ -71,7 +71,7 @@ class CoverAssign():
                 endindex += 1
             endindex += 1
             sail_line = sail_content[startindex:endindex]
-            if "union clause" in sail_line or "function" in sail_line:
+            if "union clause" in sail_line or "function" in sail_line or "mapping" in sail_line:
                 continue
             line = line_num(sail_content, startindex)
             self.context.log(f"found assign at {startindex}")
@@ -83,7 +83,7 @@ class CoverAssign():
         self.context.log(f"Commenting assign")
         new_content = f"{sail_content [:startindex]} /* {sail_content[startindex:endindex]} */ {sail_content[endindex:]}"
         counterexample_label = f"{startindex}-{line}-assign-{sail_content[startindex:endindex]}"
-        self.context.log(f"Label: counterexample_label")
+        self.context.log(f"Label: {counterexample_label}")
         return (new_content, counterexample_label)
 
 CoverTypes = [CoverAssign]
