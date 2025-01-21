@@ -1,7 +1,7 @@
 import time
-import subprocess
 import sqlite3
 from shortuuid import ShortUUID
+from pathlib import Path
 
 ws = r"[ \t]"
 intV = r"[0-9]*"
@@ -36,19 +36,18 @@ def strip_comments(content):
     return new_content
 
 class Context:
-    def __init__(self, verbose, dbname, depth):
-        self.verbose = verbose
-        self.dir = time.strftime("run-%Y%m%d-%H%M%S") + ShortUUID().random(length=8)
-        subprocess.run(["mkdir", self.dir])
+    def __init__(self, args):
+        self.dir = f"{args.logdir}/{time.strftime('run-%Y%m%d-%H%M%S') + ShortUUID().random(length=8)}"
+        Path(self.dir).mkdir(parents=True, exist_ok=False)
         self._indent = 0
-        self.db = sqlite3.connect(dbname)
+        self.db = sqlite3.connect(args.db)
         self.cur = self.db.cursor()
-        self.depth = depth
+        self.args = args
 
     def log(self, message, force_print=False):
         with open(f"{self.dir}/log.txt", "a+") as l:
             l.write((" " * self._indent) + message + "\n");
-        if self.verbose or force_print:
+        if self.args.verbose or force_print:
             print(message)
 
     def indent(self):

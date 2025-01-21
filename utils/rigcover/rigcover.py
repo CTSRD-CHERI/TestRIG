@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import sqlite3
 from multiprocessing import Pool
+from tqdm import tqdm
 
 from Coverage import CoverTypes
 from utils import *
@@ -24,14 +25,14 @@ def check_divergence(context, sail_dut_file, new_sail_content, example_label):
         shutil.copy(f"{testrig_root}/Makefile", sail_build_dir)
         with open(f"{impl_path}/sail-cheri-riscv/{sail_dut_file}", "w") as f:
             f.write(new_sail_content)
-        makeresult = subprocess.run(["make", "-C", sail_build_dir, "sail-rv64-cheri"])
+        makeresult = subprocess.run(["make", "-C", sail_build_dir, "sail-rv64-cheri"], capture_output=True)
         if makeresult.returncode != 0:
             context.log("Build failed!")
             return (False, None)
         context.log("Build success")
         args = [ "-r", "rv64icxcheri"
                , "--test-include-regex", "caprandom"
-               , "-n", str(context.depth)
+               , "-n", str(context.args.depth)
                ]
         context.log(f"Running with args {' '.join(args)}")
         command = [ "python3"
@@ -45,12 +46,15 @@ def check_divergence(context, sail_dut_file, new_sail_content, example_label):
         testresult = subprocess.run(command, capture_output=True)
         m = re.search("Writing counterexample file to: ([^\\r\\n]*\\.S)", testresult.stdout.decode(sys.stdout.encoding))
         if m:
-          newfile = f"{context.dir}/{example_label}.S"
+          newfile = f"{context.args.tracedir}/{example_label}.S"
           shutil.move(f"{m[1]}", newfile)
-          context.log(f"Found counterexample: {example_label}.S")
+          context.log(f"Found counterexample: {example_label}.S", force_print=True)
           ret = (True, newfile)
         else:
           context.log("No counterexample found?")
+          if testresult.returncode:
+              context.log("Warning: QCVEngine returned nonzero without finding a counterexample", force_print=True)
+              context.log(testresult.stderr.decode(sys.stderr.encoding), force_print=True)
           ret = (True, None)
         context.unindent()
         return ret
@@ -65,31 +69,28 @@ def createTable(context, name, fields, fieldTypes, addId = False, foreignText=""
         return False
 
 def tableExists(context, name):
-    return context.sql(f'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type="table" AND name="{name}")').fetchall() != []
+    return context.sql(f'SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type="table" AND name="{name}")').fetchone()[0] == 1
 
-def doRun(args):
-    [entry, Cover, sail_content, sail_path, db, depth] = args
-    context = Context(False, db, depth)
+def doRun(runArgs):
+    [entry, Cover, sail_content, sail_path, args] = runArgs
+    context = Context(args)
     cover = Cover(context)
-    oldBuildFails = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = FALSE").fetchall()
-    if oldBuildFails:
-        return
-    oldBuildCounters = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = TRUE AND counterexample IS NOT NULL").fetchall()
-    if oldBuildCounters:
-        return
     modif_sail, label = cover.getRun(sail_content, entry[2:])
     context.indent()
     built, counterexample = check_divergence(context, sail_path, modif_sail, label)
     context.unindent()
     context.sql(f"INSERT INTO {cover.name}_runs VALUES (?, ?, ?, ?)",
-        [entry[0], context.depth, built, counterexample])
+        [entry[0], context.args.depth, built, counterexample])
 
 def main(args):
-    context = Context(args.verbose, args.db, args.depth)
+    context = Context(args)
+
+    Path(args.tracedir).mkdir(parents=True, exist_ok=True)
 
     coverTypes = [C(context) for C in CoverTypes if args.train is None or C(None).name == args.train]
 
     for cover in coverTypes:
+        context.log(f"Covertype {cover.name}", force_print=True)
         codeFields = ["file", "startindex", "endindex", "linenum"] + cover.extraFields
         codeFieldTypes = ["text", "int", "int", "int"] + cover.extraFieldTypes
         runsFields = ["codeid", "depth", "builds", "counterexample"]
@@ -112,6 +113,7 @@ def main(args):
                  foreignText=f", FOREIGN KEY (codeid) references {codeTable}(id)")
 
         for sail_path in args.sail_paths:
+            context.log(f"Processing {sail_path}", force_print=True)
             with open(f"{sail_dir}/{sail_path}", "r") as sail_file:
                 sail_content = sail_file.read()
             sail_content = strip_comments(sail_content)
@@ -129,9 +131,13 @@ def main(args):
                     exit(1)
                 jobs = []
                 for entry in entries:
-                    jobs.append([entry, type(cover), sail_content, sail_path, args.db, args.depth])
+                    oldBuildFails = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = FALSE").fetchall()
+                    oldBuildCounters = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = TRUE AND counterexample IS NOT NULL").fetchall()
+                    if oldBuildFails or oldBuildCounters:
+                        continue
+                    jobs.append([entry, type(cover), sail_content, sail_path, args])
                 with Pool(args.j) as p:
-                    p.map(doRun, jobs)
+                    list(tqdm(p.imap_unordered(doRun, jobs), total = len(jobs)))
 
 parser = argparse.ArgumentParser(
                prog="RigCover"
@@ -143,6 +149,8 @@ parser.add_argument('-v', '--verbose', action='store_true')
 parser.add_argument('--depth', required=False, default=100)
 parser.add_argument('--train', metavar='covertype', choices=[C(None).name for C in CoverTypes])
 parser.add_argument('--retrain', action='store_true')
+parser.add_argument('--logdir', required=False, default="runlogs")
+parser.add_argument('--tracedir', required=False, default="traces")
 parser.add_argument('-j', required=False, default=1, type=int)
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
