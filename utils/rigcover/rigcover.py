@@ -40,6 +40,7 @@ def check_divergence(context, sail_dut_file, new_sail_content, example_label):
                   , "-a", "sail"
                   , "-b", "sail"
                   , "--path-to-dut", f"{impl_path}/sail-cheri-riscv/c_emulator"
+                  , "--force-rvfi-v1"
                   , "-S", context.dir
                   ] + args
         context.indent()

@@ -229,6 +229,8 @@ parser.add_argument('--test-len', metavar='LEN', default=None, type=auto_int,
   help="Tell vengine to generate tests up to LEN instructions long")
 parser.add_argument('--supported-features', metavar='FEAT', type=str,
   help="Specify supported features to vengine, separated by '_'. Each feature should begin with 'X'.")
+parser.add_argument('--force-rvfi-v1', action='count', default=0,
+  help="Force VEngine to use v1 of RVFI")
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
@@ -580,6 +582,8 @@ def spawn_vengine(name, mport, iport, arch, log, more_args=[]):
       cmd += ['--continue-on-fail']
     if args.test_len:
       cmd += ['-L', str(args.test_len)]
+    if args.force_rvfi_v1:
+      cmd += ['--force-RVFI-v1']
     if args.test_include_regex:
       cmd += ['-I', args.test_include_regex]
     if args.test_exclude_regex:
