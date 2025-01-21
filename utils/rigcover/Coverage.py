@@ -82,7 +82,7 @@ class CoverAssign():
         [startindex, endindex, line] = entry
         self.context.log(f"Commenting assign")
         new_content = f"{sail_content [:startindex]} /* {sail_content[startindex:endindex]} */ {sail_content[endindex:]}"
-        counterexample_label = f"{startindex}-{line}-assign-{sail_content[startindex:endindex]}"
+        counterexample_label = f"{startindex}-{line}-assign-{abbrevSail(sail_content[startindex:endindex])}"
         self.context.log(f"Label: {counterexample_label}")
         return (new_content, counterexample_label)
 

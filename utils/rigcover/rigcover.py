@@ -68,6 +68,9 @@ def doRun(args):
     [entry, Cover, sail_content, sail_path, db, depth] = args
     context = Context(False, db, depth)
     cover = Cover(context)
+    oldBuildFails = context.sql(f"SELECT * FROM {cover.name}_runs WHERE codeId = {entry[0]} AND builds = FALSE").fetchall()
+    if oldBuildFails:
+        return
     modif_sail, label = cover.getRun(sail_content, entry[2:])
     context.indent()
     built, counterexample = check_divergence(context, sail_path, modif_sail, label)

@@ -84,11 +84,12 @@ def main(args):
     post_content = sail_content[idx + mE.end():]
     idx += mS.start()
     runs = cur.execute(f"SELECT depth, builds, counterexample FROM {cover.name}_runs WHERE codeId = {codeId}").fetchall()
-    counters = [f'<a href="{r[2]}"></a>' for r in runs if r[1] and r[2] is not None]
+    counters = [f'<a href="{r[2]}">counterexample</a>' for r in runs if r[1] and r[2] is not None]
+    if counters: print(counters)
     buildfails = ["No build" for r in runs if not r[1]]
     counterfails = [f"(NA after {r[0]})" for r in runs if r[1] and r[2] is None]
     bg = "gray"
-    if [r for r in runs if r[0] and r[1] and r[2] is not None] and [r for r in runs if not r[0] and r[1] and r[2] is not None]:
+    if counters:
         bg = "green"
     elif counterfails:
         bg = "red"
