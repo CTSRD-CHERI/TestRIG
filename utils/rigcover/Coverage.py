@@ -86,4 +86,39 @@ class CoverAssign():
         self.context.log(f"Label: {counterexample_label}")
         return (new_content, counterexample_label)
 
-CoverTypes = [CoverAssign]
+class CoverEncDec():
+    extraFields = []
+    extraFieldTypes = []
+
+    def __init__(self, context):
+        self.context = context
+        self.name = "CoverEncDec"
+
+    def train(self, sail_content):
+        ret = []
+        for m in re.finditer(f"clause encdec", sail_content):
+            startindex = m.start()
+            while startindex >= 0 and sail_content[startindex] != '\n':
+                startindex -= 1
+            startindex += 1
+            endindex = startindex
+            newlineCount = 0
+            while endindex < len(sail_content) and newlineCount < 2:
+                endindex += 1
+                if sail_content[endindex] == '\n':
+                    newlineCount += 1
+            line = line_num(sail_content, startindex)
+            self.context.log(f"found encdec at {startindex}")
+            ret.append([startindex, endindex, line])
+        return ret
+
+    def getRun(self, sail_content, entry):
+        [startindex, endindex, line] = entry
+        self.context.log(f"Commenting encdec")
+        new_content = f"{sail_content [:startindex]} /* {sail_content[startindex:endindex]} */ {sail_content[endindex:]}"
+        mappingName = re.search(r" = ([^\(]*)\(", sail_content[startindex:endindex]).groups()[0]
+        counterexample_label = f"{startindex}-{line}-encdec-{abbrevSail(mappingName)}"
+        self.context.log(f"Label: {counterexample_label}")
+        return (new_content, counterexample_label)
+
+CoverTypes = [CoverAssign, CoverEncDec]
