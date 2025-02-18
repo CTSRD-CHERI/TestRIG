@@ -80,7 +80,7 @@ def z_ext(ext_name):
 def x_ext(ext_name):
   return ["", "X"+ext_name]
 
-known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'muntjac', 'qemu', 'manual', 'none'}
+known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'muntjac', 'cva6', 'qemu', 'manual', 'none'}
 known_vengine = {'QCVEngine', 'QCVEngine-docker'}
 multi_letter_exts = ["_".join(filter(None, [e0, e1, e2, e3, e4]))
                      for e0 in z_ext("icsr")
@@ -173,6 +173,8 @@ parser.add_argument('--path-to-ibex', metavar='PATH', type=str,
 parser.add_argument('--path-to-muntjac', metavar='PATH', type=str,
   default=op.join(implementations_path, "muntjac/bin/muntjac_core"),
   help="The PATH to the Muntjac executable")
+parser.add_argument('--path-to-cva6', metavar='PATH', type=str,
+  default=op.join(implementations_path, "cheri-cva6/corev_apu/tb/tb_testRig_cheri/work-ver/Variane_testharness_dii"))
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default=op.join(vengines_path, "QuickCheckVEngine/bin/QCVEngine"),
   help="The PATH to the QCVEngine executable")
@@ -519,6 +521,13 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   elif name == 'muntjac':
     env2["RVFI_DII_PORT"] = str(port)
     cmd = [args.path_to_muntjac]
+  ##############################################################################
+  elif name == 'cva6':
+    cmd = [args.path_to_cva6]
+    # Port info
+    cmd += ["-q", "cva6-rvfi-dii", "-w", str(port)]
+    # Currently, the toplevel needs a file arg that gets ignored
+    cmd += ["file-placeholder"]
   ##############################################################################
   elif name == 'manual':
     return None
