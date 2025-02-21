@@ -526,8 +526,6 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     cmd = [args.path_to_cva6]
     # Port info
     cmd += ["-q", "cva6-rvfi-dii", "-w", str(port)]
-    # Currently, the toplevel needs a file arg that gets ignored
-    cmd += ["file-placeholder"]
   ##############################################################################
   elif name == 'manual':
     return None
