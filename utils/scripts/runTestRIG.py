@@ -46,6 +46,7 @@ import sys
 import time
 import socket
 import typing
+import tempfile
 from dataclasses import dataclass
 from typing import Optional
 
@@ -227,6 +228,8 @@ parser.add_argument('--test-len', metavar='LEN', default=None, type=auto_int,
   help="Tell vengine to generate tests up to LEN instructions long")
 parser.add_argument('--supported-features', metavar='FEAT', type=str,
   help="Specify supported features to vengine, separated by '_'. Each feature should begin with 'X'.")
+parser.add_argument('--metashrink', metavar='FILENAME', type=str,
+  help="Perform best-effort shrinking on FILENAME, which causes a crash")
 
 # Use argcomplete to provide bash tab completion (https://github.com/kislyuk/argcomplete)
 try:
@@ -798,5 +801,33 @@ def main():
     time.sleep(2)
     kill_procs(a, b, generator, e)
 
+def metashrink_top():
+    with open(args.metashrink) as basefile:
+        shrunklines = basefile.readlines()
+    for i in range(len(shrunklines)):
+        l = shrunklines[i]
+        if l.startswith(".4byte"):
+            tf = tempfile.NamedTemporaryFile(mode="w", delete=False)
+            testlines = shrunklines[:i] + ["#" + l] + shrunklines[i+1:]
+            tf.writelines(testlines)
+            tf.close()
+            clean_exit = False
+            try:
+                args.trace_file = tf.name
+                args.no_shrink = True
+                args.no_save = True
+                main()
+                clean_exit = True
+            except SystemExit as e:
+                clean_exit = e.args[0] == 0
+            if not clean_exit:
+                shrunklines = testlines
+                with open(f"{args.metashrink}.metashrunk.S", "w") as resfile:
+                    resfile.writelines(shrunklines)
+
+
 if __name__ == "__main__":
-  main()
+  if args.metashrink is not None:
+      metashrink_top()
+  else:
+      main()
