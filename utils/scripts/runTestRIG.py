@@ -523,9 +523,11 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
     cmd = [args.path_to_muntjac]
   ##############################################################################
   elif name == 'cva6':
+    env2["RVFI_DII_PORT"] = str(port)
     cmd = [args.path_to_cva6]
     # Port info
     cmd += ["-q", "cva6-rvfi-dii", "-w", str(port)]
+    cmd += ["-v", "cva6-trace.vcd"]
   ##############################################################################
   elif name == 'manual':
     return None
