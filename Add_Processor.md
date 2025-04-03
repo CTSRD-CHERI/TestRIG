@@ -80,7 +80,7 @@ This code is responsible for the socket communication and the most important par
 
 The other two files are responsible to guide the simulation. Since tinyriscv is simple, all that is needed is to put the next instruction at the instruction input port `rib_pc_data_i` and run the clock. The relevant signals are gathered by the `pipeline_monitor` as the instruction goes through the pipeline. The signals are used to fill the fields of each execution trace packet.
 
-One of the requirements of the simulation is to set all register file to zero before starting the verification.
+One of the requirements of the simulation is to set all of the register file to zero before starting the verification.
 
 ```python
     for reg in dut.u_regs.regs:
