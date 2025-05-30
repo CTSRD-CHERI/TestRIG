@@ -32,13 +32,17 @@
 # SUCH DAMAGE.
 #
 
-all: vengines riscv-implementations
+all: tool-version-check vengines riscv-implementations tool-version-check
 
 clean: clean-vengines clean-riscv-implementations
 
+.PHONY: tool-version-check
+tool-version-check:
+	echo "Expected version of cabal is 3.4.0.0 or higher; your version is `cabal --numeric-version`"
+
 # Verification Engines
 ################################################################################
-vengines: QCVEngine
+vengines: tool-version-check QCVEngine
 
 QCVENGINE_BIN_DIR=$(CURDIR)/vengines/QuickCheckVEngine/bin
 QCVEngine: Makefile
