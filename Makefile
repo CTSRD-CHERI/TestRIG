@@ -32,7 +32,7 @@
 # SUCH DAMAGE.
 #
 
-all: tool-version-check vengines riscv-implementations tool-version-check
+all: tool-version-check vengines riscv-implementations
 
 clean: clean-vengines clean-riscv-implementations
 
