@@ -82,11 +82,12 @@ def x_ext(ext_name):
 
 known_rvfi_dii = {'spike', 'rvbs', 'sail', 'piccolo', 'flute', 'toooba', 'ibex', 'muntjac', 'qemu', 'manual', 'none'}
 known_vengine = {'QCVEngine', 'QCVEngine-docker'}
-multi_letter_exts = ["_".join(filter(None, [e0, e1, e2, e3]))
+multi_letter_exts = ["_".join(filter(None, [e0, e1, e2, e3, e4]))
                      for e0 in z_ext("icsr")
                      for e1 in z_ext("ihpm")
                      for e2 in z_ext("ifencei")
-                     for e3 in x_ext("cheri")]
+                     for e3 in z_ext("icond")
+                     for e4 in x_ext("cheri")]
 known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8
                                   for e0 in ["rv32i", "rv64i"]
                                   for e1 in std_ext("m")
@@ -288,7 +289,7 @@ class ISA_Configuration:
         exit(-1)
     self.extensions = parts[1:]
     for extension in self.extensions:
-      if extension in ('icsr', 'ifencei', 'ihpm', 'cheri'):
+      if extension in ('icsr', 'ifencei', 'icond', 'ihpm', 'cheri'):
         self.ext_map[extension] = True
       else:
         print("ERROR: Extension "+extension+" not currently supported")
