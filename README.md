@@ -25,7 +25,7 @@ Test suites are designed to test as many aspects of an instruction set specifica
 TestRIG can verify every register value read in the pipeline under random sequence generation, while a test suite will only report a prescribed test result.
 
 TestRIG greatly increases debugging efficiency.
-In-memory test suites require a significant amount of boiler plate in order to construct a valid test state which cannot be automatically reduced without disturbing instruction layout in complex ways.
+In-memory test suites require a significant amount of boilerplate in order to construct a valid test state which cannot be automatically reduced without disturbing instruction layout in complex ways.
 As TestRIG relies on direct instruction injection, bypassing fetch through PC, a sequence of instructions can easily be shortened by simply eliminating instructions from the trace to see if we still find divergence.
 As a result we can expect automatically reduced counterexamples on the order of a handful of instructions.
 
