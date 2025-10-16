@@ -195,7 +195,7 @@ muntjac-rv64imac:
 	$(MAKE) -C riscv-implementations/muntjac
 
 cva6-rv64xcheri:
-	bash -c "python3 -m venv /tmp/cva6-python-venv && source /tmp/cva6-python-venv/bin/activate && pip3 install -r riscv-implementations/cheri-cva6/verif/sim/dv/requirements.txt && cd riscv-implementations/cheri-cva6 && bash verif/regress/install-verilator.sh"
+	bash -c "cd riscv-implementations/cheri-cva6 && NUM_JOBS=4 bash verif/regress/install-verilator.sh"
 	$(MAKE) -C riscv-implementations/cheri-cva6/corev_apu/tb/tb_testRig_cheri DEBUG=1
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
