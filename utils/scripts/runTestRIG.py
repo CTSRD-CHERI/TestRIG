@@ -47,6 +47,8 @@ import time
 import socket
 import typing
 import tempfile
+import math
+import random
 from dataclasses import dataclass
 from typing import Optional
 
@@ -801,30 +803,61 @@ def main():
     time.sleep(2)
     kill_procs(a, b, generator, e)
 
+def metashrink_test_instance(test):
+    tf = tempfile.NamedTemporaryFile(mode="w", delete=False)
+    tf.writelines(test)
+    tf.close()
+    clean_exit = False
+    try:
+        args.trace_file = tf.name
+        args.no_shrink = True
+        args.no_save = True
+        main()
+        clean_exit = True
+    except SystemExit as e:
+        clean_exit = e.args[0] == 0
+    if clean_exit: return False
+    with open(f"{args.metashrink}.metashrunk.S", "w") as resfile:
+        resfile.writelines(test)
+    return True
+
 def metashrink_top():
     with open(args.metashrink) as basefile:
         shrunklines = basefile.readlines()
+    while metashrink_bisect(shrunklines):
+        with open(f"{args.metashrink}.metashrunk.S") as resfile:
+            shrunklines = resfile.readlines()
+    metashrink_linear(shrunklines)
+
+def metashrink_bisect(test):
+    random.seed(0) # determinism
+    for attempt in range(int(math.log2(len([l for l in test if l.startswith(".4byte")])))):
+        subtest = []
+        changed = False
+        for l in test:
+            if l.startswith(".4byte") and random.randrange(0, attempt+2) == 0:
+                changed = True
+                l = "# " + l
+            subtest.append(l)
+        if changed and metashrink_test_instance(subtest): return True
+    return False
+
+def metashrink_linear(test):
+    shrunklines = test
+    shorterFound = False
     for i in range(len(shrunklines)):
         l = shrunklines[i]
         if l.startswith(".4byte"):
-            tf = tempfile.NamedTemporaryFile(mode="w", delete=False)
             testlines = shrunklines[:i] + ["#" + l] + shrunklines[i+1:]
-            tf.writelines(testlines)
-            tf.close()
-            clean_exit = False
-            try:
-                args.trace_file = tf.name
-                args.no_shrink = True
-                args.no_save = True
-                main()
-                clean_exit = True
-            except SystemExit as e:
-                clean_exit = e.args[0] == 0
-            if not clean_exit:
+            if metashrink_test_instance(testlines):
                 shrunklines = testlines
-                with open(f"{args.metashrink}.metashrunk.S", "w") as resfile:
-                    resfile.writelines(shrunklines)
-
+                shorterFound = True
+            else:
+                testlines = shrunklines[:i] + [".4byte 0x13 #" + l] + shrunklines[i+1:]
+                if metashrink_test_instance(testlines):
+                    shrunklines = testlines
+                    shorterFound = True
+    return shorterFound
 
 if __name__ == "__main__":
   if args.metashrink is not None:
