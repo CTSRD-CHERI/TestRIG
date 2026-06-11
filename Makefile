@@ -195,8 +195,8 @@ muntjac-rv64imac:
 	$(MAKE) -C riscv-implementations/muntjac
 
 cva6-rv64xcheri:
-	bash -c "cd riscv-implementations/cheri-cva6 && NUM_JOBS=4 bash verif/regress/install-verilator.sh"
-	$(MAKE) -C riscv-implementations/cheri-cva6/corev_apu/tb/tb_testRig_cheri DEBUG=1
+	bash -c "cd riscv-implementations/cheri-cva6 && NUM_JOBS=8 bash verif/regress/install-verilator.sh"
+	$(MAKE) -C riscv-implementations/cheri-cva6 verilate RVFI_DII=1 DEBUG=1 verilator=`pwd`/riscv-implementations/cheri-cva6/tools/verilator-v5.038/bin/verilator VERILATOR_INSTALL_DIR=`pwd`/riscv-implementations/cheri-cva6/tools/verilator-v5.038/
 
 .PHONY: clean-riscv-implementations clean-rvbs clean-sail
 
@@ -263,4 +263,4 @@ clean-qemu:
 	rm -rf $(QEMU_DIR)/build
 
 clean-cva6-cheri:
-	$(MAKE) -C riscv-implementations/cheri-cva6/corev_apu/tb/tb_testRig_cheri clean
+	$(MAKE) -C riscv-implementations/cheri-cva6 clean

@@ -174,7 +174,7 @@ parser.add_argument('--path-to-muntjac', metavar='PATH', type=str,
   default=op.join(implementations_path, "muntjac/bin/muntjac_core"),
   help="The PATH to the Muntjac executable")
 parser.add_argument('--path-to-cva6', metavar='PATH', type=str,
-  default=op.join(implementations_path, "cheri-cva6/corev_apu/tb/tb_testRig_cheri/work-ver/Variane_testharness_dii"))
+  default=op.join(implementations_path, "cheri-cva6/work-ver/Variane_testharness"))
 parser.add_argument('--path-to-QCVEngine', metavar='PATH', type=str,
   default=op.join(vengines_path, "QuickCheckVEngine/bin/QCVEngine"),
   help="The PATH to the QCVEngine executable")
