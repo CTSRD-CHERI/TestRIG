@@ -88,7 +88,7 @@ multi_letter_exts = ["_".join(filter(None, [e0, e1, e2, e3, e4]))
                      for e2 in z_ext("ifencei")
                      for e3 in z_ext("icond")
                      for e4 in x_ext("cheri")]
-known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8
+known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8 + e9
                                   for e0 in ["rv32i", "rv64i"]
                                   for e1 in std_ext("m")
                                   for e2 in std_ext("s")
@@ -97,7 +97,8 @@ known_architectures = sorted(set([e0 + e1 + e2 + e3 + e4 + e5 + e6 + e7 + e8
                                   for e5 in std_ext("d")
                                   for e6 in std_ext("c")
                                   for e7 in std_ext("n")
-                                  for e8 in multi_letter_exts]
+                                  for e8 in std_ext("y")
+                                  for e9 in multi_letter_exts]
                                  + [e0 + e1 + e2 + e3
                                     for e0 in ["rv32g", "rv64g"]
                                     for e1 in std_ext("c")
@@ -181,7 +182,7 @@ parser.add_argument('--path-to-sail-riscv-dir', metavar='PATH', type=str,
 parser.add_argument('-r', '--architecture', type=str.lower, metavar='ARCH', choices=list(map(str.lower, known_architectures)),
   default='rv32i',
   help="""The architecture to verify, where ARCH is a non case sensitive string
-  of the form 'rv{32,64}g[c][n]', or 'rv{32,64}i[m][a][f][d][n]' optionally followed
+  of the form 'rv{32,64}g[c][n]', or 'rv{32,64}i[m][a][f][d][n][y]' optionally followed
   by an '_'-separated list of one or more of {Zicsr, Zifencei, Xcheri}
   appearing in that order (e.g. rv64ifcXcheri, rv64imd,
   rv32imafZicsr_Zifencei_Xcheri ...)""")
@@ -277,7 +278,7 @@ class ISA_Configuration:
     self.std_extensions = parts[0][4:]
     self.ext_map = {}
     for letter in self.std_extensions:
-      if letter in ('i', 'm', 's', 'a', 'f', 'd', 'c', 'n'):
+      if letter in ('i', 'm', 's', 'a', 'f', 'd', 'c', 'n', 'y'):
         self.ext_map[letter] = True
       elif letter == 'g':
         # G enables imafd+icsr+ihpm+ifencei
@@ -289,6 +290,9 @@ class ISA_Configuration:
         exit(-1)
     self.extensions = parts[1:]
     for extension in self.extensions:
+      if extension == 'cheri' and self.ext_map.get('y'):
+        print("ERROR: RVY extension is incompatible with Xcheri")
+        exit(-1)
       if extension in ('icsr', 'ifencei', 'icond', 'ihpm', 'cheri'):
         self.ext_map[extension] = True
       else:
@@ -352,12 +356,21 @@ class ISA_Configuration:
   def get_qemu_cpu(self):
     # See cpu.c: static Property riscv_cpu_properties[]
     # Only e is off by default
-    supported_qemu_exts = list("iegmafdc") + ["Counters", "Zifencei"]
+    supported_qemu_exts = list("iegmafdcy") + ["Zifencei"]
+    if not self.has("y"):
+      # QEMU rvy does not support Counters
+      supported_qemu_exts += ["Counters"]
     # Explicitly disable QEMU extensions that are on by default and selectively enable
     ext_map = {k: k + "=false" for k in supported_qemu_exts}
     # TestRIG expects s,u,Zicsr to be on by default:
     ext_map["s"] = "s=true"
     ext_map["u"] = "u=true"
+    if self.has("y"):
+      ext_map["y"] = "y=true"
+      ext_map["Zyhybrid"] = "Zyhybrid=true"
+      ext_map["Zylevels1"] = "Zylevels1=true"
+      ext_map["Svyrg"] = "Svyrg=true"
+
     print("WARNING: enabling s and u extensions by default in QEMU.")
     if not self.has_icsr:
       ext_map["Zicsr"] = "Zicsr=true"
@@ -391,7 +404,7 @@ class ISA_Configuration:
     #  print("ERROR: Sail currently does not support CSRs.")
     #  exit(-1)
     #TODO check if there are other configurations that Sail does not yet support and throw an error.
-    if self.has_cheri:
+    if self.has_cheri or self.has("y"):
       result = "cheri_" + result
     if self.has_xlen_32:
       result += "_RV32"
@@ -485,7 +498,7 @@ def spawn_rvfi_dii_server(name, port, log, isa_def):
   elif name == 'sail':
     if args.path_to_sail_riscv_dir is None:
       args.path_to_sail_riscv_dir = op.join(implementations_path, "sail-")
-      if isa_def.has_cheri:
+      if isa_def.has_cheri or isa_def.has("y"):
         args.path_to_sail_riscv_dir += "cheri-"
       args.path_to_sail_riscv_dir += "riscv/c_emulator/"
     full_sail_sim = op.join(op.dirname(op.realpath(__file__)), args.path_to_sail_riscv_dir, isa_def.get_sail_name())
