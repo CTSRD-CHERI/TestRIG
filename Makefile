@@ -169,7 +169,7 @@ $(QEMU_DIR)/build/config-host.mak:
 	    --disable-strip --disable-linux-aio --disable-kvm --disable-werror --disable-pie \
 	    --disable-linux-user --disable-bsd-user --disable-xen --disable-docs --disable-rdma \
 	    --disable-capstone \
-	    --enable-rvfi-dii --target-list=riscv64y-softmmu
+	    --enable-rvfi-dii --target-list=riscv64y-softmmu,riscv64-softmmu,riscv32-softmmu
 
 qemu: $(QEMU_DIR)/build/config-host.mak
 	$(MAKE) -C $(QEMU_DIR)/build
