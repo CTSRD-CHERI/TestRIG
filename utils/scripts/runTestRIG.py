@@ -367,6 +367,7 @@ class ISA_Configuration:
     # TestRIG expects s,u,Zicsr to be on by default:
     ext_map["s"] = "s=true"
     ext_map["u"] = "u=true"
+    ext_map["c"] = "c=true"
     if self.has("y"):
       ext_map["y"] = "y=true"
       ext_map["Zyhybrid"] = "Zyhybrid=true"
