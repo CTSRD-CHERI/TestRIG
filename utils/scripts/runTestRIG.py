@@ -378,7 +378,9 @@ class ISA_Configuration:
     # TODO: mmu/pmp/priv_spec?
     # DEFINE_PROP_STRING("priv_spec", RISCVCPU, cfg.priv_spec),
     # DEFINE_PROP_BOOL("mmu", RISCVCPU, cfg.mmu, true),
-    # DEFINE_PROP_BOOL("pmp", RISCVCPU, cfg.pmp, true),
+
+    # PMP is currently unsupported on both Sail and QEMU
+    ext_map["pmp"] = "pmp=false"
     result = ""
     if self.has_xlen_32:
       result = "rv32"
